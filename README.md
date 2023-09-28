@@ -34,3 +34,13 @@ Todos os códigos referente a importação dos dados do sistema de RH estão no 
 A versão atual só permite acesso via **LDAP**
 
 Se o valor da constante ambiente no arquivo `config/app.php` for igual a `local` ou `develop` sistema não verifica o LDAP e permite o acesso com qualquer senha.
+
+### Comandos para ajuste de dependências
+
+As dependências utilizadas necessitam do composer na versão 1.x, para isso é necessário retroceder a versão caso esteja utilizando uma versão superior a 1.x.
+
+Execute o seguinte comando e posteriormente instale as dependências.
+
+```
+$ composer self-update --1
+```
