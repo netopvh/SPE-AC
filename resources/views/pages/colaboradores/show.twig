@@ -1,0 +1,84 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-6 col-xs-12">
+                    <h4 class="page-title">
+                        <a href="{{ APP_URL }}/colaboradores">Lista de Colaboradores </a><i class="fa fa-chevron-right font-12"></i> 
+                        Informações do Colaborador
+                    </h4>
+                </div>
+                {# <div class="col-sm-6">
+                    <h4 class="page-title">Informações do Colaborador</h4>
+                </div> #}
+                {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 and 
+                    (
+                        AUTH.perfil_usuario ['id_tipo_perfil'] == 2 and
+                        (
+                            (
+                                usuario.id_orgao_exercicio_usuario in AUTH.visualizar_orgaos
+                                and usuario.id_lotacao_exercicio_usuario in LOTACOES.lotacoesArray
+                            )
+                            or usuario.id_orgao_exercicio_usuario not in AUTH.visualizar_orgaos
+                        )
+                    ) %}
+                    <div class="col-sm-6">
+                        <div class="float-right d-none d-md-block">
+                            <a href="{{ APP_URL }}/colaboradores/editar/{{ usuario.id_usuario }}" class="btn btn-primary waves-effect waves-light">
+                                <i class="mdi mdi-pencil"></i> Editar
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card card-bordered">
+                        <h4 class="card-header font-16 mt-0">Dados Pessoais</h4>
+                        <div class="card-body">
+                            <dl>
+                                <dt>CPF</dt>
+                                <dd>{{ str.mask(usuario.cpf_usuario,'###.###.###-##') }}</dd>
+
+                                <dt>Nome</dt>
+                                <dd>{{ usuario.nome_usuario }}</dd>
+
+                                <dt>E-mail</dt>
+                                <dd>{{ usuario.email_usuario }}</dd>
+
+                                <dt>Cargo</dt>
+                                <dd>{{ usuario.cargo_comissao_usuario ? usuario.cargo_comissao_usuario : usuario.cargo_usuario }}</dd>
+
+                                <dt>Órgão</dt>
+                                <dd>{{ usuario.orgao.descricao_orgao }}</dd>
+
+                                <dt>Lotação Exercício</dt>
+                                <dd>{{ usuario.lotacao.descricao_lotacao }}</dd>
+
+                                <dt>Vínculo</dt>
+                                <dd>{{ usuario.tipo_usuario.descricao_tipo_usuario|upper }}</dd>
+
+                                <dt>Horário</dt>
+                                <dd>
+                                    {% if usuario.horario %}
+                                        {{ str.mask(usuario.horario.entrada_1_horario, '#####') }} - 
+                                        {{ str.mask(usuario.horario.saida_1_horario, '#####') }} - 
+                                        {{ str.mask(usuario.horario.entrada_2_horario, '#####') }} - 
+                                        {{ str.mask(usuario.horario.saida_2_horario, '#####') }}
+                                    {% else %}
+                                        Horário Padrão
+                                    {% endif %}
+                                </dd> 
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

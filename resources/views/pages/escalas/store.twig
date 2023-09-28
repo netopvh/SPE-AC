@@ -1,0 +1,114 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <form class="form-ajax" data-redirect="{{ APP_URL }}/escalas?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" autocomplete="off">
+        <div class="container-fluid p-0">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">
+                            <a href="{{ APP_URL }}/escalas?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}">Lista de Escalas </a><i class="fa fa-chevron-right font-12"></i> 
+                            Cadastro de Escalas
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Atribuir Escala</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane p-3 active" id="home" role="tabpanel">
+                        <div class="form-group">
+                            <label>Servidor {{ OBRIGATORIO }}</label>
+                            <select id="id_usuario" name="id_usuario" class="form-control searchable" required="required">
+                                <option value=""></option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-auto">
+                                <label>Datas {{ OBRIGATORIO }}</label>
+                                <div id="datepicker">
+                                    <input type="text" class="d-none" id="datas_escala" name="datas_escala" required="required"/>
+                                </div>
+                            </div>
+                            <div class="form-group col">
+                                <label for="amparo_legal_escala" class="col-form-label">Amparo Legal {{ OBRIGATORIO }}</label>
+                                <textarea name="amparo_legal_escala" id="amparo_legal_escala" rows="11" class="form-control" required="required" maxlength="500"></textarea>
+                            </div>
+                        </div>
+                        <strong>Observação: </strong><span class="text-danger" style="font-size: 13px;">O cadastro das escalas é referente aos dias em que o servidor não tem obrigação de registrar o ponto.</span>
+                        <div class="form-group pt-2 mb-0">
+                            <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                <i class="fa fa-save"></i>
+                                Cadastrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+        $('#id_usuario').select2({
+			placeholder: 'Digite nome ou matricula (exibindo até 10 registros)',
+			theme: 'bootstrap',
+			language: 'pt-BR',
+			ajax: {
+				url: `{{ APP_URL }}/api/servidores`,
+				dataType: 'json',
+				data: function(params) {
+					var query = {
+						search: params.term ? params.term : '',
+						length: 10,
+						start: 0,
+						draw: 1,
+					}
+
+					return query;
+				},
+				processResults: function(data) {
+					var usuarios = [];
+					data.aaData.map(usuario => {
+						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.contrato_usuario})` })
+					});
+					return {
+						results: usuarios
+					};
+				}
+			}
+		});
+
+        var startDate = moment(`{{ "now"|date('Y-m-d') }}`).startOf('month').add( 1, 'days').format('YYYY-MM-DD');
+
+        $('#datepicker').datepicker({
+            multidate: true,
+            format: 'yyyy-mm-dd',
+            //startDate: new Date(startDate),
+            daysOfWeekDisabled: [0, 6],
+            language: 'pt'
+        }).on('changeDate', function(e) {
+            if(e.date){
+                var startDateCurrent = moment(e.date).startOf('month').add( 1, 'days').format('YYYY-MM-DD');
+                var endDateCurrent = moment(e.date).endOf('month').add( 1, 'days').format('YYYY-MM-DD');
+
+                if(moment(e.date).format('YYYY-MM') == moment(startDate).format('YYYY-MM')){
+                    $("#datepicker").datepicker('setEndDate', new Date(endDateCurrent));
+                }else{
+                    $("#datepicker").datepicker('setStartDate', new Date(startDateCurrent));
+                    $("#datepicker").datepicker('setEndDate', new Date(endDateCurrent));
+                }
+            }else{
+                $("#datepicker").datepicker('setStartDate', new Date(startDate));
+                $("#datepicker").datepicker('setEndDate', '');
+            }
+        });
+
+	</script>
+{%  endblock %}

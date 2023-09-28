@@ -1,0 +1,235 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-12">
+					<h4 class="page-title">Lista de Servidores</h4>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Matrícula, contrato, nome, horário, cargo e lotação"/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control">
+							<option value="A" selected>Todos</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="horario_padrao">Horário</label>
+						<select id="horario_padrao" class="form-control select2">
+							<option value="false">Todos</option>
+							<option value="true">Horário Padrão</option>
+							<option value="outros">Outros</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-servidores" class="table table-sm table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase" style="width:100px;">Matrícula</th>
+								<th class="text-uppercase" style="width:100px;">Contrato</th>
+								<th class="text-uppercase">Nome</th>
+								<th class="text-uppercase">Horário</th>
+								<th class="text-uppercase">Cargo</th>
+								<th class="text-uppercase">Orgão</th>
+								<th class="text-uppercase" style="width:300px;">Lotação Exercício</th>
+								<th class="text-uppercase" style="width:65px;">Ação</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+
+            const meusOrgaos = JSON.parse('{{ AUTH.visualizar_orgaos|json_encode() }}');
+            const minhasLotacoes = JSON.parse('{{ LOTACOES.lotacoesArray|json_encode() }}');
+
+            $('.select2').select2({theme: 'bootstrap',})
+
+            $('#id_orgao').select2({
+				placeholder: 'Digite nome ou sigla (exibindo até 10 registros)',
+				theme: 'bootstrap',
+				language: 'pt-BR',
+				ajax: {
+					url: `{{ APP_URL }}/api/orgaos`,
+					dataType: 'json',
+					data: function(params) {
+						var query = {
+							search: params.term ? params.term : '',
+							length: 100,
+							start: 0,
+							draw: 1,
+                            order: [{
+                                column: 2,
+                                dir: 'asc'
+                            }]
+						}
+
+						return query;
+					},
+					processResults: function(data) {
+						var itens = [];
+						itens.push({ id: 'A', text: `Todas os Órgão` })
+						data.aaData.map(dados => {
+							itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+						});
+						return {
+							results: itens
+						};
+					}
+				}
+			});
+
+			var table = $("#table-servidores").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/servidores",
+					data: function(data){
+						data.search = $("#search").val();
+						data.horario_padrao = $("#horario_padrao").val();
+						data.id_orgao = $("#id_orgao").val() != 'A' ? $("#id_orgao").val() : null;
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+							var horario = 'Horário Padrão';
+                            if(data.horario){
+                                horario = `${data.horario.entrada_1_horario.substr(0,5)} - 
+									${data.horario.saida_1_horario.substr(0,5)}
+									${data.horario.entrada_2_horario ? ' - ' + data.horario.entrada_2_horario.substr(0,5) + ' - ' : ''}
+									${data.horario.saida_2_horario ? data.horario.saida_2_horario.substr(0,5) : ''}`;
+                            }
+                            return horario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_comissao_usuario ? data.cargo_comissao_usuario : data.cargo_usuario;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.sigla_orgao;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_lotacao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+
+
+							var html = `<a href="./servidores/visualizar/${data.id_usuario}" class="btn btn-sm btn-default btn-circle">
+									<i class="mdi mdi-eye"></i>
+								</a>`;
+
+							if({{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 2 && meusOrgaos && minhasLotacoes && meusOrgaos.includes(data.id_orgao_exercicio_usuario) && !minhasLotacoes.includes(data.id_lotacao_exercicio_usuario)){
+                                return html;
+                            }
+								
+							{% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+								html += `<a href="./servidores/editar/${data.id_usuario}" class="btn btn-sm btn-default btn-circle ml-1">
+									<i class="ti-pencil"></i>
+								</a>`;
+							{% endif %}
+							
+                            return html;
+                        }
+                        
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 3,4,7 ] 
+                    },
+                ],
+				order: [[ 2, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+			$("#horario_padrao, #id_orgao").change(function(){
+				table.draw();
+			});
+		});
+	</script>
+{%  endblock %}

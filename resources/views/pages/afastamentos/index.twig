@@ -1,0 +1,203 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Lista de Servidores Afastados / Licenciados</h4>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Matrícula, contrato, nome, cargo, lotação e data"/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control">
+							<option value="A" selected>Todos</option>
+						</select>
+					</div>
+				</div>
+                <div class="col-md-3">
+					<div class="form-group">
+						<label for="descricao_afastamento">Descrição</label>
+                        <select class="form-control select2" id="descricao_afastamento" name="descricao_afastamento">
+                            <option value="">Selecione um...</option>
+                            {% for descricao in descricoes %}
+                                <option value="{{ descricao.descricao_afastamento }}">{{ descricao.descricao_afastamento }}</option>
+                            {% endfor %}
+                        </select>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-afastamentos" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase" style="width:100px;">Matrícula</th>
+                                <th class="text-uppercase" style="width:100px;">Contrato</th>
+                                <th class="text-uppercase">Nome</th>
+                                <th class="text-uppercase">Lotação</th>
+                                <th class="text-uppercase">Descrição</th>
+                                <th class="text-uppercase" style="width:100px;">Início</th>
+                                <th class="text-uppercase" style="width:100px;">Fim</th>
+                                <th class="text-uppercase" style="width:100px;">Qtd. Dias</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+
+            $('.select2').select2({theme: 'bootstrap'})
+
+            $('#id_orgao').select2({
+				placeholder: 'Digite nome ou sigla (exibindo até 10 registros)',
+				theme: 'bootstrap',
+				language: 'pt-BR',
+				ajax: {
+					url: `{{ APP_URL }}/api/orgaos`,
+					dataType: 'json',
+					data: function(params) {
+						var query = {
+							search: params.term ? params.term : '',
+							length: 100,
+							start: 0,
+							draw: 1,
+                            order: [{
+                                column: 2,
+                                dir: 'asc'
+                            }]
+						}
+
+						return query;
+					},
+					processResults: function(data) {
+						var itens = [];
+						itens.push({ id: 'A', text: `Todas os Órgão` })
+						data.aaData.map(dados => {
+							itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+						});
+						return {
+							results: itens
+						};
+					}
+				}
+			});
+
+			var table = $("#table-afastamentos").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/afastamentos",
+					data: function(data){
+						data.search = $("#search").val();
+						data.descricao_afastamento = $("#descricao_afastamento").val();
+                        data.id_orgao = $("#id_orgao").val() != 'A' ? $("#id_orgao").val() : null;
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_lotacao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_afastamento;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return moment(data.data_inicio_afastamento).format('DD/MM/YYYY');
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return moment(data.data_fim_afastamento).format('DD/MM/YYYY');
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.qtd_dias_afastamento;
+                        }                       
+                    },
+                ],
+				order: [[ 6, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+            $("#descricao_afastamento, #id_orgao").on('change', function(){
+                table.draw();
+            });
+		});
+	</script>
+{%  endblock %}

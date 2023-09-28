@@ -1,0 +1,79 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <form class="form-ajax" data-redirect="{{ APP_URL }}/escalas?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" autocomplete="off">
+        <div class="container-fluid p-0">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">
+                            <a href="{{ APP_URL }}/escalas?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}">Lista de Escalas </a><i class="fa fa-chevron-right font-12"></i> 
+                            Editar Escala
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Editar Escala</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane p-3 active" id="home" role="tabpanel">
+                        <div class="form-group">
+                            <label>Servidor </label>
+                            <span class="form-control-plaintext">{{ escala.usuario.nome_usuario }}</span>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-auto">
+                                <label>Datas {{ OBRIGATORIO }}</label>
+                                <div id="datepicker">
+                                    <input type="text" class="d-none" id="datas_escala" name="datas_escala" required="required"/>
+                                </div>
+                            </div>
+                            <div class="form-group col">
+                                <label for="amparo_legal_escala" class="col-form-label">Amparo Legal {{ OBRIGATORIO }}</label>
+                                <textarea name="amparo_legal_escala" id="amparo_legal_escala" rows="11" class="form-control" required="required" maxlength="500">{{ escala.amparo_legal_escala }}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group pt-2 mb-0">
+                            <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                <i class="fa fa-save"></i>
+                                Salvar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+       
+        var startDateEscala = moment(`{{ escala.data_escala[0]['data_escala'] }}`).startOf('month').add( 1, 'days').format('YYYY-MM-DD');
+        var endDateEscala = moment(`{{ escala.data_escala[escala.data_escala|length -1]['data_escala'] }}`).endOf('month').add( 1, 'days').format('YYYY-MM-DD');
+
+        $('#datepicker').datepicker({
+            multidate: true,
+            format: 'yyyy-mm-dd',
+            startDate: new Date(startDateEscala),
+            endDate: new Date(endDateEscala),
+            daysOfWeekDisabled: [0, 6],
+            language: 'pt'
+        });
+
+        var datas = {{ escala.data_escala|json_encode|raw }};
+        var new_datas = [];
+
+        datas.map(data => {
+            new_datas.push(data.data_escala);
+        });
+
+        $("#datepicker").datepicker('update', ...new_datas);
+
+	</script>
+{%  endblock %}

@@ -1,0 +1,278 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-6">
+					<h4 class="page-title">
+						<a href="{{ APP_URL }}/relatorios">Lista de Relatórios </a><i class="fa fa-chevron-right font-12"></i> 
+						{{ relatorio.descricao_relatorio }}
+					</h4>
+				</div>
+				<div class="col-md-6">
+					<div class="float-right d-none d-md-block">
+						{# <a href="{{ APP_URL }}/relatorios/imprimir/{{ relatorio.link_relatorio }}?ano={{ ano }}&mes={{ mes }}{{ id_orgao ? '&id_orgao=' ~ id_orgao : '' }}{{ id_lotacao ? '&id_lotacao=' ~ id_lotacao : '' }}{{ situacao_funcional_usuario ? '&situacao_funcional_usuario=' ~ situacao_funcional_usuario : '' }}&acao=pdf" class="btn btn-primary waves-effect waves-light" target="_blank">
+							<i class="fa fa-file-pdf"></i>
+							Gerar PDF
+						</a> #}
+                        
+						<a href="{{ APP_URL }}/relatorios/imprimir/{{ relatorio.link_relatorio }}?ano={{ ano }}&mes={{ mes }}{{ id_orgao ? '&id_orgao=' ~ id_orgao : '' }}{{ id_lotacao ? '&id_lotacao=' ~ id_lotacao : '' }}{{ situacao_funcional_usuario ? '&situacao_funcional_usuario=' ~ situacao_funcional_usuario : '' }}&acao=pdf" class="btn btn-primary waves-effect waves-light" target="_blank">
+							<i class="fa fa-eye"></i>
+							Visualizar
+						</a>
+					</div>
+				</div>
+				<h6 class="ml-3">Ano de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="year" class="form-control" required="required">
+							{% for year in years %}
+								<option {{ year == ano ? 'selected' : '' }} value="{{ year }}">{{ year }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<h6 class="ml-3">Mês de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="month" class="form-control" required="required">
+							{% for month in 1..12 %}
+								<option {{ month == mes ? 'selected' : '' }} value="{{ month }}">{{ DATE.monthName(month) }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off"/>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control select2" required="required">
+							<option value="">Selecione um órgão</option>
+							{% for orgao in orgaos %}
+								<option {{ id_orgao == orgao.id_orgao ? 'selected' : '' }} value="{{ orgao.id_orgao }}">{{ orgao.id_orgao ~ ' - ' ~ orgao.sigla_orgao }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="form-group">
+						<label for="id_lotacao">Lotação</label>
+						<select id="id_lotacao" class="form-control select2" required="required">
+							<option value="">Selecione um lotação</option>
+							{% for lotacao in lotacoes %}
+								<option {{ id_lotacao == lotacao.id_lotacao ? 'selected' : '' }} value="{{ lotacao.id_lotacao }}">{{ lotacao.descricao_lotacao }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="form-group">
+						<label for="situacao_funcional_usuario">Situação</label>
+						<select id="situacao_funcional_usuario" class="form-control select2" required="required">
+							<option value="">Selecione um situação</option>
+							<option {{ situacao_funcional_usuario == 'Afastado/Licenciado' ? 'selected' : '' }}>Afastado/Licenciado</option>
+							<option {{ situacao_funcional_usuario == 'Cedido' ? 'selected' : '' }}>Cedido</option>
+							<option {{ situacao_funcional_usuario == 'Em Exercício' ? 'selected' : '' }}>Em Exercício</option>
+							<option {{ situacao_funcional_usuario == 'Em Férias' ? 'selected' : '' }}>Em Férias</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-servidores" class="table table-sm table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase" style="width:100px;">Matrícula</th>
+								<th class="text-uppercase" style="width:100px;">Contrato</th>
+								<th class="text-uppercase">Nome</th>
+								<th class="text-uppercase">Cargo</th>
+								<th class="text-uppercase">Orgão</th>
+								<th class="text-uppercase" style="width:400px;">Lotação Exercício</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+            $('.select2').select2({theme: 'bootstrap'})
+
+			var id_orgao = '{{ id_orgao }}';
+			var id_lotacao = '{{ id_lotacao }}';
+			var situacao_funcional_usuario = '{{ situacao_funcional_usuario }}';
+
+			var table = $("#table-servidores").DataTable({
+				serverSide: true,
+				responsive: true,
+				processing: true,
+				searching: false,
+				ajax: {
+					url: `{{ APP_URL }}/api/relatorios/{{ relatorio.link_relatorio }}?ano={{ ano }}&mes={{ mes }}${ id_orgao !== '' ? '&id_orgao='+id_orgao : '' }${ id_lotacao !== '' ? '&id_lotacao='+id_lotacao : '' }${ situacao_funcional_usuario !== '' ? '&situacao_funcional_usuario='+situacao_funcional_usuario : '' }`,
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_comissao_usuario ? data.cargo_comissao_usuario : data.cargo_usuario;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.sigla_orgao;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_lotacao;
+                        }                       
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 3 ] 
+                    },
+                ],
+				order: [[ 2, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+		});
+		$('#month').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('mes', $(this).val());
+            window.location.href = url.href;
+        });
+
+        $('#year').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('ano', $(this).val());
+            window.location.href = url.href;
+        });
+
+		$('#id_orgao').on('change', async function () {
+            if(this.value == ''){
+                let acao = await swal({
+                    title: "ATENÇÃO",
+                    text: "Você tem certeza que deseja selecionar todos os órgãos?\n\nEssa consulta pode demorar para ser processada!",
+                    buttons: {
+                        cancel: {
+                            text: "Cancelar",
+                            value: 'cancelar',
+                            visible: true,
+                            className: "btn btn-danger",
+                            closeModal: true,
+                        },
+                        confirm: {
+                            text: "Continuar",
+                            value: true,
+                            visible: true,
+                            className: "btn btn-success",
+                            closeModal: true
+                        }
+                    }
+                });
+
+                if(acao == 'cancelar'){
+                    $('#id_orgao').val('{{ id_orgao }}').trigger('change');
+                    return false;
+                }
+            }
+
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('id_orgao', $(this).val());
+			}else{
+				url.searchParams.delete('id_orgao');
+			}
+			url.searchParams.delete('id_lotacao');
+            window.location.href = url.href;
+        });
+
+        $('#id_lotacao').on('change', function () {
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('id_lotacao', $(this).val());
+			}else{
+				url.searchParams.delete('id_lotacao');
+			}
+            window.location.href = url.href;
+        });
+
+        $('#situacao_funcional_usuario').on('change', function () {
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('situacao_funcional_usuario', $(this).val());
+			}else{
+				url.searchParams.delete('situacao_funcional_usuario');
+			}
+            window.location.href = url.href;
+        });
+	</script>
+{%  endblock %}

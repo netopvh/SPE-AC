@@ -1,0 +1,85 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-12">
+					<h4 class="page-title">Lista de Relatórios</h4>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-lg-12">
+					<table id="table-relatorios" class="table table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase">Descrição</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+			var table = $("#table-relatorios").DataTable({
+				serverSide: true,
+				responsive: false,
+				searching: false,
+				lengthChange: false,
+				info: false,
+				paging:false,
+				ajax: {
+					url: "{{ APP_URL }}/api/relatorios",
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+							var html = '';
+							if(data.link_relatorio == 'dispensados'){
+								html = `<a href="{{ APP_URL }}/relatorios/visualizar/${data.link_relatorio}">
+									${data.descricao_relatorio}
+								</a>`;
+							}else{
+								html = `<a href="{{ APP_URL }}/relatorios/visualizar/${data.link_relatorio}?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}">
+									${data.descricao_relatorio}
+								</a>`;
+							}
+                            return html;
+                        }                       
+                    }
+                ],
+				ordering:  false,
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+		});
+	</script>
+{%  endblock %}

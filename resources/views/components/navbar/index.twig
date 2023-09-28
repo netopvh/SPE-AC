@@ -1,0 +1,179 @@
+<div class="left side-menu">
+    <div class="slimscroll-menu" id="remove-scroll">
+        <div id="sidebar-menu">
+            <ul class="metismenu" id="side-menu">
+                <li>
+                    <a href="{{ APP_URL }}/dashboard" class="waves-effect">
+                        <i class="mdi mdi-view-dashboard-outline"></i>
+                        <span>Início</span>
+                    </a>
+                </li>
+                <li class="menu-title">Servidor</li>
+                <li>
+                    <a href="{{ APP_URL }}/registros?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" class="waves-effect">
+                        <i class="mdi mdi-buffer"></i>
+                        <span>Meus Registros</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ APP_URL }}/abonos_servidor?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" class="waves-effect" id="abonos_usuario_nav">
+                        <i class="mdi mdi-briefcase-plus-outline"></i>
+                        <span>Meus Abonos</span>
+                    </a>
+                </li>
+				<li>
+					<a href="{{ APP_URL }}/organograma" class="waves-effect">
+						<i class="mdi mdi-sitemap"></i>
+						<span>Organograma</span>
+					</a>
+				</li>
+                {% if AUTH.perfil_usuario %}
+
+                    <li class="menu-title">Gestão</li>
+                    <li>
+                        <a href="{{ APP_URL }}/folhas_ponto?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') - 1 }}" class="waves-effect" id="folhas_ponto_nav">
+                            <i class="mdi mdi-graphql"></i>
+                            <span>Folhas de Ponto</span>
+                        </a>
+                    </li>
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+                        <li>
+                            <a href="{{ APP_URL }}/verificar_token" class="waves-effect">
+                                <i class="mdi mdi-key"></i>
+                                <span>Validação Folha</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li>
+                        <a href="{{ APP_URL }}/abonos?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" class="waves-effect" id="abonos_nav">
+                            <i class="mdi mdi-calendar-plus"></i>
+                            <span>Abonos</span>
+                        </a>
+                    </li>
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 %}
+                        <li>
+                            <a href="{{ APP_URL }}/escalas?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" class="waves-effect" id="abonos_nav">
+                                <i class="mdi mdi-calendar-multiselect"></i>
+                                <span>Escalas</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 %}
+                        <li>
+                            <a href="{{ APP_URL }}/dispensas" class="waves-effect" id="abonos_nav">
+                                <i class="mdi mdi-calendar-remove"></i>                                
+                                <span>Dispensas</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {# <li>
+                        <a href="{{ APP_URL }}/afastamentos" class="waves-effect">
+                            <i class="mdi mdi-calendar-text"></i>
+                            <span>Afastamentos</span>
+                        </a>
+                    </li> #}
+
+                    <li>
+                        <a href="{{ APP_URL }}/ferias" class="waves-effect">
+                            <i class="mdi mdi-calendar-clock"></i>
+                            <span>Férias</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ APP_URL }}/afastamentos" class="waves-effect">
+                            <i class="mdi mdi-calendar-clock"></i>
+                            <span>Afastamento / Licença</span>
+                        </a>
+                    </li>
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+                        <li>
+                            <a href="{{ APP_URL }}/orgaos" class="waves-effect">
+                                <i class="mdi mdi-layers"></i>
+                                <span>Órgão / Lotação</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li>
+                        <a href="{{ APP_URL }}/servidores" class="waves-effect">
+                            <i class="mdi mdi-account-group"></i>
+                            <span>Servidores</span>
+                        </a>
+                    </li>
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 %}
+                        <li>
+                            <a href="{{ APP_URL }}/colaboradores" class="waves-effect">
+                                <i class="mdi mdi-account-multiple"></i>
+                                <span>Colaboradores</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 %}
+                        <li>
+                            <a href="{{ APP_URL }}/calendarios?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" class="waves-effect">
+                                <i class="mdi mdi-calendar-blank"></i>
+                                <span>Calendário</span>
+                            </a>
+                        </li>
+                    {% endif %}    
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 %}
+                        <li>
+                            <a href="{{ APP_URL }}/relatorios" class="waves-effect">
+                                <i class="mdi mdi-chart-areaspline"></i>
+                                <span>Relatórios</span>
+                            </a>
+                        </li>
+                    {% endif %}                   
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 %}
+                        <li class="menu-title">Administrativo</li>
+                    {% endif %}
+                    
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+                        <li>
+                            <a href="{{ APP_URL }}/permissoes" class="waves-effect">
+                                <i class="mdi mdi-account-key"></i>
+                                <span>Permissões</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 %}
+                        <li>
+                            <a href="{{ APP_URL }}/horarios" class="waves-effect">
+                                <i class="mdi mdi-clock"></i>
+                                <span>Horários</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% if (AUTH.perfil_usuario())['id_tipo_perfil'] == 1 %}
+                        <li>
+                            <a href="{{ APP_URL }}/configuracoes" class="waves-effect">
+                                <i class="mdi mdi-settings"></i>
+                                <span>Configuração</span>
+                            </a>
+                        </li>    
+                        <li>
+                            <a href="{{ APP_URL }}/importacao" class="waves-effect">
+                                <i class="mdi mdi-backup-restore"></i>
+                                <span>Importação</span>
+                            </a>
+                        </li>     
+                    {% endif %}           
+                {% endif %}           
+            </ul>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>

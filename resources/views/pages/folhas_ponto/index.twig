@@ -1,0 +1,306 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-12">
+					<h4 class="page-title">Folhas de Ponto</h4>
+				</div>
+				<h6 class="ml-3">Ano de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="year" class="form-control" required="required">
+							{% for year in years %}
+								<option {{ year == ano ? 'selected' : '' }} value="{{ year }}">{{ year }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<h6 class="ml-3">Mês de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="month" class="form-control" required="required">
+							{% for month in 1..12 %}
+								<option {{ month == mes ? 'selected' : '' }} value="{{ month }}">{{ DATE.monthName(month) }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-md-4">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Matrícula, contrato, nome, cargo e lotação"/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control">
+							<option value="A" selected>Todos</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_lotacao">Lotação</label>
+						<select id="id_lotacao" class="form-control">
+							<option value="A" selected>Todas as lotações</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-md-2">
+					<div class="form-group">
+						<label for="assinatura_folha">Status da Folha</label>
+						<select id="assinatura_folha" class="form-control">
+							<option value="false" selected>Todos</option>
+							<option value="sim">Assinada</option>
+							<option value="servidor">Assinado Servidor</option>
+							{# <option value="parcial">Assinado Parcialmente</option> #}
+							<option value="nao">Pendente</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-servidores" class="table table-sm table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase" style="width:100px;">Matrícula</th>
+								<th class="text-uppercase" style="width:100px;">Contrato</th>
+								<th class="text-uppercase">Nome</th>
+								<th class="text-uppercase">Cargo</th>
+								<th class="text-uppercase" style="width:300px;">Lotação Exercício</th>
+								<th class="text-uppercase">Status Folha</th>
+								<th class="text-uppercase" style="width:65px;">Visualizar</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+	
+	
+		
+		
+		$(function(){
+			$('#id_orgao').select2({
+				placeholder: 'Digite nome ou sigla (exibindo até 10 registros)',
+				theme: 'bootstrap',
+				language: 'pt-BR',
+				ajax: {
+					url: `{{ APP_URL }}/api/orgaos`,
+					dataType: 'json',
+					data: function(params) {
+						var query = {
+							search: params.term ? params.term : '',
+							length: 100,
+							start: 0,
+							draw: 1,
+                            order: [{
+                                column: 2,
+                                dir: 'asc'
+                            }]
+						}
+
+						return query;
+					},
+					processResults: function(data) {
+						var itens = [];
+						itens.push({ id: 'A', text: `Todas os Órgão` })
+						data.aaData.map(dados => {
+							itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+						});
+						return {
+							results: itens
+						};
+					}
+				}
+			});
+
+			$('#id_lotacao').select2({
+				placeholder: 'Digite nome ou sigla (exibindo até 10 registros)',
+				theme: 'bootstrap',
+				language: 'pt-BR',
+				ajax: {
+					url: `{{ APP_URL }}/api/lotacoes`,
+					dataType: 'json',
+					data: function(params) {
+						var query = {
+							search: params.term ? params.term : '',
+                            id_orgao: $('#id_orgao').val() != 'A' ? $('#id_orgao').val() : null,
+							length: 10,
+							start: 0,
+							draw: 1,
+						}
+
+						return query;
+					},
+					processResults: function(data) {
+						var itens = [];
+						itens.push({ id: 'A', text: `Todas as lotações` })
+						data.aaData.map(dados => {
+							itens.push({ id: dados.id_lotacao, text: `${dados.sigla_lotacao ?? dados.descricao_lotacao}` })
+						});
+						return {
+							results: itens
+						};
+					}
+				}
+			});
+		
+			var table = $("#table-servidores").DataTable({
+				serverSide: true,
+                processing: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/folhas_ponto?ano={{ ano }}&mes={{ mes }}",
+					data: function(data){
+						data.search = $("#search").val();
+						data.assinatura_folha = $("#assinatura_folha").val();
+						data.id_orgao = $("#id_orgao").val();
+						data.id_lotacao = $("#id_lotacao").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_comissao_usuario ? data.cargo_comissao_usuario : data.cargo_usuario;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_lotacao;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							var folha_assinada = '';
+							var ano_atual = moment().format('YYYY');
+							var mes_atual = moment().format('MM');
+							var dia_atual = moment().format('DD');
+
+							if(data.assinaturas > 0 && data.total_assinaturas > data.assinaturas){
+								folha_assinada = '<span class="badge badge-info">Assinada Parcialmente</span>';
+							} else if(data.folha_assinada == 'sim'){
+								folha_assinada = '<span class="badge badge-success">Assinada</span>';
+							} else if(data.assinado_servidor == 'sim'){
+								folha_assinada = '<span class="badge badge-primary">Assinado Servidor</span>';
+							} else if( 
+								( {{ ano }} == ano_atual && {{ mes }} == mes_atual - 1 && dia_atual >= 1 && dia_atual <= `{{ ENV.get('dia_fechamento_folha') }}` ) ||
+								( mes_atual == 1 && {{ ano }} == ano_atual - 1 && {{ mes }} == 12 && dia_atual >= 1 && dia_atual <= `{{ ENV.get('dia_fechamento_folha') }}` )
+							){
+								folha_assinada = '<span class="badge badge-warning">Pendente</span>';
+							}else if(
+								( {{ ano }} == ano_atual && {{ mes }} <= mes_atual - 2 || dia_atual > `{{ ENV.get('dia_fechamento_folha') }}` || {{ ano }} < ano_atual && {{ mes }} >= mes_atual ) 
+							){
+								folha_assinada = '<span class="badge badge-warning">Pendente</span>';	
+							}else{
+								folha_assinada = '<span class="badge badge-secondary">Aguardando fechamento</span>';
+							}
+
+                            return folha_assinada;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							var html = `<a href="{{ APP_URL }}/folhas_ponto/visualizar?id_usuario=${data.id_usuario}&ano={{ ano }}&mes={{ mes }}" class="btn btn-sm btn-default btn-circle">
+									<i class="mdi mdi-eye"></i>
+								</a>`;
+							
+                            return html;
+                        }
+                        
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 3,5,6 ] 
+                    },
+                ],
+				order: [[ 2, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+			$("#assinatura_folha, #id_lotacao, #id_orgao").change(function(){
+				table.draw();
+			});
+		});
+
+		$('#month').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('mes', $(this).val());
+            window.location.href = url.href;
+        });
+
+        $('#year').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('ano', $(this).val());
+            window.location.href = url.href;
+        });
+
+	</script>
+{%  endblock %}

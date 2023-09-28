@@ -1,0 +1,278 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-6">
+                    <h4 class="page-title">Lista de Horários</h4>
+                </div>
+                <div class="col-sm-6">
+                    {% if AUTH.perfil_usuario %}
+                        {% if AUTH.perfil_usuario ['id_tipo_perfil'] != 3 and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+                            <div class="float-right d-none d-md-block btn-cadastrar">
+                                <a href="{{ APP_URL }}/horarios/cadastrar" class="btn btn-primary waves-effect waves-light">
+                                    <i class="fa fa-plus"></i>
+                                    Cadastrar
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Horário"/>
+					</div>
+				</div>
+
+                <div class="col-md-6">
+                {% if AUTH.perfil_usuario and (AUTH.perfil_usuario ['id_tipo_perfil'] == 1 or AUTH.perfil_usuario ['id_tipo_perfil'] == 2) %}
+					<div class="form-group">
+						<label for="search">Órgão</label>
+						<select id="orgao" class="form-control select2"/>
+                            {% for orgao in orgaos %}
+                            <option value="{{ orgao.id_orgao }}" {{ AUTH.id_orgao_exercicio_usuario == orgao.id_orgao ? 'selected' : '' }}>{{ orgao.sigla_orgao }} - {{ orgao.descricao_orgao }}</option>
+                            {% endfor %}
+                        </select>
+					</div>
+                {% endif %}
+				</div>
+
+                <div class="col-lg-12">
+                    <table id="table-horarios" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">Primeira Entrada</th>
+                                <th class="text-uppercase">Primeira Saída</th>
+                                <th class="text-uppercase">Segunda Entrada</th>
+                                <th class="text-uppercase">Segunda Saída</th>
+                                <th class="text-uppercase">Ação</th>
+                                {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+                                    <th class="text-uppercase">Remover</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+
+            const meusOrgaos = JSON.parse('{{ AUTH.visualizar_orgaos|json_encode() }}');
+            const minhasLotacoes = JSON.parse('{{ LOTACOES.lotacoesArray|json_encode() }}');
+
+            $('.select2').select2({theme: 'bootstrap'})
+			var table = $("#table-horarios").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/horarios",
+					data: function(data){
+						data.search = $("#search").val();
+						data.id_orgao = $("#orgao").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.entrada_1_horario.substr(0,5);
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.saida_1_horario.substr(0,5);
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            var horario = '';
+                            if(data.entrada_2_horario){
+                                horario = data.entrada_2_horario.substr(0,5);
+                            }
+                            return horario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            var horario = '';
+                            if(data.saida_2_horario){
+                                horario = data.saida_2_horario.substr(0,5);
+                            }
+                            return horario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                            orderable: false,
+                        render: function ( data, type, row ) {
+                            var acao = '';
+                            if(data.padrao_horario == 'S'){
+                                acao = 'Horário Padrão';
+                            }
+
+                            
+
+                            if(({{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 2 && meusOrgaos && meusOrgaos.includes(parseInt($("#orgao").val()))) || {{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 4){
+                                return acao;
+                            }
+
+                            if(data.padrao_horario == 'N'){
+                                acao = `
+                                    <button type="button" data-id-horario="${data.id_horario}" class="btn btn-outline btn-primary definir-horario" title="Definir horário padrão">
+                                        Definir como padrão
+                                    </button>
+                                `;
+                            }
+
+                            return acao;
+                        }
+                    },
+                    {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+                        {
+                            data: null,
+                            className: 'text-center',
+                            orderable: false,
+                            render: function ( data, type, row ) {
+                                return `
+                                <a href="javascript:void(0);" title="Remover Horário" class="btn btn-danger btn-sm btn-circle delete_confirmation" data-url="{{ APP_URL }}/horarios/deletar/${data.id_horario}">
+                                    <i class="ti-trash"></i>
+                                </a>
+                                `;
+                            }
+                            
+                        },
+                    {% endif %}
+                ],
+				{# columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 4,5 ] 
+                    },
+                ], #}
+				order: [[ 0, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				},
+                drawCallback: function(settings){
+                    if({{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 2 && meusOrgaos && meusOrgaos.includes(parseInt($("#orgao").val()))){
+                        $('.btn-cadastrar').removeClass('d-md-block');
+                    } else {
+                        $('.btn-cadastrar').addClass('d-md-block');
+                    }
+                }
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+            $('body').on('change', '#orgao', function(){
+				table.draw();
+            })
+
+            
+            $(document).on('click','.definir-horario', function(){
+                var btn = $(this);
+                var id_horario = btn.attr('data-id-horario');
+                var id_orgao = ($('#orgao').length && $('#orgao').val() != '') ? $('#orgao').val() : '{{ AUTH.id_orgao_exercicio_usuario }}';
+                var url = `{{ APP_URL }}/horarios/padrao/${id_horario}`;
+
+                console.log(id_orgao);
+
+                btn.attr('disabled', 'disabled');
+
+                swal({
+                    title: 'Definir horário',
+                    text: 'Tem certeza que deseja fazer isso?',
+                    icon: 'warning',
+                    closeOnClickOutside: false,
+                    buttons: {
+                        cancel: {
+                            text: 'Cancelar',
+                            value: null,
+                            visible: true,
+                            closeModal: true,
+                        },
+                        confirm: {
+                            text: 'Ok',
+                            value: true,
+                            visible: true,
+                            closeModal: false
+                        }
+                    },
+                }).then(function (result) {
+                    if (result) {
+                        $.ajax({
+                            cache: false,
+                            url,
+                            type: 'POST',
+                            data: { id_horario, status: 'S', id_orgao },
+                            success: function (data) {
+                                {# document.location.reload(true); #}
+                                table.draw();
+                                swal({
+                                    title: 'Definido',
+                                    text: 'Horario padrão alterado com sucesso!',
+                                    icon: 'success',
+                                })
+                            },
+                            error: function (data) {
+                                var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.'
+                                $.toast({
+                                    heading: 'Error',
+                                    text: error,
+                                    position: 'top-right',
+                                    showHideTransition: 'slide',
+                                    icon: 'error'
+                                });
+                                btn.removeAttr('disabled');
+                                swal.close();
+                            },
+                        });
+                    }else{
+                        btn.removeAttr('disabled');
+                    }
+                });
+            });
+		});
+
+	</script>
+{%  endblock %}

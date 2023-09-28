@@ -1,0 +1,194 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-6">
+					<h4 class="page-title">Lista de Configurações</h4>
+				</div>
+				<div class="col-sm-6">
+					<div class="float-right d-none d-md-block">
+						<a href="javascript:void(0);" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#modal-cadastrar-configuracao">
+							<i class="fa fa-plus"></i>
+							Cadastrar
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Chave"/>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-configuracoes" class="table table-sm table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase" style="width:300px;">Chave</th>
+								<th class="text-uppercase">Valor</th>
+								<th class="text-uppercase" style="width:100px;">Ação</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="modal-cadastrar-configuracao" tabindex="-1" aria-labelledby="modal-cadastrar-configuracao-label" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="modal-cadastrar-configuracao-label">Cadastrar Configuração</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form class="form-ajax" action="{{ APP_URL }}/configuracoes/cadastrar" data-reload="true" data-confirmation="Cadastrar Configuração">
+					<div class="modal-body">
+						<div class="form-group">
+							<label for="cadastrar_chave_configuracao"><strong>Chave</strong> {{ OBRIGATORIO }}</label>
+							<input type="text" class="form-control" id="cadastrar_chave_configuracao" name="chave_configuracao" required>
+						</div>
+						<div class="form-group">
+							<label for="cadastrar_valor_configuracao"><strong>Valor</strong> {{ OBRIGATORIO }}</label>
+							<input type="text" class="form-control" id="cadastrar_valor_configuracao" name="valor_configuracao" required>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+						<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i>&nbsp;&nbsp;Salvar</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	
+	<div class="modal fade" id="modal-editar-configuracao" tabindex="-1" aria-labelledby="modal-editar-configuracao-label" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="modal-editar-configuracao-label">Editar Configuração</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form class="form-ajax" id="form-modal-editar-configuracao" action="" data-reload="true" data-confirmation="Editar Configuração">
+					<div class="modal-body">
+						<div class="form-group">
+							<label for="editar_chave_configuracao"><strong>Chave</strong></label>
+							<input type="text" class="form-control" id="editar_chave_configuracao" disabled>
+						</div>
+						<div class="form-group">
+							<label for="editar_valor_configuracao"><strong>Valor</strong> {{ OBRIGATORIO }}</label>
+							<input type="text" class="form-control" id="editar_valor_configuracao" name="valor_configuracao" required>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+						<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i>&nbsp;&nbsp;Salvar</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+			var table = $("#table-configuracoes").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/configuracoes",
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.chave_configuracao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.valor_configuracao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							var html = `
+								<a 
+									href="javascript:void(0);" 
+									title="editar" 
+									class="btn btn-sm btn-default btn-circle" 
+									onclick="editarConfiguracao(${data.id_configuracao}, '${data.chave_configuracao}', '${data.valor_configuracao}')"
+								>
+									<i class="ti-pencil"></i>
+								</a>
+								`;				
+							
+                            return html;
+                        }
+                        
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 2 ] 
+                    },
+                ],
+				order: [[ 0, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+		});
+
+		function editarConfiguracao(id_configuracao, chave_configuracao, valor_configuracao){
+			var url = `{{ APP_URL }}/configuracoes/editar/${id_configuracao}`;
+			$('#form-modal-editar-configuracao').attr('action', url);
+			$('#editar_chave_configuracao').val(chave_configuracao);
+			$('#editar_valor_configuracao').val(valor_configuracao);
+			$('#modal-editar-configuracao').modal('show');
+		}
+	</script>
+{%  endblock %}

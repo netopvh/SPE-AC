@@ -1,0 +1,263 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-6">
+                    <h4 class="page-title">Lista de Órgãos</h4>
+                </div>
+                <div class="col-sm-6">
+                    <div class="float-right d-none d-md-block">
+                        <button type="submit" class="btn btn-primary waves-effect waves-light importacao">
+                            <i class="mdi mdi-backup-restore"></i>
+                            Importação Externa
+                        </button>
+                        <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#fileModal">
+                            <i class="mdi mdi-backup-restore"></i>
+                            Importar Arquivo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-lg-12 alerta-importacao"></div>
+                <div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Nome e sigla"/>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-orgaos" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">#</th>
+                                <th class="text-uppercase">Órgão</th>
+                                <th class="text-uppercase" style="width: 100px">Sigla</th>
+                                <th class="text-uppercase" style="width: 100px">Importação</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true" modal-backdrop="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Importar Arquivo</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="recipient-name" class="col-form-label">Tipo de Arquivo:</label>
+                            <select name="type" id="file-type" class="form-control">
+                                <option selected>Selecione o tipo</option>
+                                <option value="txt">Arquivo de Texto</option>
+                                <option value="csv">Arquivo CSV</option>
+                                <option value="xml">Arquivo XML</option>
+                            </select>
+                        </div>
+                        <div class="form-group d-none" id="fileDiv">
+                            <label for="message-text" class="col-form-label">Arquivo:</label>
+                            <input type="file" class="form-control-file" id="fileFormat">
+                        </div>
+                        <div class="d-none font-weight-bold text-danger" id="fileMessage">
+                            O formato selecionado é sincronizado automaticamente com o sistema.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary">Importar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+			var table = $("#table-orgaos").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+                paginate: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/importacao",
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return {{ TURMALINA ? 'data.COD_ORGAO' : 'data.id_orgao' }};
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return {{ TURMALINA ? 'data.NOME_ORGAO' : 'data.descricao_orgao' }};
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return {{ TURMALINA ? 'data.SIGLA_ORGAO' : 'data.sigla_orgao' }};
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return `
+                                <a href="javascript:void(0);" class="btn btn-outline btn-primary importacao" data-id-orgao="${data.COD_ORGAO}">
+                                    <i class="mdi mdi-backup-restore"></i>
+                                    Importar
+                                </a>
+                            `;
+                        }
+                        
+                    },
+                ],
+				ordering:  false,
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+		});
+
+        $(document).on('click','.importacao', function(){
+            var btn = $(this);
+            let id_orgao = btn.attr('data-id-orgao') ? btn.attr('data-id-orgao') : 'all';
+            btn.attr('disabled', 'disabled');
+
+            swal({
+                title: 'Importar',
+                text: 'Tem certeza que deseja fazer isso?',
+                icon: 'warning',
+                closeOnClickOutside: false,
+                buttons: {
+                    cancel: {
+                        text: 'Cancelar',
+                        value: null,
+                        visible: true,
+                        closeModal: true,
+                    },
+                    confirm: {
+                        text: 'Ok',
+                        value: true,
+                        visible: true,
+                        closeModal: false
+                    }
+                },
+            }).then(function (result) {
+                if (result) {
+                    $.ajax({
+                        cache: false,
+                        url: `{{ APP_URL }}/importacao`,
+                        type: 'POST',
+                        data: { id_orgao },
+                        success: function (data) {
+                            document.location.reload(true);
+                        },
+                        error: function (data) {
+                            var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.';
+                            $.toast({
+                                heading: 'Error',
+                                text: error,
+                                position: 'top-right',
+                                showHideTransition: 'slide',
+                                icon: 'error'
+                            });
+                            btn.removeAttr('disabled');
+                            swal.close();
+                        },
+                    });
+                }else{
+                    btn.removeAttr('disabled');
+                }
+            });
+        });
+
+        $(document).on('click', '.arquivo', function(){
+
+        });
+
+        $(document).on('change', '#file-type', function(){
+            var type = $(this).val();
+            if(type == 'txt'){
+                $('#fileDiv').removeClass('d-none');
+                $('#fileMessage').addClass('d-none');
+                $('#fileFormat').attr('accept', '.txt');
+            } else if(type == 'xml') {
+                $('#fileDiv').removeClass('d-none');
+                $('#fileMessage').addClass('d-none');
+                $('#fileFormat').attr('accept', '.xml');
+            }else{
+                $('#fileDiv').addClass('d-none');
+                $('#fileMessage').removeClass('d-none');
+            }
+        });
+
+        $(document).ready(function() {
+            function getData() {
+                $.ajax({
+                    cache: false,
+                    url: "{{ APP_URL }}/importacao/verificar",
+                    type: 'GET',
+                    success: async function (data) {
+                        $('.alerta-importacao').empty();
+                    },
+                    error: function (data) {
+                        var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.';
+                        $('.alerta-importacao')
+                            .empty()
+                            .append(`
+                                <div class="alert alert-danger" role="alert">
+                                    <i class="mdi mdi-backup-restore"></i> ${error}
+                                </div>`
+                            );
+                    }            
+                });
+            }
+            getData();
+            setInterval(getData, 2000);
+        });
+	</script>
+{%  endblock %}

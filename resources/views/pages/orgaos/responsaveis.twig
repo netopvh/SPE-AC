@@ -1,0 +1,215 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <form class="form-ajax" data-redirect="{{ APP_URL }}/orgaos/{{ orgao.id_orgao }}/responsaveis" autocomplete="off">
+        <div class="container-fluid p-0">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">
+                            <a href="{{ APP_URL }}/orgaos">Lista de Órgãos </a><i class="fa fa-chevron-right font-12"></i> 
+                            Responsáveis pelo {{ orgao.descricao_orgao }}
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <div class="row">
+                    <div class="col-lg-12 mb-4">
+                        <p class="msg"></p>
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Atribuir Acesso</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane p-3 active" id="home" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-8">
+                                        <div class="form-group">
+                                            <label>Servidores / Colaboradores {{ OBRIGATORIO }}</label>
+                                            <select id="id_usuario" name="id_usuario" class="form-control searchable" required="required">
+                                                <option value=""></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="form-group">
+                                            <label>Função {{ OBRIGATORIO }}</label>
+                                            <select name="funcao" class="form-control searchable" required="required">
+                                                <option value="">Selecione a função</option>
+                                                <option value="1">Gestor do Orgão</option>
+                                                <option value="2">Gestor de RH</option>
+                                                <option value="3">Controle Interno</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group pt-2 mb-0">
+                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                        <i class="fa fa-save"></i>
+                                        Cadastrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="search">Buscar</label>
+                            <input type="text" id="search" class="form-control" autocomplete="off" placeholder="Matrícula, contrato, nome, cargo e tipo"/>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <table id="table-responsaveis" class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase">Matrícula</th>
+                                    <th class="text-uppercase">Contrato</th>
+                                    <th class="text-uppercase">Nome</th>
+                                    <th class="text-uppercase">Cargo</th>
+                                    <th class="text-uppercase">E-mail</th>
+                                    <th class="text-uppercase">Função</th>
+                                    <th class="text-uppercase">Remover</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+		$('#id_usuario').select2({
+			placeholder: 'Digite nome ou matricula (exibindo até 10 registros)',
+			theme: 'bootstrap',
+            language: 'pt-BR',
+			ajax: {
+				url: `{{ APP_URL }}/api/perfis_usuario?id_tipo_perfil=2`,
+				dataType: 'json',
+				data: function(params) {
+					var query = {
+						search: params.term ? params.term : '',
+						length: 10,
+						start: 0,
+						draw: 1,
+					}
+
+					return query;
+				},
+				processResults: function(data) {
+					var usuarios = [];
+					data.aaData.map(usuario => {
+						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.contrato_usuario})` })
+					});
+					return {
+						results: usuarios
+					};
+				}
+			}
+		});
+        $(function(){
+			var table = $("#table-responsaveis").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/orgaos_responsaveis?id_orgao={{ orgao.id_orgao }}",
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                     {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_comissao_usuario ? data.cargo_comissao_usuario : data.cargo_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.email_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            if(data.funcao == 2){
+                                return "Gestor de RH";
+                            }
+                            else if(data.funcao == 3){
+                                return "Controle Interno";
+                            }
+                            return "Gestor do Orgão";
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return `
+                                <a href="javascript:void(0);" title="Remover Servidor" class="btn btn-outline btn-danger delete_confirmation" data-url="{{ APP_URL }}/orgaos/{{ orgao.id_orgao }}/responsaveis/deletar/${data.id_orgao_responsavel}">
+                                    <i class="ti-trash"></i>
+                                </a>
+                            `;
+                        }                       
+                    },
+                ],
+				ordering:  false,
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+		});
+	</script>
+{% endblock %}

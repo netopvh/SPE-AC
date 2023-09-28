@@ -1,0 +1,184 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-6">
+                    <h4 class="page-title">Lista de Colaboradores</h4>
+                </div>
+                <div class="col-sm-6">
+                    {% if AUTH.perfil_usuario %}
+                        {% if AUTH.perfil_usuario['id_tipo_perfil'] != 4 %}
+                            <div class="float-right d-none d-md-block">
+                                <a href="{{ APP_URL }}/colaboradores/cadastrar" class="btn btn-primary waves-effect waves-light">
+                                    <i class="fa fa-plus"></i>
+                                    Cadastrar
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Nome, horário, cargo e lotação"/>
+					</div>
+				</div>
+                <div class="col-md-4">
+					<div class="form-group">
+						<label for="horario_padrao">Horário</label>
+						<select id="horario_padrao" class="form-control">
+							<option value="false">Todos</option>
+							<option value="true">Horário Padrão</option>
+							<option value="outros">Outros</option>
+						</select>
+					</div>
+				</div>
+                <div class="col-lg-12">
+                    <table id="table-colaboradores" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">CPF</th>
+                                <th class="text-uppercase">Nome</th>
+                                <th class="text-uppercase">Horário</th>
+                                <th class="text-uppercase">Cargo</th>
+                                <th class="text-uppercase">Vínculo</th>
+                                <th class="text-uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+
+            const meusOrgaos = JSON.parse('{{ AUTH.visualizar_orgaos|json_encode() }}');
+            const minhasLotacoes = JSON.parse('{{ LOTACOES.lotacoesArray|json_encode() }}');
+
+			var table = $("#table-colaboradores").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/colaboradores",
+					data: function(data){
+						data.search = $("#search").val();
+                        data.horario_padrao = $("#horario_padrao").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cpf_usuario.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+							var horario = 'Horário Padrão';
+                            if(data.horario){
+                                horario = `${data.horario.entrada_1_horario.substr(0,5)} - 
+									${data.horario.saida_1_horario.substr(0,5)}
+									${data.horario.entrada_2_horario ? ' - ' + data.horario.entrada_2_horario.substr(0,5) + ' - ' : ''}
+									${data.horario.saida_2_horario ? data.horario.saida_2_horario.substr(0,5) : ''}`;
+                            }
+                            return horario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_usuario;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.tipo_usuario.descricao_tipo_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            var html = `<a href="./colaboradores/visualizar/${data.id_usuario}" class="btn btn-sm btn-default btn-circle">
+                                    <i class="mdi mdi-eye"></i>
+                                </a>`;                            
+
+							if({{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 2 && meusOrgaos && minhasLotacoes && meusOrgaos.includes(data.id_orgao_exercicio_usuario) && !minhasLotacoes.includes(data.id_lotacao_exercicio_usuario)){
+                                return html;
+                            }
+
+                            {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+                                html += `<a href="./colaboradores/editar/${data.id_usuario}" class="btn btn-sm btn-default btn-circle ml-1">
+                                    <i class="ti-pencil"></i>
+                                </a>`;
+                            {% endif %}
+                            
+                            return html;
+                        }
+                        
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 2,5 ] 
+                    },
+                ],
+				order: [[ 1, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+            $("#horario_padrao").change(function(){
+				table.draw();
+			});
+		});
+	</script>
+{%  endblock %}

@@ -1,0 +1,260 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-6">
+					<h4 class="page-title">
+						<a href="{{ APP_URL }}/relatorios">Lista de Relatórios </a><i class="fa fa-chevron-right font-12"></i> 
+						<a href="{{ APP_URL }}/relatorios/visualizar/{{ relatorio.link_relatorio }}?ano={{ ano }}&mes={{ mes }}">{{ relatorio.descricao_relatorio }} </a><i class="fa fa-chevron-right font-12"></i> 
+						{{ usuario.nome_usuario }}
+					</h4>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-lg-12">
+                    <div class="card card-bordered">
+                        <h4 class="card-header font-16 mt-0">Dados do Usuário</h4>
+                        <div class="card-body">
+                            <div class="row">
+                                <dl class="col-md-2">
+                                    <dt>Matrícula</dt>
+                                    <dd>{{ usuario.matricula_usuario ? usuario.matricula_usuario : '-- --' }}</dd>
+                                </dl>
+                                <dl class="col-md-2">
+                                    <dt>Contrato</dt>
+                                    <dd>{{ usuario.contrato_usuario ? usuario.contrato_usuario : '-- --' }}</dd>
+                                </dl>
+                                <dl class="col-md-8">
+                                    <dt>Nome</dt>
+                                    <dd>{{ usuario.nome_usuario }}</dd>
+                                </dl>
+                                <dl class="col-md-4">
+                                    <dt>Cargo</dt>
+                                    <dd>{{ usuario.cargo_comissao_usuario ? usuario.cargo_comissao_usuario : usuario.cargo_usuario }}</dd>
+                                </dl>
+                                <dl class="col-md-4">
+                                    <dt>Vínculo</dt>
+                                    <dd>
+                                        {{ usuario.tipo_usuario.descricao_tipo_usuario|upper }}
+                                    </dd>
+                                </dl>
+                                <dl class="col-md-4">
+                                    <dt>Lotação Atual</dt>
+                                    <dd>
+                                        {{ usuario.sigla_lotacao|upper }}{% if usuario.sigla_lotacao %} - {% endif %}{{ usuario.descricao_lotacao|upper }}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			<div class="row">
+				<div class="col-lg-12">
+					<table id="table-pontos" class="table table-sm table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase" style="width:100px;">Data</th>
+								<th class="text-uppercase" style="width:100px;">Horário</th>
+								<th class="text-uppercase" style="width:100px;">Tipo</th>
+								<th class="text-uppercase" style="width:100px;">Plataforma</th>
+								<th class="text-uppercase">Dados</th>
+								<th class="text-uppercase">Localização</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+
+        <div class="modal fade" id="mapa" data-backdrop="static" data-keyboard="false" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Geolocalização</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{{ APP_URL }}/plugins/leaflet/css/leaflet.css"/>
+    <script type="text/javascript" src="{{ APP_URL }}/plugins/leaflet/js/leaflet.js"></script>
+
+	<script>
+		$(function(){
+			var id_orgao = '{{ id_orgao }}';
+			var id_lotacao = '{{ id_lotacao }}';
+			var id_usuario = '{{ usuario.id_usuario }}';
+
+			var table = $("#table-pontos").DataTable({
+				serverSide: true,
+				responsive: false,
+				searching: false,
+				lengthChange: false,
+				info: false,
+				paging:false,
+				ajax: {
+					url: `{{ APP_URL }}/api/relatorios/{{ relatorio.link_relatorio }}?id_usuario=${id_usuario}&ano={{ ano }}&mes={{ mes }}${ id_orgao !== '' ? '&id_orgao='+id_orgao : '' }${ id_lotacao !== '' ? '&id_lotacao='+id_lotacao : '' }`,
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return moment(data.data_ponto).format('DD/MM/YYYY');
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return moment(data.data_ponto).format('HH:mm');
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							var tipo_ponto = '';
+							if(data.tipo_ponto == 1){
+								tipo_ponto = '1ª Entrada';
+							}else if(data.tipo_ponto == 2){
+								tipo_ponto = '1ª Saída';
+							}else if(data.tipo_ponto == 3){
+								tipo_ponto = '2ª Entrada';
+							}else if(data.tipo_ponto == 4){
+								tipo_ponto = '2ª Saída';
+							} 
+                            return tipo_ponto;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							var plataforma = '';
+							if(data.dados_ponto.indexOf('iPhone') > -1){
+								plataforma = 'iPhone';
+							}else if(data.dados_ponto.indexOf('iPad') > -1){
+								plataforma = 'iPad';
+							}else if(data.dados_ponto.indexOf('Android') > -1){
+								plataforma = 'Android';
+							}else if(data.dados_ponto.indexOf('webOS') > -1){
+								plataforma = 'webOS';
+							}else if(data.dados_ponto.indexOf('BlackBerry') > -1){
+								plataforma = 'BlackBerry';
+							}else if(data.dados_ponto.indexOf('iPod') > -1){
+								plataforma = 'iPod';
+							}else if(data.dados_ponto.indexOf('Symbian') > -1){
+								plataforma = 'Symbian';
+							}else if(data.dados_ponto.indexOf('Windows Phone') > -1){
+								plataforma = 'Windows Phone';
+							}
+
+                            return plataforma;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.dados_ponto;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            if(data.geolocalizacao){
+                                let geo
+                                try {
+                                    geo = JSON.parse(data.geolocalizacao)
+                                } catch(e){
+                                    return `<button class="btn btn-default btn-sm btn-circle btn-disabled" disabled>
+                                        <i class="mdi mdi-map-marker-off"></i>
+                                    </button>`;
+                                }                                
+
+                                return `<a href="javascript:void(0)" onclick="abrirGeo(${geo.latitude}, ${geo.longitude}, ${geo.accuracy})" title="Visualizar no mapa" class="btn btn-default btn-sm btn-circle">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </a>`
+
+                                //GOOGLE MAPS
+                                return `<a href="https://www.google.com/maps/search/?api=1&query=${geo.latitude},${geo.longitude}" target="_new" title="Visualizar no mapa" class="btn btn-default btn-sm btn-circle">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </a>`
+                            }
+                            return `<button class="btn btn-default btn-sm btn-circle btn-disabled" disabled>
+								<i class="mdi mdi-map-marker-off"></i>
+							</button>`;
+                        }                       
+                    },
+                ],
+				ordering:  false,
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+
+
+		});
+
+        
+            
+
+            function abrirGeo(latitude,longitude,accuracy){
+                console.log(accuracy)
+                $('#mapa').modal('show')
+
+                $('#mapa .modal-body').html(`<div id="geomap" style="height: calc(100vh - 200px); display: table;     width: 100%;"><h1 class="text-center" style="display: table-cell;vertical-align: middle;"><img src="{{ APP_URL }}/img/loading.gif"/></h1></div>`)
+
+                setTimeout( () => {
+                    let elementMap = document.getElementById('geomap');
+                    elementMap.style = 'height: calc(100vh - 200px);';
+                    let openMap = L.map(elementMap);
+                    L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; Gerado por <a href="https://osm.org/copyright">OpenStreetMap</a>'
+                    }).addTo(openMap);
+                    
+                    let target = L.latLng(latitude, longitude);
+                    openMap.setView(target, 17);
+                    L.marker(target).addTo(openMap);
+                    L.circle([latitude, longitude], accuracy).addTo(openMap);
+                },500)
+                
+            }
+	</script>
+{%  endblock %}

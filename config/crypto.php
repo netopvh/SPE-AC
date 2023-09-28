@@ -1,0 +1,7 @@
+<?php
+
+define('APP_CHIPER', PASSWORD_BCRYPT);
+
+define('APP_CRYPTO_MASK', 'DA|9EY#N@X2#>:1u)4*');
+
+define('SECRET_JWT', 'c551647679400adfd207d37de08f5574');

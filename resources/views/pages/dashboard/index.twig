@@ -1,0 +1,351 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0 dashboard">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-12 col-xs-12">
+                    <div class="row">
+                        <div class="col-md-6 text-left">
+                            <h4 class="page-title" style="color: #000;">Bem-vindo, {{ AUTH.nome_usuario }}!</h4>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <h5 class="page-title">Lotação Atual: {{ usuario.lotacao.descricao_lotacao }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-5">
+            <a href="http://atualizacaocadastral.ac.gov.br" target="_bank">
+                <img class="col-md-5" src="{{ BASE_URL }}/assets/images/logos/atualizacao_cadastral.jpg">
+            </a>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                {% if AUTH.perfil_usuario %}
+                    <div class="col-md-12 mb-3 mt-2">
+                        <h5 style="color: #000;">Detalhes das Lotações</h5>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card card-bordered">
+                            <h4 class="card-header font-16 mt-0" style="color: #000;">Solicitações de Abonos</h4>
+                            <div class="card-body">
+								{% if abonos|length == 0 %}
+									<div class="text-center">
+										<h1><i class="fa fa-info-circle"></i></h1>
+										<b>NENHUM ABONO NO MOMENTO</b>
+									</div>
+								{% else %}
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr class="text-center">
+                                            <th class="text-left">Nome</th>
+                                            <th>Órgão Exercício</th>
+                                            <th>Data do Abono</th>
+                                            <th>Período</th>
+                                            <th>Situação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for abono in abonos %}
+                                            <tr class="text-center">
+                                                <td class="text-left">{{ abono.nome_usuario }}</td>
+                                                <td>{{ abono.sigla_orgao }}</td>
+                                                <td>
+                                                    {{ abono.data_abono|date('d/m/Y') }}
+                                                    {% if abono.data_final_abono %}
+                                                        a {{ abono.data_final_abono|date('d/m/Y') }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                {% if abono.periodo_abono == 'V' %}
+                                                    VESPERTINO
+                                                {% elseif abono.periodo_abono == 'M' %}
+                                                    MATUTINO
+                                                {% elseif abono.periodo_abono == 'I' %}
+                                                    INTEGRAL
+                                                {% endif %}
+                                                </td>
+                                                <td>
+                                                    <a class="btn btn-sm btn-{{ abono.classe_status_abono }} text-uppercase" href="{{ APP_URL }}/abonos/visualizar/{{ abono.id_abono }}">{{ abono.descricao_status_abono }}</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <div class="col-sm-12 m-3">
+                                    <div class="float-right d-none d-md-block" style="margin-right: 12.5px;">
+                                        <a href="{{ APP_URL }}/abonos?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" class="btn btn-sm btn-primary waves-effect waves-light">
+                                            Listar Todos
+                                        </a>
+                                    </div>
+                                </div>
+								{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card card-bordered">
+                            <h4 class="card-header font-16 mt-0" style="color: #000;">Férias Agendadas</h4>
+                            <div class="card-body">
+								
+								{% if ferias|length == 0 %}
+									<div class="text-center">
+										<h1><i class="fa fa-info-circle"></i></h1>
+										<b>NENHUMA FÉRIAS NO MOMENTO</b>
+									</div>
+								{% else %}
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr class="text-center">
+                                            <th class="text-left">Nome</th>
+                                            <th>Órgão Exercício</th>
+                                            <th>Inicio Férias</th>
+                                            <th>Fim Férias</th>
+                                            <th>Dias</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ferias_ in ferias %}
+                                            <tr class="text-center">
+                                                <td class="text-left">{{ ferias_.nome_usuario }}</td>
+                                                <td>{{ ferias_.sigla_orgao }}</td>
+                                                <td>{{ ferias_.data_inicio_ferias|date('d/m/Y') }}</td>
+                                                <td>{{ ferias_.data_fim_ferias|date('d/m/Y') }}</td>
+                                                <td>{{ ferias_.qtd_dias_ferias }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <div class="col-sm-12 m-3">
+                                    <div class="float-right d-none d-md-block">
+                                        <a href="{{ APP_URL }}/ferias" class="btn btn-sm btn-primary waves-effect waves-light">
+                                            Listar Todos
+                                        </a>
+                                    </div>
+                                </div>
+								{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="col-md-12 mb-3 mt-2">
+                    <h5 style="color: #000;">Detalhes do Servidor</h5>
+                </div>
+                <div class="col-lg-12">
+                    <div class="card card-bordered">
+                        <h4 class="card-header font-16 mt-0" style="color: #000;">Pontos da Semana</h4>
+                        <div class="card-body">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="padding-left: 0;">Dia da Semana</th>
+                                        <th class="text-center">Primeira Entrada</th>
+                                        <th class="text-center">Primeira Saída</th>
+                                        <th class="text-center">Segunda Entrada</th>
+                                        <th class="text-center">Segunda Saída</th>
+                                        <th class="text-center" style="width: 200px;">Período do Abono</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for index, ponto in pontos %}
+                                        <tr>
+                                            <td>{{ ponto.dia_nome|upper }}</td>
+                                            {% if ponto.datas|length > 0 and ponto.datas[0].tipo_calendario == 'F' %}
+                                                <td class="text-center" colspan="4">
+                                                    <div style="background-color: #FF4F4F; color: #FFF;" title="{{ ponto.datas[0].descricao_calendario }}">FERIADO</div>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">
+                                                    -- --
+                                                </td>
+                                            {% elseif ponto.datas|length > 0 and ponto.datas[0].tipo_calendario == 'P' %}
+                                                <td class="text-center" colspan="4">
+                                                    <div style="background-color: #2F2FFF; color: #FFF;" title="{{ ponto.datas[0].descricao_calendario }}">PONTO FACULTATIVO</div>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">
+                                                    -- --
+                                                </td>
+                                            {% elseif ponto.ferias|length > 0 %}
+                                                <td class="text-center">Férias</td>
+                                                <td class="text-center">Férias</td>
+                                                <td class="text-center">Férias</td>
+                                                <td class="text-center">Férias</td>
+                                                <td class="text-center" style="width: 200px;">
+                                                    -- --
+                                                </td>
+                                            {% elseif ponto.afastamentos|length > 0 %}
+                                                <td class="text-center">Afastado / Licenciado</td>
+                                                <td class="text-center">Afastado / Licenciado</td>
+                                                <td class="text-center">Afastado / Licenciado</td>
+                                                <td class="text-center">Afastado / Licenciado</td>
+                                                <td class="text-center" style="width: 200px;">
+                                                    -- --
+                                                </td>
+                                            {% elseif ponto.dispensas|length > 0 %}
+                                                <td class="text-center" colspan="4">
+                                                    <div style="background-color: #b3b3b3; color: #FFF;">DISPENSA</div>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">
+                                                    -- --
+                                                </td>
+                                            {% elseif ponto.escalas|length > 0 %}
+                                                <td class="text-center" colspan="4">
+                                                    <div style="background-color: #dca500; color: #FFF;">ESCALA</div>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">
+                                                    -- --
+                                                </td>
+                                            {% elseif ponto.abonos|length > 0 and ponto.abonos[1] and ponto.abonos[2] and ponto.abonos[3] and ponto.abonos[4] %}
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[1] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[2] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[3] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[4] }}</strong>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">INTEGRAL</td>
+                                            {% elseif ponto.abonos|length > 0 and ponto.abonos[1] and ponto.abonos[2] %}
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[1] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[2] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[3] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[4] }}</strong>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">MATUTINO</td>
+                                            {% elseif ponto.abonos|length > 0 and ponto.abonos[3] and ponto.abonos[4] %}
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[1] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[2] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[3] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.abonos[4] }}</strong>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">VESPERTINO</td>
+                                            {% else %}
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[1] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[2] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[3] }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ ponto.pontos[4] }}</strong>
+                                                </td>
+                                                <td class="text-center" style="width: 200px;">
+                                                    -- --
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card card-bordered">
+                        <h4 class="card-header font-16 mt-0" style="color: #000;">Minhas Solicitações de Abono</h4>
+                        <div class="card-body">
+							{% if abonos_servidor|length == 0 %}
+								<div class="text-center">
+									<h1><i class="fa fa-info-circle"></i></h1>
+									<b>NENHUMA SOLICITAÇÃO DE ABONO</b>
+								</div>
+							{% else %}
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr class="text-center">
+                                        <th>Data do Abono</th>
+                                        <th>Data da Solicitação</th>
+                                        <th>Período</th>
+                                        <th>Situação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for abono in abonos_servidor %}
+                                        <tr class="text-center">
+                                            <td>
+                                                {{ abono.data_abono|date('d/m/Y') }}
+                                                {% if abono.data_final_abono %}
+                                                    a {{ abono.data_final_abono|date('d/m/Y') }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ abono.data_criacao_abono|date('d/m/Y') }}</td>
+                                            <td>
+                                            {% if abono.periodo_abono == 'V' %}
+                                                VESPERTINO
+                                            {% elseif abono.periodo_abono == 'M' %}
+                                                MATUTINO
+                                            {% elseif abono.periodo_abono == 'I' %}
+                                                INTEGRAL
+                                            {% endif %}
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-{{ abono.classe_status_abono }} text-uppercase">{{ abono.descricao_status_abono }}</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+							{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card card-bordered">
+                        <h4 class="card-header font-16 mt-0" style="color: #000;">Minhas Férias Agendadas</h4>
+                        <div class="card-body">
+								
+							{% if ferias_agendadas|length == 0 %}
+								<div class="text-center">
+									<h1><i class="fa fa-info-circle"></i></h1>
+									<b>NENHUMA FÉRIAS AGENDADA</b>
+								</div>
+							{% else %}
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr class="text-center">
+                                        <th>Inicio Férias</th>
+                                        <th>Fim Férias</th>
+                                        <th>Dias</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ferias in ferias_agendadas %}
+                                        <tr class="text-center">
+                                            <td>{{ ferias.data_inicio_ferias|date('d/m/Y') }}</td>
+                                            <td>{{ ferias.data_fim_ferias|date('d/m/Y') }}</td>
+                                            <td>{{ ferias.qtd_dias_ferias }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+							{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+     
+{%  endblock %}

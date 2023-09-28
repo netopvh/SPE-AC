@@ -1,0 +1,200 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-content">
+            <div class="row">
+                
+				
+				<div class="col-lg-12">
+					<div class="card card-bordered mr-3">
+						<h4 class="card-header font-16 mt-0" style="color: #000;">
+							Organograma
+							
+							<select name="id_lotacao" class="organograma select2">
+								{% if orgaos|length > 0 %}
+								{% for orgao in orgaos %}
+								<option value="{{ orgao.id_lotacao }}" {% if AUTH.id_orgao_exercicio_usuario == orgao.id_orgao %}selected{% endif %}>{{ orgao.sigla_orgao }}</option>
+								{% endfor %}
+								{% else %}
+									<option value="" disabled selected>NENHUM ORGANOGRAMA DISPONÍVEL</option>
+								{% endif %}
+							</select>
+						</h4>
+						<div class="card-body">
+
+							<div id="chart-container"></div>
+							
+							
+							<div class="col-sm-12 m-3">
+								<div class="legenda" data-toggle="popover" data-trigger="hover" data-placement="top" data-original-title="Ajuste de visibilidade" data-content="Selecione uma opção para definir os niveis que serão exibidos">
+									<div class="itens">
+										<div onclick="ocultarNivel(1)" class="cor orgao" data-toggle="tooltip" data-placement="left" data-original-title="Orgão">
+											<i class="fas fa-angle-double-down"></i>
+										</div>
+									</div>
+									<div class="itens">
+										<div onclick="ocultarNivel(2)" class="cor sec-adjunta" data-toggle="tooltip" data-placement="left" data-original-title="Secretaria Adjunta">
+											<i class="fas fa-angle-double-down"></i>
+										</div>
+									</div>
+									<div class="itens">
+										<div  onclick="ocultarNivel(3)"class="cor diretoria" data-toggle="tooltip" data-placement="left" data-original-title="Diretoria">
+											<i class="fas fa-angle-double-down"></i>
+										</div>
+									</div>
+									<div class="itens">
+										<div onclick="ocultarNivel(4)" class="cor departamento" data-toggle="tooltip" data-placement="left" data-original-title="Departamento">
+											<i class="fas fa-angle-double-down"></i>
+										</div>
+									</div>
+									<div class="itens">
+										<div onclick="ocultarNivel(5)" class="cor divisao active" data-toggle="tooltip" data-placement="left" data-original-title="Divisão">
+											<i class="fas fa-angle-double-left"></i>
+										</div>
+									</div>
+								</div>
+							
+								<div class="ferramentas">								
+									<a data-toggle="tooltip" data-placement="left" data-original-title="Posição inicial" href="javascript:void(0)" id="OcBtnReset" class="btn btn-sm btn-default waves-effect waves-light mb-1">
+										<i class="fas fa-expand-arrows-alt"></i>
+									</a>
+									<!--<a data-toggle="tooltip" data-placement="left" data-original-title="Ir para o topo" href="javascript:void(0)" id="OcBtnCenter" class="btn btn-sm btn-default waves-effect waves-light mb-1">
+										<i class="fas fa-crosshairs"></i>
+									</a>-->
+									<a data-toggle="tooltip" data-placement="left" data-original-title="Aumentar zoom" href="javascript:void(0)" id="OcBtnZoomIn" class="btn btn-sm btn-success waves-effect waves-light mb-1">
+										<i class="fas fa-search-plus"></i>
+									</a>	
+									<a data-toggle="tooltip" data-placement="left" data-original-title="Diminuir zoom" href="javascript:void(0)" id="OcBtnZoomOut" class="btn btn-sm btn-info waves-effect waves-light">
+										<i class="fas fa-search-minus"></i>
+									</a>								
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+                    
+				
+		   </div>
+        </div>
+    </div>
+     
+{%  endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ BASE_URL }}/js/jquery.orgchart.js"></script>
+<link rel="stylesheet" href="{{ BASE_URL }}/assets/css/jquery.orgchart.css">
+<link rel="stylesheet" href="{{ BASE_URL }}/assets/css/orgchart.css">
+
+<script type="text/javascript">
+
+exibirOrganograma()
+
+function exibirOrganograma(id_lotacao){	
+	$('#chart-container').html(`
+		<center>
+			<strong>Aguarde...<br/>Criando o organograma</strong>
+		</center>
+	`)
+	$.post("{{ APP_URL }}/organograma/exibir", {id_lotacao}, function(dados){
+        
+        if(dados.dados.length === 0){
+            console.log('entrou')
+            $('#chart-container').html(`<h1><i class="fa fa-exclamation-triangle"></i></h2><h6 class="text-center">O organograma desse órgão não está disponível.</h6><p>Solicite ao Gestor de RH a inclusão do organograma<p/>`);
+            return false;
+        }
+
+		$('#chart-container').html('')
+		let nodeTemplate = function(data) {
+			let exibirResponsaveis = '';
+			
+			for(let i in data.responsaveis){
+				exibirResponsaveis += `
+					<div class="dados">
+						<strong>
+							${data.responsaveis[i].nome_formatado}
+						</strong>
+						<small>${(data.responsaveis[i].cargo_comissao_usuario) ? data.responsaveis[i].cargo_comissao_usuario : data.responsaveis[i].cargo_usuario }</small>
+						<small>${data.responsaveis[i].email_usuario}</small>
+					</div>
+				`;
+			}
+			
+			return `
+				<div class="nivel-${data.nivel_pai}">
+					<div class="title">${data.sigla_lotacao ? data.sigla_lotacao : data.descricao_lotacao}</div>
+					<div class="content">
+						${exibirResponsaveis ? exibirResponsaveis : '<div class="dados"><strong>NENHUM RESPONSÁVEL CADASTRADO</strong></div>'}
+					</div>
+				</div>
+			  `;
+		};
+		
+
+		let oc = $('#chart-container').orgchart({
+		  'data' : dados.dados[0],
+		  'nodeTemplate': nodeTemplate,
+		  'pan': true,
+		  'zoom': true,
+		  'verticalLevel': 4,
+		  'visibleLevel': 10,
+		  'toggleSiblingsResp': true
+		});
+		
+		oc.$chartContainer.on('touchmove', function(event) {
+		  event.preventDefault();
+		});
+	},'json')
+    .fail(function() {
+        $('#chart-container').html( "Não existe organograma disponível para esse órgão" );
+    })
+	
+}
+	
+
+$( "select[name='id_lotacao']" ).change(function() {
+	exibirOrganograma(this.value)
+});
+
+  
+  
+function ocultarNivel(nivel) {
+
+	$('.slide-up').removeClass('slide-up')
+	$('ul.nodes .hidden').removeClass('hidden')
+	$('ul.nodes li.isChildrenCollapsed').removeClass('isChildrenCollapsed')
+	
+	$('.legenda .cor.active').removeClass('active')
+	
+	$(`.legenda .itens`).each(function(index, element) {
+		console.log(index + ' - ' + nivel)
+		if(index == (nivel - 1)){
+			$(this).children('div').html(`<i class="fas fa-angle-double-left"></i>`)
+		} else if(index < nivel){
+			$(this).children('div').html(`<i class="fas fa-angle-double-down"></i>`)
+		} else {
+			$(this).children('div').html(`<i class="fas fa-angle-double-up"></i>`)
+		}
+	})
+	
+	let n  = $('.legenda .cor')[nivel - 1]
+	$(n).addClass('active')
+
+	if( !$(`#chart-container .nivel-${nivel - 1}`).parent().parent().hasClass('hybrid ') ){
+		$(`#chart-container .nivel-${nivel - 1}`).parent().parent().addClass('isChildrenCollapsed')
+	}
+
+	for(let i = nivel; i <= 5; i++ ){
+		$(`#chart-container .nivel-${i}`).each(function(index, element) {
+			$(this).parent().addClass('slide-up')
+			if( !$(this).parent().parent().parent().hasClass('hidden') ){
+				$(this).parent().parent().parent().addClass('hidden')
+			}
+		});
+	}
+	
+	$('#OcBtnReset').trigger('click')
+		
+}
+</script>
+{%  endblock %}

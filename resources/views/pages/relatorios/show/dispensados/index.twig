@@ -1,0 +1,236 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-6">
+					<h4 class="page-title">
+						<a href="{{ APP_URL }}/relatorios">Lista de Relatórios </a><i class="fa fa-chevron-right font-12"></i> 
+						{{ relatorio.descricao_relatorio }}
+					</h4>
+				</div>
+				<div class="col-md-6">
+					<div class="float-right d-none d-md-block">
+						<a href="{{ APP_URL }}/relatorios/imprimir/{{ relatorio.link_relatorio }}?{{ id_orgao ? 'id_orgao=' ~ id_orgao : '' }}{{ id_lotacao ? '&id_lotacao=' ~ id_lotacao : '' }}{{ situacao ? '&situacao=' ~ situacao : '' }}" class="btn btn-primary waves-effect waves-light" target="_blank">
+							<i class="fa fa-print"></i>
+							Imprimir
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off"/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control" required="required">
+							<option value="">Selecione um órgão</option>
+							{% for orgao in orgaos %}
+								<option {{ id_orgao == orgao.id_orgao ? 'selected' : '' }} value="{{ orgao.id_orgao }}">{{ orgao.id_orgao ~ ' - ' ~ orgao.sigla_orgao }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_lotacao">Lotação</label>
+						<select id="id_lotacao" class="form-control" required="required">
+							<option value="">Selecione um lotação</option>
+							{% for lotacao in lotacoes %}
+								<option {{ id_lotacao == lotacao.id_lotacao ? 'selected' : '' }} value="{{ lotacao.id_lotacao }}">{{ lotacao.descricao_lotacao }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="situacao">Situação</label>
+						<select id="situacao" class="form-control" required="required">
+							<option value="" selected>Todas</option>
+							<option value="finalizada" {{ situacao == 'finalizada' ? 'selected' : '' }}>Finalizada</option>
+							<option value="aberta" {{ situacao == 'aberta' ? 'selected' : '' }}>Aberta</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-servidores" class="table table-sm table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase" style="width:100px;">Matrícula</th>
+								<th class="text-uppercase" style="width:100px;">Contrato</th>
+								<th class="text-uppercase">Nome</th>
+								<th class="text-uppercase">Cargo</th>
+								<th class="text-uppercase">Orgão</th>
+								<th class="text-uppercase" style="width:400px;">Lotação Exercício</th>
+								<th class="text-uppercase">Período</th>
+								<th class="text-uppercase">Situação</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+			var id_orgao = '{{ id_orgao }}';
+			var id_lotacao = '{{ id_lotacao }}';
+			var situacao = '{{ situacao }}';
+
+			var table = $("#table-servidores").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: `{{ APP_URL }}/api/relatorios/{{ relatorio.link_relatorio }}?${ id_orgao !== '' ? '&id_orgao='+id_orgao : '' }${ id_lotacao !== '' ? '&id_lotacao='+id_lotacao : '' }${ situacao !== '' ? '&situacao='+situacao : '' }`,
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_comissao_usuario ? data.cargo_comissao_usuario : data.cargo_usuario;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.sigla_orgao;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_lotacao;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            var data_dispensa = moment(data.data_inicio_dispensa).format('DD/MM/YYYY');
+                            if(data.data_fim_dispensa){
+                                var data_fim_dispensa = moment(data.data_fim_dispensa).format('DD/MM/YYYY');
+                                data_dispensa = `${data_dispensa} a ${data_fim_dispensa}`;
+                            }
+                            return data_dispensa;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							var html = '';
+							if(data.situacao == 'ABERTA'){
+								html = `<span class="badge badge-success">${data.situacao}</span>`;
+							}else{
+								html = `<span class="badge badge-danger">${data.situacao}</span>`;
+							}
+                            return html;
+                        }                       
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 3, 6, 7 ] 
+                    },
+                ],
+				order: [[ 2, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+		});
+
+		$('#id_orgao').on('change', function () {
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('id_orgao', $(this).val());
+			}else{
+				url.searchParams.delete('id_orgao');
+			}
+			url.searchParams.delete('id_lotacao');
+            window.location.href = url.href;
+        });
+
+        $('#id_lotacao').on('change', function () {
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('id_lotacao', $(this).val());
+			}else{
+				url.searchParams.delete('id_lotacao');
+			}
+            window.location.href = url.href;
+        });
+
+        $('#situacao').on('change', function () {
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('situacao', $(this).val());
+			}else{
+				url.searchParams.delete('situacao');
+			}
+            window.location.href = url.href;
+        });
+	</script>
+{%  endblock %}

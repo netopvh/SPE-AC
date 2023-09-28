@@ -1,0 +1,161 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-6">
+                    <h4 class="page-title">Lista de Feriados e Pontos Facultativos</h4>
+                </div>
+                <div class="col-sm-6">
+                    {% if AUTH.perfil_usuario %}
+                        {% if AUTH.perfil_usuario['id_tipo_perfil'] == 1 %}
+                            <div class="float-right d-none d-md-block">
+                                <a href="{{ APP_URL }}/calendarios/cadastrar" class="btn btn-primary waves-effect waves-light">
+                                    <i class="fa fa-plus"></i>
+                                    Cadastrar
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <h6 class="ml-3">Ano de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="year" class="form-control" required="required">
+							{% for year in years %}
+								<option {{ year == ano ? 'selected' : '' }} value="{{ year }}">{{ year }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<h6 class="ml-3">Mês de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="month" class="form-control" required="required">
+							{% for month in 1..12 %}
+								<option {{ month == mes ? 'selected' : '' }} value="{{ month }}">{{ DATE.monthName(month) }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-lg-12">
+                    <table id="table-calendarios" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">Data</th>
+                                <th class="text-uppercase">Tipo</th>
+                                <th class="text-uppercase">Descrição</th>
+                                {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+                                    <th class="text-uppercase">Editar</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+			var table = $("#table-calendarios").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/calendarios?ano={{ ano }}&mes={{ mes }}",
+					data: function(data){
+						data.search = null;
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return moment(data.data_calendario).format('DD/MM/YYYY');
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            var tipo_calendario = '';
+                            if(data.tipo_calendario == 'F'){
+                                tipo_calendario = 'FERIADO';
+                            }else if(data.tipo_calendario == 'P'){
+                                tipo_calendario = 'PONTO FACULTATIVO';
+                            }
+                            return tipo_calendario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_calendario;
+                        }                       
+                    },
+                    {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+                        {
+                            data: null,
+                            className: 'text-center',
+                            orderable: false,
+                            render: function ( data, type, row ) {
+                                return `
+                                    <a href="{{ APP_URL }}/calendarios/editar/${data.id_calendario}" class="btn btn-sm btn-default btn-circle">
+                                        <i class="ti-pencil"></i>
+                                    </a>
+                                    <a href="javascript:void(0);" data-url="{{ APP_URL }}/calendarios/deletar/${data.id_calendario}" class="btn btn-sm btn-default btn-circle delete_confirmation">
+                                        <i class="ti-trash"></i>
+                                    </a>
+                                `;
+                            }
+                            
+                        },
+                    {% endif %}
+                ],
+				order: [[ 0, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+		});
+
+        $('#month').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('mes', $(this).val());
+            window.location.href = url.href;
+        });
+        $('#year').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('ano', $(this).val());
+            window.location.href = url.href;
+        });
+	</script>
+{%  endblock %}

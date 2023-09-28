@@ -1,0 +1,249 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <form class="form-ajax" data-redirect="{{ APP_URL }}/colaboradores/visualizar/{{ usuario.id_usuario }}" autocomplete="off">
+        <div class="container-fluid p-0">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                     <div class="col-sm-6 col-xs-12">
+                        <h4 class="page-title">
+                            <a href="{{ APP_URL }}/colaboradores">Lista de Colaboradores </a><i class="fa fa-chevron-right font-12"></i> 
+                            <a href="{{ APP_URL }}/colaboradores/visualizar/{{ usuario.id_usuario }}">Informações do Colaborador </a><i class="fa fa-chevron-right font-12"></i> 
+                            Editar Colaborador
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p class="msg"></p>
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Dados Pessoais</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane p-3 active" id="home" role="tabpanel">
+
+                                <div class="row">
+                                    <div class="col-4">
+                                        <div class="form-group">
+                                            <label>CPF</label>
+                                            <div>{{ str.mask(usuario.cpf_usuario,'###.###.###-##') }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="form-group">
+                                            <label>Nome {{ OBRIGATORIO }}</label>
+                                            <input name="nome_usuario" type="text" class="form-control text-uppercase" maxlength="50" value="{{ usuario.nome_usuario }}" required="required">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label>E-mail {{ OBRIGATORIO }}</label>
+                                            <input name="email_usuario" type="email" class="form-control text-lowercase" required="required" value="{{ usuario.email_usuario }}" maxlength="50">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label>Cargo {{ OBRIGATORIO }}</label>
+                                            <input name="cargo_usuario" type="text" class="form-control text-uppercase" maxlength="50" value="{{ usuario.cargo_usuario }}" required="required">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-4">
+                                        <div class="form-group">
+                                            <label>Órgão {{ OBRIGATORIO }}</label>
+                                            <select name="id_orgao_exercicio_usuario" id="id_orgao_exercicio_usuario" class="form-control" required="required">
+                                                <option value="{{ usuario.id_orgao_exercicio_usuario }}"> {{ usuario.orgao.sigla_orgao }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-4">
+                                        <div class="form-group">
+                                            <label>Lotação Exercício {{ OBRIGATORIO }}</label>
+                                            <select name="id_lotacao_exercicio_usuario" id="id_lotacao_exercicio_usuario" class="form-control select2" required="required">
+                                                {% for lotacao in lotacoes %}
+                                                    <option value="{{ lotacao.id_lotacao }}" {{ usuario.id_lotacao_exercicio_usuario == lotacao.id_lotacao ? 'selected' : '' }}>{{ lotacao.descricao_lotacao }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-4">
+                                        <div class="form-group">
+                                            <label>Vínculo {{ OBRIGATORIO }}</label>
+                                            <select name="id_tipo_usuario" class="form-control select2" required="required">
+                                                <option value="">Selecione um tipo...</option>
+                                                {% for tipo_usuario in tipos_usuario %}
+                                                    {% if tipo_usuario.id_tipo_usuario != 1 %}
+                                                        <option value="{{ tipo_usuario.id_tipo_usuario }}" {{ tipo_usuario.id_tipo_usuario == usuario.id_tipo_usuario ? 'selected' : '' }}>{{ tipo_usuario.descricao_tipo_usuario }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label>Horários {{ OBRIGATORIO }}</label>
+                                            <div class="form-inline">
+                                                <div id="campo_horario"class="col-md-4 pl-0"></div>
+                                                <div class="form-group form-check">
+                                                    <input type="checkbox" class="form-check-input" id="id_horario_padrao" {{ not usuario.id_horario ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="id_horario_padrao">Horário Padrão</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-group pt-2 mb-0">
+                                            <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                <i class="fa fa-save"></i>
+                                                Salvar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+
+        $('.select2').select2({theme: 'bootstrap'});
+
+        $('#id_orgao_exercicio_usuario').select2({
+            placeholder: 'Digite nome ou sigla (exibindo até 10 registros)',
+            theme: 'bootstrap',
+            language: 'pt-BR',
+            ajax: {
+                url: `{{ APP_URL }}/api/orgaos`,
+                dataType: 'json',
+                data: function(params) {
+                    var query = {
+                        search: params.term ? params.term : '',
+                        length: 100,
+                        start: 0,
+                        draw: 1,
+                        order: [{
+                            column: 2,
+                            dir: 'asc'
+                        }]
+                    }
+
+                    return query;
+                },
+                processResults: function(data) {
+                    var itens = [];
+                    itens.push({ id: '', text: `Selecione um orgão` })
+                    data.aaData.map(dados => {
+                        itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+                    });
+                    return {
+                        results: itens
+                    };
+                }
+            }
+        });
+
+        handleChangeOrgao();
+
+        function handleChangeOrgao(){
+            const select_lotacoes = $('#id_lotacao_exercicio_usuario');
+
+            $('#id_orgao_exercicio_usuario').on('change', (e)=>{
+
+                select_lotacoes.empty().append('<option value="">Selecione uma lotação..</option>');
+                
+                var id_orgao_exercicio_usuario = e.target.value;
+                if(id_orgao_exercicio_usuario){
+                    //send data
+                    $.ajax({
+                        cache: false,
+                        url: `{{ APP_URL }}/api/lotacoes?id_orgao=${id_orgao_exercicio_usuario}`,
+                        type: 'POST',
+                        data: {
+                            length: 100,
+                            start: 0,
+                            draw: 1,
+                            search: null,
+                        },
+                        success: function (data) {
+                            data.aaData.map(lotacao => {
+                                select_lotacoes.append(new Option(lotacao.descricao_lotacao, lotacao.id_lotacao));
+                            });
+                        },
+                        error: function (data) {
+                            var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.'
+                            $.toast({
+                                heading: 'Error',
+                                text: error,
+                                position: 'top-right',
+                                showHideTransition: 'slide',
+                                icon: 'error'
+                            });
+                            btn.removeAttr('disabled');
+                        },
+                    });
+                }
+            });
+        }
+
+        $('#campo_horario').html(
+            {% if usuario.id_horario %}
+                `
+                    <select name="id_horario" class="form-control" required="required" style="width: inherit !important;">
+                        <option value="">Selecione um horário...</option>
+                        {% for horario in horarios %}
+                            <option value="{{ horario.id_horario }}" {{ horario.id_horario == usuario.id_horario ? 'selected' : '' }}>
+                                {{ str.mask(horario.entrada_1_horario, '#####') }} {{ horario.saida_1_horario ? '-' : '' }}  
+                                {{ str.mask(horario.saida_1_horario, '#####') }} {{ horario.entrada_2_horario ? '-' : '' }}  
+                                {{ str.mask(horario.entrada_2_horario, '#####') }} {{ horario.saida_2_horario ? '-' : '' }}  
+                                {{ str.mask(horario.saida_2_horario, '#####') }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                `
+            {% else %}
+                `
+                    <input type="text" name="id_horario" class="d-none" value="null" />
+                    <div class="form-control" style="width: inherit !important;"></div>
+                `
+            {% endif %}
+        );
+        $('#id_horario_padrao').on('change',function(e) {
+            if(e.target.checked){
+                $('#campo_horario').html(`
+                    <input type="text" name="id_horario" class="d-none" value="null" />
+                    <div class="form-control" style="width: inherit !important;"></div>
+                `);
+            }else{
+                $('#campo_horario').html(`
+                    <select name="id_horario" class="form-control" required="required" style="width: inherit !important;">
+                        <option value="">Selecione um horário...</option>
+                        {% for horario in horarios %}
+                            <option value="{{ horario.id_horario }}" {{ horario.id_horario == usuario.id_horario ? 'selected' : '' }}>
+                                {{ str.mask(horario.entrada_1_horario, '#####') }} {{ horario.saida_1_horario ? '-' : '' }} 
+                                {{ str.mask(horario.saida_1_horario, '#####') }} {{ horario.entrada_2_horario ? '-' : '' }}  
+                                {{ str.mask(horario.entrada_2_horario, '#####') }} {{ horario.saida_2_horario ? '-' : '' }}  
+                                {{ str.mask(horario.saida_2_horario, '#####') }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                `);
+            }
+        });
+    </script>
+{% endblock %}

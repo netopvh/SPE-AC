@@ -1,0 +1,175 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <style>
+    .table-dark, .table-dark>td, .table-dark>th {
+        background-color: #000;
+    }
+    @media print {
+        body {
+            background: #FFF;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .table-dark, .table-dark>td, .table-dark>th {
+            box-shadow: 0 0 0 1000px black inset !important;
+            color: #FFF !important;
+        }
+        .table-dark, .table-danger>td, .table-danger>th {
+            box-shadow: 0 0 0 1000px #ed969e inset !important;
+        }
+    }
+    </style>
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-6">
+					<h4 class="page-title">
+						<a href="{{ APP_URL }}/relatorios">Lista de Relatórios </a><i class="fa fa-chevron-right font-12"></i> 
+						{{ relatorio.descricao_relatorio }}
+					</h4>
+				</div>
+				<div class="col-md-6">
+					<div class="float-right d-none d-md-block">
+						<button class="btn btn-primary waves-effect waves-light imprimir" target="_blank">
+							<i class="fa fa-print"></i>
+							Imprimir
+						</button>
+					</div>
+				</div>
+                
+			</div>
+		</div>
+		
+        <div class="page-content">
+			<div class="row no-print">
+				<div class="col-md-4">
+					<div class="form-group">
+						<label for="search">Servidor</label>
+						<input type="text" id="search" class="form-control" placeholder="Matrícula do Servidor" autocomplete="off"/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="year">Ano</label>
+						<select id="year" class="form-control" required="required">
+							{% for year in years %}
+								<option {{ year == ano ? 'selected' : '' }} value="{{ year }}">{{ year }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="month">Mês</label>
+						<select id="month" class="form-control" required="required">
+							{% for month in 1..12 %}
+								<option {{ month == (mes - 1) ? 'selected' : '' }} value="{{ month }}">{{ DATE.monthName(month) }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-md-2">
+					<div class="form-group">
+						<label style="opacity: 0;">...</label>
+                        <button class="btn btn-success waves-effect waves-light btn-block" id="gerarRelatorio">
+							<i class="fas fa-play mr-3"></i>
+							GERAR DADOS
+						</button>
+                    </div>
+				</div>
+			</div>
+
+			<div class="row">
+				
+                
+
+                
+				<div class="col-lg-12">
+					<table id="table-servidores" class="table table-sm table-hover d-none">
+						<thead>
+							<tr>
+								<th class="text-uppercase text-center" style="width:5%;">Hora</th>
+								<th class="text-uppercase text-center" style="width:10%;">Matrícula</th>
+								<th class="text-uppercase text-center" style="width:30%;">Servidor</th>
+								<th class="text-uppercase text-center" style="width:30%;">Lotação</th>
+								<th class="text-uppercase text-center" style="width:15%;">Orgão</th>
+								<th class="text-uppercase text-center" style="width:10%;">IP</th>
+							</tr>
+						</thead>
+						<tbody>
+							
+						</tbody>
+					</table>
+                    <div id="loadingRelatorio" style="user-select: none;" class="text-center d-none">
+                        <img src="{{ APP_URL }}/img/loading2.gif"/>
+                    </div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+
+            $('.select2').select2({theme: 'bootstrap',})
+
+            $('#gerarRelatorio').on('click', function(){
+
+                let servidor = $("#search").val();
+                let ano = $("#year").val();
+                let mes = $("#month").val();
+
+                if($('[id=search]').val() == ''){
+                    alert('informe os dados do servidor')
+                    return false;
+                }
+
+                $('#gerarRelatorio').prop('disabled', true).html(`<i class="fas fa-spinner fa-spin mr-3"></i> GERANDO DADOS...`);
+
+                $('#table-servidores').addClass('d-none')
+                $('#loadingRelatorio').removeClass('d-none')
+
+                $.post(`{{ APP_URL }}/api/relatorios/{{ relatorio.link_relatorio }}`, {search: servidor, ano, mes}, function(data){
+                    $('#gerarRelatorio').prop('disabled', false).html(`<i class="fas fa-play mr-3"></i> GERAR DADOS`);
+
+                    $('#loadingRelatorio').addClass('d-none')
+                    $('#table-servidores').removeClass('d-none')
+                     $('#table-servidores tbody').html('')
+                    
+                    for(let dia in data.aaData){
+                        for(let batida in data.aaData[dia]){
+                            let textBatida = (batida != 4 ? batida != 1 ? batida != 3 ? '1ª SAÍDA' : '2ª ENTRADA' : '1ª ENTRADA' : '2ª SAÍDA')
+                            $('#table-servidores tbody').append(`<tr class="table-dark"><th class="text-uppercase text-center" colspan="6">Dia ${("00" + dia).slice(-2)}/${("00" + mes).slice(-2)} - ${textBatida}</th></tr>`)
+                            for(ponto in data.aaData[dia][batida]){
+                                $('#table-servidores').append(`<tr class="${(data.id_usuario == data.aaData[dia][batida][ponto].id_usuario) ? 'table-danger' : ''}">
+                                    <th class="text-uppercase text-center">${moment(data.aaData[dia][batida][ponto].data_ponto).format('HH:mm')}</th>
+                                    <th class="text-uppercase text-center">${data.aaData[dia][batida][ponto].matricula_usuario}/${data.aaData[dia][batida][ponto].contrato_usuario}</th>
+                                    <th class="text-uppercase text-center">${data.aaData[dia][batida][ponto].nome_usuario}</th>
+                                    <th class="text-uppercase text-center">${data.aaData[dia][batida][ponto].descricao_lotacao}</th>
+                                    <th class="text-uppercase text-center">${data.aaData[dia][batida][ponto].sigla_orgao}</th>
+                                    <th class="text-uppercase text-center">${data.aaData[dia][batida][ponto].ip_ponto}</th>
+                                </tr>`)
+                            }
+                        }
+                    }
+                },'json')
+
+
+            })
+
+		});
+
+        $('body').on('click', '.imprimir', function(){
+            window.print()
+        })
+
+
+
+	</script>
+{%  endblock %}

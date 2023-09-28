@@ -1,0 +1,371 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-12">
+                    <h4 class="page-title">
+                        <a href="{{ APP_URL }}/abonos?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}">Lista de Solicitações de Abono </a><i class="fa fa-chevron-right font-12"></i> 
+                        Informações do Solicitante - {{ DATE.monthName(mes) ~ '/' ~ ano }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+				<div class="col-lg-12">
+                    <div class="card card-bordered">
+                        <h4 class="card-header font-16 mt-0">Dados do Solicitante</h4>
+                        <div class="card-body">
+                            <div class="row">
+                                <dl class="col-md-2">
+                                    <dt>Matrícula</dt>
+                                    <dd>{{ usuario.matricula_usuario ? usuario.matricula_usuario : '-- --' }}</dd>
+                                </dl>
+                                <dl class="col-md-2">
+                                    <dt>Contrato</dt>
+                                    <dd>{{ usuario.contrato_usuario ? usuario.contrato_usuario : '-- --' }}</dd>
+                                </dl>
+                                <dl class="col-md-8">
+                                    <dt>Nome</dt>
+                                    <dd>{{ usuario.nome_usuario }}</dd>
+                                </dl>
+                                <dl class="col-md-4">
+                                    <dt>Cargo</dt>
+                                    <dd>{{ usuario.cargo_comissao_usuario ? usuario.cargo_comissao_usuario : usuario.cargo_usuario }}</dd>
+                                </dl>
+                                <dl class="col-md-4">
+                                    <dt>Vínculo</dt>
+                                    <dd>
+                                        {{ usuario.tipo_usuario.descricao_tipo_usuario|upper }}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+				<div class="col-lg-6">
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input selectAll" type="checkbox" id="gridCheck">
+                            <label class="form-check-label" for="gridCheck">
+                                Selecionar todos
+                            </label>
+                        </div>
+                    </div>
+                </div>
+				<div class="col-lg-6">
+                    <div class="row" id="buttons" style="float: right;">
+                        <a href="javascript:void(0);" class="btn btn-outline btn-default mb-20 mr-2">
+                            <i class="ti-check"></i>
+                            Deferir Todos
+                        </a>
+                        <a href="javascript:void(0);" class="btn btn-outline btn-default mb-20">
+                            <i class="ti-close"></i>
+                            Indeferir Todos
+                        </a>
+                    </div>
+                </div>
+				<div class="col-lg-12">
+					<table id="table-abonos" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="d-none">id_abono</th>
+                                <th class="text-uppercase">Data do Abono</th>
+                                <th class="text-uppercase">Motivo</th>
+                                <th class="text-uppercase text-center">Período</th>
+                                <th class="text-uppercase text-center">Situação</th>
+                                <th class="text-uppercase text-center" style="width: 100px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for abono in abonos %}
+                                <tr>
+                                    <td></td>
+                                    <td class="d-none">{{ abono.id_abono }}</td>
+                                    <td>{{ abono.data_abono|date('d/m/Y') }} {{ abono.data_final_abono ? ' à ' ~ abono.data_final_abono|date('d/m/Y') : '' }}</td>
+                                    {% if abono.motivo_resposta_abono %}
+                                        <td data-toggle="tooltip" title="{{ abono.motivo_resposta_abono }}">{{ abono.motivo_resposta_abono|length > 80 ? abono.motivo_resposta_abono|slice(0, 80) ~ '...' : abono.motivo_resposta_abono }}</td>
+                                    {% else %}
+                                        <td data-toggle="tooltip" title="{{ abono.motivo_abono }}">{{ abono.motivo_abono|length > 80 ? abono.motivo_abono|slice(0, 80) ~ '...' : abono.motivo_abono }}</td>
+                                    {% endif %}
+                                    <td class="text-center">
+                                        {% if abono.periodo_abono == 'V' %}
+                                        VESPERTINO
+                                        {% elseif abono.periodo_abono == 'M' %}
+                                            MATUTINO
+                                        {% elseif abono.periodo_abono == 'I' %}
+                                            INTEGRAL
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ APP_URL }}/abonos/visualizar/{{ abono.id_abono }}" class="btn btn-sm btn-{{ abono.status_abono.classe_status_abono  }} text-uppercase">
+                                            {{ abono.status_abono.descricao_status_abono }}
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if abono.id_status_abono == 1 %}
+                                            <a href="javascript:void(0);" class="btn btn-sm btn-outline btn-warning btn-circle mb-20" title="Devolver" data-toggle="modal" data-target="#devolver" data-id-abono="{{ abono.id_abono }}">
+                                                <i class="ti-arrow-left"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="javascript:void(0);" class="btn btn-sm btn-outline btn-primary mb-20 btn-circle deferir" title="Deferir" data-url="{{ APP_URL }}/abonos/{{ abono.id_abono }}/deferir" >
+                                            <i class="ti-check"></i>
+                                        </a>
+                                        <a href="javascript:void(0);" class="btn btn-sm btn-outline btn-danger btn-circle mb-20" title="Indeferir" data-toggle="modal" data-target="#indeferir" data-id-abono="{{ abono.id_abono }}">
+                                            <i class="ti-close"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="devolver" tabindex="-1" aria-labelledby="devolverLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="devolverLabel">Devolver</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-ajax" id="form-devolver" data-confirmation="Devolver Abono" data-reload="true">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="mensagem_abono" class="col-form-label">Motivo {{ OBRIGATORIO }}</label>
+                            <textarea id="mensagem_abono" name="mensagem_abono" rows="3" class="form-control" required="required" maxlength="500"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary waves-effect waves-light"><i class="fa fa-save"></i> Enviar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="indeferir" tabindex="-1" aria-labelledby="indeferirLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="indeferirLabel">Indeferir</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-ajax" id="form-indeferir" data-confirmation="Indeferir Abono" data-reload="true">
+                    <input type="text" class="d-none" id="ids_abono" name="ids_abono" />
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="mensagem_indeferido_abono" class="col-form-label">Motivo {{ OBRIGATORIO }}</label>
+                            <textarea id="mensagem_indeferido_abono" name="mensagem_indeferido_abono" rows="3" class="form-control" required="required" maxlength="500"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary waves-effect waves-light"><i class="fa fa-save"></i> Enviar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        let ids_abono = [];
+
+        modalDevolver();
+        function modalDevolver(){
+            $('#devolver').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                var id_abono = button.data('id-abono') // Extract info from data-* attributes
+                
+                $('#form-devolver').attr('action', `{{ APP_URL }}/abonos/${id_abono}/devolver`)
+            });
+        }
+
+        modalIndeferir();
+        function modalIndeferir(){
+            $('#indeferir').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                var id_abono = button.data('id-abono') // Extract info from data-* attributes
+                
+                $('#form-indeferir').attr('action', `{{ APP_URL }}/abonos/${id_abono}/indeferir`)
+            });
+        }
+
+        $(function(){
+			var table = $("#table-abonos").DataTable({
+                searching: false,
+                paginate: false,
+                columnDefs: [{
+                    className: 'select-checkbox',
+                    targets: 0
+                }],
+                select: {
+                    style:    'multi',
+                    selector: 'td:first-child'
+                },
+                ordering: false,
+                language: {
+					sEmptyTable: "",
+					sInfo: "",
+					sInfoEmpty: "",
+					sInfoFiltered: "",
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "",
+					sLoadingRecords: "",
+					sProcessing: "",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "",
+					oPaginate: {
+						sNext: "",
+						sPrevious: "",
+						sFirst: "",
+						sLast: ""
+					},
+                    select: {
+                        rows: {
+                            _: "",
+                            0: "",
+                            1: ""
+                        }
+                    }
+				}
+			});
+
+            $(".selectAll").on( "click", function(e) {
+                if ($(this).is( ":checked" )) {
+                    table.rows().select();
+                } else {
+                    table.rows().deselect(); 
+                }
+            });
+
+            table
+                .on('select', function ( e, dt, type, indexes ) {
+                    var rowData = table.rows( indexes ).data().toArray();
+                    rowData.map(abono => {
+                        if(ids_abono.indexOf(parseInt(abono[1])) < 0){
+                            ids_abono.push(parseInt(abono[1]));
+                        }
+                    });
+
+                    var ids = '';
+                    ids_abono.map(id_abono => {
+                        ids = `${ids}${id_abono}-`;
+                    });
+                    $('#ids_abono').val(ids);
+
+                    var count = table.rows('.selected').data().length;
+                    if(count > 0){
+                        $('#buttons').html(`
+                            <a href="javascript:void(0);" class="btn btn-outline btn-primary mb-20 deferir mr-2" data-url="{{ APP_URL }}/abonos/0/deferir">
+                                <i class="ti-check"></i>
+                                Deferir Todos
+                            </a>
+                            <a href="javascript:void(0);" class="btn btn-outline btn-danger mb-20" data-toggle="modal" data-target="#indeferir" data-id-abono="0">
+                                <i class="ti-close"></i>
+                                Indeferir Todos
+                            </a>
+                        `);
+                    }
+
+                })
+                .on('deselect', function ( e, dt, type, indexes ) {
+                    var rowData = table.rows( indexes ).data().toArray();
+                    rowData.map(abono => {
+                        ids_abono.splice(ids_abono.indexOf(parseInt(abono[1])), 1);
+                    });
+
+                    var ids = '';
+                    ids_abono.map(id_abono => {
+                        ids = `${ids}${id_abono}-`;
+                    });
+                    $('#ids_abono').val(ids);
+
+                    var count = table.rows('.selected').data().length;
+                    $('.selectAll').prop('checked', false );
+                    if(count == 0){
+                        $('#buttons').html(`
+                            <a href="javascript:void(0);" class="btn btn-outline btn-default mb-20 mr-2">
+                                <i class="ti-check"></i>
+                                Deferir Todos
+                            </a>
+                            <a href="javascript:void(0);" class="btn btn-outline btn-default mb-20">
+                                <i class="ti-close"></i>
+                                Indeferir Todos
+                            </a>
+                        `);
+                    }
+                });
+        });
+
+        $(document).on('click','.deferir', function(){
+            var btn = $(this);
+            var url = btn.attr('data-url');
+
+            btn.attr('disabled', 'disabled');
+
+            swal({
+                title: 'Deferir',
+                text: 'Tem certeza que deseja fazer isso?',
+                icon: 'warning',
+                closeOnClickOutside: false,
+                buttons: {
+                    cancel: {
+                        text: 'Cancelar',
+                        value: null,
+                        visible: true,
+                        closeModal: true,
+                    },
+                    confirm: {
+                        text: 'Ok',
+                        value: true,
+                        visible: true,
+                        closeModal: false
+                    }
+                },
+            }).then(function (result) {
+                if (result) {
+                    $.ajax({
+                        cache: false,
+                        url,
+                        type: 'POST',
+                        data: { ids_abono: ids_abono },
+                        success: function (data) {
+                            document.location.reload(true);
+                        },
+                        error: function (data) {
+                            var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.'
+                            $.toast({
+                                heading: 'Error',
+                                text: error,
+                                position: 'top-right',
+                                showHideTransition: 'slide',
+                                icon: 'error'
+                            });
+                            btn.removeAttr('disabled');
+                            swal.close();
+                        },
+                    });
+                }else{
+                    btn.removeAttr('disabled');
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>{{ APP_SIGLA_NAME }} - {{ APP_NAME }}</title>
+
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="{{ BASE_URL }}/assets/images/favicon.png">
+
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/icons.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/style.css?version={{ APP_VERSION }}"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/animated.css"/>
+
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/jquery-toast/css/jquery.toast.css"/>
+
+        <style>
+            .nome-sistemas {
+                font-size: 40px;
+                margin-bottom: 15px;
+                color: #000;
+            }
+
+            .btn-area-servidor {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding: 20px 20px 0 0;
+            }
+
+            .data {
+                color: #00000087;
+                margin-top: 10px;
+                margin-bottom: 25px;
+                font-size: 25px;
+            }
+
+            .form-ponto {
+                max-width: 370px;
+                min-width: 250px;
+                text-align: left;
+            }
+
+            .form-control-user {
+                font-size: 14px;
+                padding: 20px 15px;
+            }
+
+            .grid-left {
+                display: flex;
+                flex-direction: column;
+                background-color: #008F4C;
+                justify-content: space-evenly; 
+                border-radius: 15px 0 0 15px;
+            }
+
+            @media (max-width: 767px){
+                .btn-option {
+                    justify-content: space-around;
+                    height: 65px;
+                    width: 65px;
+                    font-size: 10px;
+                    line-height: 14px;
+                    background-color: #afafaf7d;
+                    color: #ffffff;
+                    padding: 0;
+                }
+
+                .grid-left {
+                    border-radius: 15px 15px 0 0;
+                }
+            }
+
+            .btn-green-ponto {
+                background-color: #023E88;
+                color: #FFF;
+            }
+
+            .btn-green-login {
+                background-color: #229E06;
+                color: #FFF;
+            }
+            
+            .btn-green-ponto:hover {
+                background-color: #00326f;
+                color: #FFF;
+            }
+
+            .btn-green-login {
+                background-color: #1a7b04;
+                color: #FFF;
+            }
+
+            .btn-green-login:hover {
+                background-color: #115801;
+                color: #FFF;
+            }
+
+        </style>
+    </head>
+    <body style="background-image: linear-gradient(#bbbbbb, #F7F7F7);">
+        <div class="container animated zoomIn">
+            <div class="row justify-content-center">
+                <div class="col-xl-10 col-lg-10 col-md-9 col-sm-12">
+                    <div class="card o-hidden border-0 shadow-lg my-5" style="border-radius: 15px;">
+                        <div class="row no-gutters" style="min-height: 650px; border-radius: 15px;">
+                            <div class="col-md-5 p-5 grid-left">
+                                <img src="{{ BASE_URL }}/assets/images/logos/brasao_light.png" class="card-img mb-3 pl-4 pr-4" alt="ACRE">
+                                <img src="{{ BASE_URL }}/assets/images/logos/seplag_light.png" class="card-img pl-4 pr-4" alt="SEPLAG"/>
+                            </div>
+                            <div class="col-md-7" style="border-radius: 20px;">
+                                <div class="btn-area-servidor">
+                                    <a href="{{ APP_URL }}" class="btn btn-green-ponto" >
+                                        <i class="mdi mdi-clock"></i> Registro de Ponto
+                                    </a>
+                                </div>
+                                <div class="card-body text-center d-flex flex-column align-items-center">
+                                    <h1 class="nome-sistemas">{{ APP_NAME }}</h1>
+                                    <div class="data" id="data">
+                                        Área do Servidor
+                                    </div>
+                                    <form class="form-horizontal form-ajax form-ponto user" data-redirect="{{ APP_URL }}/dashboard">
+                                        <div class="form-usuario">
+                                            <div class="form-group">
+                                                <label class="ml-3" for="login" style="color: #00000087; font-size: 12px;">USUÁRIO</label>
+                                                <input type="text" class="form-control form-control-user" name="login" maxlength="50" required="required">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="ml-3" for="password" style="color: #00000087; font-size: 12px;">SENHA</label>
+                                                <input type="password" class="form-control form-control-user" name="password" maxlength="50" required="required">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 text-center mt-5">
+                                            <button class="btn w-md waves-effect waves-light btn-green-login" type="submit" style="width: 200px; font-size: 16px;">
+                                                Acessar
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- jQuery  -->
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/jquery.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/bootstrap.bundle.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/metisMenu.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/jquery.slimscroll.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/waves.min.js"></script>
+
+        <!-- SCRIPTS Moment -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/moment/moment.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/moment/moment-with-locales.js"></script>
+
+        <!-- SCRIPTS jQueryToast -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/jquery-toast/js/jquery.toast.js"></script>
+
+        <!-- SCRIPTS Javascript -->
+        <script type="text/javascript" src="{{ BASE_URL }}/js/scripts.js?version={{ APP_VERSION }}"></script>
+
+        <!-- App js -->
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/app.js?version={{ APP_VERSION }}"></script>
+    </body>
+</html>

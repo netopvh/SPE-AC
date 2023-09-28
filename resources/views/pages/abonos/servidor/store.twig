@@ -1,0 +1,248 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+	<form class="form-ajax needs-validation" data-redirect="{{ APP_URL }}/abonos_servidor?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}" autocomplete="off" enctype="multipart/form-data" >
+		<input type="hidden" name="id_lotacao" value="{{ lotacao.id_lotacao }}" />
+		<div class="container-fluid p-0">
+			<div class="page-title-box">
+				<div class="row align-items-center">
+					<div class="col-sm-12">
+						<h4 class="page-title">
+							<a href="{{ APP_URL }}/abonos_servidor?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}">Lista de Solicitações de Abono </a><i class="fa fa-chevron-right font-12"></i> 
+							Solicitação de Abono
+						</h4>
+					</div>
+				</div>
+			</div>
+			<div class="page-content">
+				<div class="row">
+					<div class="col-lg-12">
+						<p class="msg"></p>
+						<ul class="nav nav-tabs" role="tablist">
+							<li class="nav-item">
+								<a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Solicitação</a>
+							</li>
+						</ul>
+						<div class="tab-content">
+							<div class="tab-pane p-3 active" id="home" role="tabpanel">
+								<div class="row">
+									<div class="form-group col-md-12">
+										<label>Lotação</label>
+										<div>{{ lotacao.descricao_lotacao }}</div>
+									</div>
+							
+									<div class="form-group form-check col-md-12 ml-3">
+										<input type="checkbox" class="form-check-input" id="por_intervalo">
+										<label class="form-check-label" for="por_intervalo">Por Intervalo</label>
+									</div>
+									
+									<div class="col-md-6">
+										<div class="form-group">
+											<label for="data_abono">Data {{ OBRIGATORIO }}</label>
+											<input name="data_abono" id="data_abono" type="date" class="form-control"  required="required" onkeypress="return false" min="{{ "now"|date_modify("-30 days")|date("Y-m") }}-01" max="{{ "now"|date("Y-m-d") }}" oninvalid="checar.data_abono()">
+                                            <div class="invalid-feedback"></div>
+										</div>
+									</div>
+
+									<div id="data_final" class="col-md-6"></div>
+									
+									<div class="col-md-6">
+										<div class="form-group">
+											<label>Período {{ OBRIGATORIO }}</label>
+											<select name="periodo_abono" class="form-control" required="required">
+												<option value="">Selecione um período...</option>
+												<option value="M">MATUTINO</option>
+												<option value="V">VESPERTINO</option>
+												<option value="I">INTEGRAL</option>
+											</select>
+                                            <div class="invalid-feedback"></div>
+										</div>
+									</div>
+
+									<div class="col-md-6"></div>
+
+									{# <div class="col-md-6">
+										<div class="form-group">
+											<label for="tipo-documento">Tipo de Documento{{ OBRIGATORIO }}</label>
+											<select name="tipo_documento" id="tipo-documento" class="form-control select2">
+												<option value="">Selecione um...</option>
+												<option value="ATESTADO MÉDICO">ATESTADO MÉDICO</option>
+												<option value="CERTIDÃO DE NASCIMENTO">CERTIDÃO DE NASCIMENTO</option>
+												<option value="CERTIDÃO DE ÓBITO">CERTIDÃO DE ÓBITO</option>
+												<option value="OUTROS">OUTROS</option>
+											</select>
+										</div>
+									</div>
+
+									<div class="col-md-6">
+										<div class="form-group">
+											<label for="arquivo-documento">Anexo</label>
+											<input type="file" name="arquivo_documento" id="arquivo-documento" class="form-control-file" accept=".pdf, .png, .jpg, .jpeg">
+										</div>
+									</div> #}
+
+									<div class="form-group col-md-12">
+										<label>Motivo {{ OBRIGATORIO }}</label>
+										<textarea name="motivo_abono" rows="3" class="form-control" required="required" maxlength="255"></textarea>
+                                        <div class="invalid-feedback"></div>
+									</div>
+
+									<div class="form-group col-md-12 pt-2 mb-0">
+										<button type="button" class="btn btn-primary waves-effect waves-light">
+											<i class="fa fa-save"></i>
+											Cadastrar
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+
+{% endblock %}
+
+{% block scripts %}
+	<style>
+	input[type="date"]::-webkit-calendar-picker-indicator {
+		background: transparent;
+		bottom: 0;
+		color: transparent;
+		cursor: pointer;
+		height: auto;
+		left: 0;
+		position: absolute;
+		right: 0;
+		top: 0;
+		width: auto;
+	}
+	</style>
+
+	<script type="text/javascript">
+        
+        $('body').on('blur', 'input, select, textarea', function(){
+            verificarCampo(this.name, this.value)
+        })
+        
+        $('body').on('click', '.btn.btn-primary.waves-effect.waves-light', function() {
+            let data_abono = $('[name=data_abono]').val()
+            let periodo_abono = $('[name=periodo_abono]').val()
+            let motivo_abono = $('[name=motivo_abono]').val()
+            let error = false
+
+            if(!verificarCampo('data_abono', data_abono)){ error = true }
+            if(!verificarCampo('periodo_abono', periodo_abono)){ error = true }
+            if(!verificarCampo('motivo_abono', motivo_abono)){ error = true }
+            if($('#por_intervalo').is(':checked')){
+                let data_final_abono = $('[name=data_final_abono]').val()
+                if(!verificarCampo('data_final_abono', data_final_abono)){ error = true }
+            }
+
+            if(error){
+                return false;
+            }
+
+            return $('form.form-ajax').submit()
+        })
+
+        var buttonSubmitDisabled = false
+
+        function acaoButtonSubmitDisabled(){
+            if(buttonSubmitDisabled){
+                return $('button.waves-effect.waves-light').prop('disabled', true).removeClass('btn-primary').addClass('btn-secondary')
+            }
+            return $('button.waves-effect.waves-light').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary')
+        }
+
+        function verificarCampo(campo, value) {
+            let msg = null
+
+            if(campo == 'data_abono'){
+                buttonSubmitDisabled = false
+                acaoButtonSubmitDisabled()
+            }
+
+            if(campo){
+                switch(campo) {
+                    case 'data_abono':
+                        if(moment(value) > moment()){
+                            buttonSubmitDisabled = true
+                            acaoButtonSubmitDisabled()
+                            msg = '<b>A data do abono não pode ser superior a data atual.</b>'
+                        } else if(value == ''){
+                            msg = 'Informe a data do abono.'
+                        }
+                        break;
+                    case 'data_final_abono':
+                        let data_abono = $('[name=data_abono]').val()
+                        if(moment(value) > moment()){
+                            msg = 'A data final do abono não pode ser superior a data atual.'
+                        } else if(moment(value) < moment(data_abono)){
+                            msg = 'A data final do abono não pode ser inferior a data inicial.'
+                        } else if(moment(value) == moment(data_abono)){
+                            msg = 'A data final do abono não pode ser igual a data inicial.'
+                        } else if(value == ''){
+                            msg = 'Informe a data final do abono.'
+                        }
+                        break;
+                    case 'periodo_abono':
+                        if(value == ''){
+                            msg = 'Informe o período do abono.'
+                        }
+                        break;
+                    case 'motivo_abono':
+                        if(value == ''){
+                            msg = 'Informe o motivo da solicitação do abono.'
+                        }
+                        break;
+                    default:
+                }
+
+                if(msg){
+                    $(`[name=${campo}]`).addClass('is-invalid')
+                    $(`[name=${campo}]`).parent().children('.invalid-feedback').html(msg)
+                    return false
+                }
+                $(`[name=${campo}]`).removeClass('is-invalid')
+            }
+            return true
+        }
+
+        $('.select2').select2({theme: 'bootstrap'})
+		$('#por_intervalo').on('change',function(e) {
+			var data_abono = $('#data_abono').val();
+			if(e.target.checked){
+				$("label[for='data_abono']").html(`Data Início {{ OBRIGATORIO }}`);
+				$('#data_final').html(`
+					<div class="form-group col-md-12">
+						<label>Data Fim {{ OBRIGATORIO }}</label>
+						<input name="data_final_abono" id="data_final_abono" x-moz-errormessage="This field should not be left blank." title="This field should not be left blank." type="date" class="form-control" min="${data_abono}" max="{{ "now"|date("Y-m-d") }}" oninvalid="checar.data_final_abono()" value="" required="required">
+                        <div class="invalid-feedback"></div>
+					</div>
+				`);
+			}else{
+				$("label[for='data_abono']").html(`Data {{ OBRIGATORIO }}`);
+				$('#data_final').html('');
+			}
+		});
+		$('#data_abono').on('change',function(e) {
+			if($('#data_abono').val() !== ''){
+				var data_abono = $('#data_abono').val();
+				$('#data_final_abono').attr('min', data_abono).attr('max', moment(data_abono).endOf('month') >= moment() ? moment().format('YYYY-MM-DD') : moment(data_abono).endOf('month').format('YYYY-MM-DD'));
+			}
+		});
+
+		$("#tipo-documento").change(function(){
+			if ($(this).val() == "ATESTADO MÉDICO") {
+				$("#arquivo-documento").attr("required", true);
+				$("label[for='arquivo-documento']").html(`Anexo{{ OBRIGATORIO }}`);
+			}
+			else{
+				$("#arquivo-documento").attr("required", false);
+				$("label[for='arquivo-documento']").html("Anexo");
+			}
+		});
+	</script>
+{% endblock %}

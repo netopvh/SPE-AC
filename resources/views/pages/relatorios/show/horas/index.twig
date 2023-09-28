@@ -1,0 +1,233 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-6">
+					<h4 class="page-title">
+						<a href="{{ APP_URL }}/relatorios">Lista de Relatórios </a><i class="fa fa-chevron-right font-12"></i> 
+						{{ relatorio.descricao_relatorio }}
+					</h4>
+				</div>
+				<div class="col-md-6">
+					<div class="float-right d-none d-md-block">
+						<a href="{{ APP_URL }}/relatorios/imprimir/{{ relatorio.link_relatorio }}?ano={{ ano }}&mes={{ mes }}{{ id_orgao ? '&id_orgao=' ~ id_orgao : '' }}{{ id_lotacao ? '&id_lotacao=' ~ id_lotacao : '' }}{{ qtd ? '&qtd=' ~ qtd : '' }}" class="btn btn-primary waves-effect waves-light" target="_blank">
+							<i class="fa fa-print"></i>
+							Imprimir
+						</a>
+					</div>
+				</div>
+				<h6 class="ml-3">Ano de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="year" class="form-control" required="required">
+							{% for year in years %}
+								<option {{ year == ano ? 'selected' : '' }} value="{{ year }}">{{ year }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<h6 class="ml-3">Mês de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="month" class="form-control" required="required">
+							{% for month in 1..12 %}
+								<option {{ month == mes ? 'selected' : '' }} value="{{ month }}">{{ DATE.monthName(month) }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-md-4">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off"/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control select2" required="required">
+							<option value="">Selecione um órgão</option>
+							{% for orgao in orgaos %}
+								<option {{ id_orgao == orgao.id_orgao ? 'selected' : '' }} value="{{ orgao.id_orgao }}">{{ orgao.sigla_orgao }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_lotacao">Lotação</label>
+						<select id="id_lotacao" class="form-control select2" required="required">
+							<option value="">Selecione uma lotação</option>
+							{% for lotacao in lotacoes %}
+								<option {{ id_lotacao == lotacao.id_lotacao ? 'selected' : '' }} value="{{ lotacao.id_lotacao }}">{{ lotacao.descricao_lotacao }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-servidores" class="table table-sm table-hover">
+						<thead>
+							<tr>
+								<th class="text-uppercase" style="width:10%;">Matricula</th>
+								<th class="text-uppercase" style="width:35%;">Servidor</th>
+								<th class="text-uppercase" style="width:15%;">Órgão</th>
+								<th class="text-uppercase" style="width:20%;">Lotação</th>
+								<th class="text-uppercase" style="width:10%;">Média de Horas</th>
+                                <th class="text-uppercase" style="width:10%;"></th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{%  endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+            $('.select2').select2({theme: 'bootstrap',})
+			var id_orgao = '{{ id_orgao }}';
+			var id_lotacao = '{{ id_lotacao }}';
+
+			var table = $("#table-servidores").DataTable({
+				serverSide: true,
+				processing: true,
+				responsive: true,
+				{# paging: false, #}
+				searching: false,
+				ajax: {
+					url: `{{ APP_URL }}/api/relatorios/{{ relatorio.link_relatorio }}?ano={{ ano }}&mes={{ mes }}${ id_orgao !== '' ? '&id_orgao='+id_orgao : '' }${ id_lotacao !== '' ? '&id_lotacao='+id_lotacao : '' }`,
+					data: function(data){
+						data.search = $("#search").val();
+						data.qtd_aceita = $("#search-qtd").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        {# orderable: false, #}
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario + '-' + data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.sigla_orgao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.descricao_lotacao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            let horas = data.total_hora > 0 ? Math.floor(data.total_hora / 60) : 0;
+                            let min = (data.total_hora > 0) ? data.total_hora % 60 : 0
+                            return ('00'+horas).slice(-2)+'hs e '+('00'+min).slice(-2)+'min';
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        orderable: false,
+                        render: function ( data, type, row ) {
+                            return `<a href="{{ APP_URL }}/folhas_ponto/visualizar?id_usuario=${data.id_usuario}&ano={{ ano }}&mes={{ mes }}" class="btn btn-sm btn-default btn-circle">
+                                <i class="mdi mdi-eye"></i>
+                            </a>`;
+                        }    
+                    }
+                ],
+				order: [[ 1, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			})
+
+			$('body').on('keyup', "#search", function(){
+				table.draw();
+			});
+		});
+		$('#month').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('mes', $(this).val());
+            window.location.href = url.href;
+        });
+
+        $('#year').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('ano', $(this).val());
+            window.location.href = url.href;
+        });
+
+		$('#id_orgao').on('change', function () {
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('id_orgao', $(this).val());
+			}else{
+				url.searchParams.delete('id_orgao');
+			}
+			url.searchParams.delete('id_lotacao');
+            window.location.href = url.href;
+        });
+
+        $('#id_lotacao').on('change', function () {
+			var url = new URL(window.location.href);
+			if($(this).val()){
+				url.searchParams.set('id_lotacao', $(this).val());
+			}else{
+				url.searchParams.delete('id_lotacao');
+			}
+            window.location.href = url.href;
+        });
+
+        $('body').on('click', '#aplicarQtd', function(){
+            let url = new URL(window.location.href);
+			if($('#search-qtd').val()){
+				url.searchParams.set('qtd', $('#search-qtd').val());
+			}else{
+				url.searchParams.delete('qtd');
+			}
+            window.location.href = url.href;
+        })
+	</script>
+{%  endblock %}

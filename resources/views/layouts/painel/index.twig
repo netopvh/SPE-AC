@@ -1,0 +1,139 @@
+{% set OBRIGATORIO %}
+    <span style="color: #ff0000" title="campo obrigatório">*</span> 
+{% endset %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>{{ APP_NAME }}</title>
+
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="{{ APP_URL }}/assets/images/favicon.png">
+
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/metisMenu.min.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/icons.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/style.css?version={{ APP_VERSION }}"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/animated.css"/>
+
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/select2js/dist/css/select2.min.css"/>   
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/select2js/dist/css/select2-bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/sweetalert/dist/sweetalert.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/data-tables/DataTables-1.10.21/css/dataTables.bootstrap4.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/data-tables/Select-1.3.1/css/select.semanticui.css"/>
+
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/jquery-toast/css/jquery.toast.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/bootstrap-datepicker/css/datepicker.css"/>
+
+    </head>
+    <body>
+
+        <!-- Begin page -->
+        <div id="wrapper">
+
+            <!-- Top Bar Start -->
+            {% include "components/topbar/index.twig" %}
+
+            <!-- COMPONENT Navbar -->
+            {% include "components/navbar/index.twig" %}
+
+            <div class="content-page">
+                <div class="content">
+
+                    <!-- COMPONENT Content -->
+                    {% block content %}{% endblock %}
+                </div>
+                
+                <!-- COMPONENT Footer -->
+                {% include "components/footer/index.twig" %}
+            </div>
+        </div>
+
+        <!-- jQuery  -->
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/jquery.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/bootstrap.bundle.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/metisMenu.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/jquery.slimscroll.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/waves.min.js"></script>
+
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/sweetalert/dist/sweetalert.min.js"></script>
+        {# <script type="text/javascript" src="{{ APP_URL }}/plugins/sweetalert2/sweetalert2@11.js"></script> #}
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/data-tables/datatables.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/data-tables/DataTables-1.10.21/js/dataTables.bootstrap4.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/data-tables/Select-1.3.1/js/dataTables.select.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/mask/jquery.mask.js"></script>
+
+        <!-- SCRIPTS Moment -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/moment/moment.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/moment/moment-with-locales.js"></script>
+
+        <!-- SCRIPTS jQueryToast -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/jquery-toast/js/jquery.toast.js"></script>
+
+        <!-- SCRIPTS Select2 -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/select2js/dist/js/select2.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/select2js/dist/js/i18n/pt-BR.js"></script>
+
+        <!-- SCRIPTS MultipleDates -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/bootstrap-datepicker/js/locales/bootstrap-datepicker.pt.js"></script>
+
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/qrcode/qrcode.js"></script>
+
+        <!-- App js -->
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/app.js?version={{ APP_VERSION }}"></script>
+
+        <!-- App js -->
+        <script type="text/javascript" src="{{ BASE_URL }}/js/scripts.js?version={{ APP_VERSION }}"></script>
+
+        <script type="text/javascript">
+            $.ajax({
+                cache: false,
+                url: `{{ APP_URL }}/api/abonos_servidor/devolvidos`,
+                type: 'GET',
+                success: function (data) {
+                    if(data > 0){
+                        $('#abonos_usuario_nav').append(`<span class="badge badge-danger float-right">${data.toLocaleString('de-DE')}</span>`);
+                    }
+                },
+                error: function (data) {},
+            });
+        </script>
+
+        {% if AUTH.perfil_usuario and AUTH.perfil_usuario['id_tipo_perfil'] != 4 %}
+            <script type="text/javascript">
+                $.ajax({
+                    cache: false,
+                    url: `{{ APP_URL }}/api/abonos/retornados`,
+                    type: 'GET',
+                    success: function (data) {
+                        if(data > 0){
+                            $('#abonos_nav').append(`<span class="badge badge-danger float-right">${data.toLocaleString('de-DE')}</span>`);
+                        }
+                    },
+                    error: function (data) {},
+                });
+                $.ajax({
+                    cache: false,
+                    url: `{{ APP_URL }}/api/folhas_ponto/count`,
+                    type: 'GET',
+                    success: function (data) {
+                        if(data > 0){
+                            $('#folhas_ponto_nav').append(`<span class="badge badge-danger float-right">${data.toLocaleString('de-DE')}</span>`);
+                        }
+                    },
+                    error: function (data) {},
+                });
+            </script>
+        {% endif %}
+
+        <!-- JS Scripts -->
+        {% block scripts %}{% endblock %}
+        
+    </body>
+</html>

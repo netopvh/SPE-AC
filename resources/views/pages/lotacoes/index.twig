@@ -1,0 +1,223 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-12 col-xs-12">
+                    <h4 class="page-title">
+                        <a href="{{ APP_URL }}/orgaos">Lista de Órgãos </a><i class="fa fa-chevron-right font-12"></i> 
+                        Lista de Lotações
+                    </h4>
+                </div>
+                {# <div class="col-sm-9 col-xs-12">
+                    <h4 class="page-title">Lista de Lotações</h4>
+                </div> #}
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="search">Buscar</label>
+                        <input type="text" id="search" class="form-control" autocomplete="off" placeholder="Nome, sigla e município"/>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <table id="table-lotacoes" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">Tipo</th>
+                                <th class="text-uppercase">Lotação</th>
+                                <th class="text-uppercase">Responsáveis</th>
+                                <th class="text-uppercase" style="width:100px;">Sigla</th>
+                                <th class="text-uppercase" style="width:100px;">Município</th>
+                                {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+                                    <th class="text-uppercase" style="width:95px;">Responsáveis</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+        $(function(){
+
+            const meusOrgaos = JSON.parse('{{ AUTH.visualizar_orgaos|json_encode() }}');
+            const minhasLotacoes = JSON.parse('{{ LOTACOES.lotacoesArray|json_encode() }}');
+
+            let [ link, parametros ] = window.location.href.split('?');
+            parametros = `?${parametros}`;
+
+			var table = $("#table-lotacoes").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: `{{ APP_URL }}/api/lotacoes${parametros}`,
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return (data.tipo_lotacao) ? data.tipo_lotacao.tipo_lotacao : '--';
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_lotacao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            var usuarios = '';
+                            data.lotacao_responsavel.map(lotacao_responsavel => {
+                                usuarios = `${usuarios}${lotacao_responsavel.usuario.nome_usuario}<br/>`;
+                            })
+
+                            if(usuarios == ''){
+                                usuarios = `<i class="text-secondary">Responsável não atribuido</i>`
+                            }
+
+                            return usuarios;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            
+                            if(!data.sigla_lotacao){
+                                return `<i class="text-secondary">N/A</i>`
+                            }
+
+                            return data.sigla_lotacao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.municipio_lotacao;
+                        }                       
+                    },
+                    {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] != 4 %}
+                        {
+                            data: null,
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+
+                                console.log(meusOrgaos, data.id_orgao)
+                                
+                                if({{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 2 && meusOrgaos && meusOrgaos.includes(data.id_orgao)){
+                                    return ``;
+                                }
+
+                                return `
+                                    <a href="{{ APP_URL }}/lotacoes/${data.id_lotacao}/responsaveis" class="btn btn-sm btn-success" title="Editar Responsáveis pela Lotação">
+                                        <i class="mdi mdi-account-check"></i> 
+                                    </a>
+
+                                    <a href="javascript:void(0)" data-id="${data.id_lotacao}" class="btn btn-sm btn-danger removerLotacao" title="Remover Lotação">
+                                        <i class="mdi mdi-trash-can-outline"></i> 
+                                    </a>
+                                `;
+                            }
+                            
+                        },
+                    {% endif %}
+                ],
+                columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 0,2,5 ] 
+                    },
+                ],
+				order: [[ 0, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+		});
+		$('#month').change(function(){
+			window.location.href = window.jQuery.MainApp.updateURLParam(
+				window.location.href, 'mes', $(this).val()
+			);
+		});
+
+        //function removerLotacao(id_lotacao) {
+
+        $( "#table-lotacoes" ).on( "click", ".removerLotacao", function() {
+            let div = this
+            let id_lotacao = $(this).attr('data-id')
+            
+            swal({
+                title: 'Atenção!',
+                text: 'Tem certeza que deseja remover essa lotação?',
+                icon: 'warning',
+                dangerMode: false,
+                closeOnClickOutside: false,
+                buttons: {
+                    cancel: {
+                        text: 'Cancelar',
+                        value: null,
+                        visible: true,
+                        closeModal: true,
+                    },
+                    confirm: {
+                        text: 'Sim, remover',
+                        value: true,
+                        visible: true,
+                        closeModal: false
+                    }
+                },
+            }).then(function (result) {
+                if (result) {
+                    $.post(`{{ APP_URL }}/lotacoes/remover/${id_lotacao}`, {acao: 'remover', id_lotacao}, function(data) {
+                        $(div).parent().parent().remove()
+                        swal('Removido', 'Removendo lotação....', 'success', {
+                            buttons: false,
+                            timer: 1500,
+                        })
+                    },'json')
+                }else{
+                }
+            });
+        })
+    </script>
+{% endblock %}

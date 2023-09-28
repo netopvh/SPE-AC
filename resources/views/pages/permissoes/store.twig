@@ -1,0 +1,95 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+	<form class="form-ajax" data-redirect="{{ APP_URL }}/permissoes" autocomplete="off">
+		<div class="container-fluid p-0">
+			<div class="page-title-box">
+				<div class="row align-items-center">
+					<div class="col-sm-12">
+						<h4 class="page-title">
+							<a href="{{ APP_URL }}/calendarios?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}">Usuários com Acesso ao Painel Administrativo </a><i class="fa fa-chevron-right font-12"></i> 
+							Adicionar permissão de Acesso
+						</h4>
+					</div>
+				</div>
+			</div>
+			<div class="page-content">
+				<div class="row">
+					<div class="col-lg-12">
+						<p class="msg"></p>
+						<ul class="nav nav-tabs" role="tablist">
+							<li class="nav-item">
+								<a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Atribuir Acesso</a>
+							</li>
+						</ul>
+						<div class="tab-content">
+							<div class="tab-pane p-3 active" id="home" role="tabpanel">
+								<div class="form-group">
+									<label>Servidores / Colaboradores {{ OBRIGATORIO }}</label>
+									<select id="id_usuario" name="id_usuario" class="form-control searchable" required="required">
+										<option value=""></option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label>Tipo {{ OBRIGATORIO }}</label>
+									<select name="id_tipo_perfil" class="form-control" required="required">
+										<option value="">Selecione um perfil...</option>
+
+										{% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+											<option value="1">ADMINISTRADOR</option>
+											<option value="2">GESTOR</option>
+										{% endif %}
+										<option value="3">CHEFIA</option>
+										{% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+											<option value="4">VISUALIZADOR</option>
+										{% endif %}
+									</select>
+								</div>
+								<div class="form-group pt-2 mb-0">
+                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                        <i class="fa fa-save"></i>
+                                        Cadastrar
+                                    </button>
+                                </div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+		$('#id_usuario').select2({
+			placeholder: 'Digite nome ou matricula (exibindo até 10 registros)',
+			theme: 'bootstrap',
+			language: 'pt-BR',
+			ajax: {
+				url: `{{ APP_URL }}/api/servidores`,
+				dataType: 'json',
+				data: function(params) {
+					var query = {
+						search: params.term ? params.term : '',
+						length: 10,
+						start: 0,
+						draw: 1,
+					}
+
+					return query;
+				},
+				processResults: function(data) {
+					var usuarios = [];
+					data.aaData.map(usuario => {
+						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.contrato_usuario})` })
+					});
+					return {
+						results: usuarios
+					};
+				}
+			}
+		});
+	</script>
+{% endblock %}

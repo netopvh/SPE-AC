@@ -1,0 +1,44 @@
+{
+    "name": "spe_novo/app",
+    "type": "project",
+    "description": "Sistema de Ponto Eletrônico",
+    "authors": [
+        {
+            "name": "Diretoria de Modernização - SEAD",
+            "email": "mdoernizacao@ac.gov.br"
+        }
+    ],
+    "require": {
+        "slim/slim": "^4.3",
+        "slim/http": "^0.8.0",
+        "slim/psr7": "^0.6.0",
+        "nyholm/psr7": "^1.2",
+        "nyholm/psr7-server": "^0.3.0",
+        "guzzlehttp/psr7": "^1.6",
+        "http-interop/http-factory-guzzle": "^1.0",
+        "zendframework/zend-diactoros": "^2.1",
+        "php-di/slim-bridge": "^3.0",
+        "slim/twig-view": "^2.5",
+        "illuminate/database": "^6.3",
+        "illuminate/pagination": "^6.7",
+        "phpmailer/phpmailer": "^6.1",
+        "sail/useragent": "dev-master",
+        "firebase/php-jwt": "^5.0",
+        "tplaner/when": "^3.0",
+        "chillerlan/php-qrcode": "^4.3",
+        "dompdf/dompdf": "^1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Routes\\": "routes/"
+        },
+        "files": [
+            "config/app.php",
+            "config/crypto.php",
+            "config/database.php",
+            "config/mail.php",
+            "config/time.php"
+        ]
+    }
+}

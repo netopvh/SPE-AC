@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>{{ APP_SIGLA_NAME }} - {{ APP_NAME }}</title>
+
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="{{ BASE_URL }}/assets/images/favicon.png">
+
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/icons.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/style.css?version={{ APP_VERSION }}"/>
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/assets/css/animated.css"/>
+
+        <link rel="stylesheet" type="text/css" href="{{ BASE_URL }}/plugins/jquery-toast/css/jquery.toast.css"/>
+
+        <style>
+            .nome-sistemas {
+                font-size: 40px;
+                margin-bottom: 15px;
+                color: #000;
+            }
+
+            .btn-area-servidor {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding: 20px 20px 0 0;
+            }
+
+            .horario {
+                background-color: #03366e;
+                padding: 0 15px;
+                border-radius: 15px;
+                font-size: 35px;
+                margin-bottom: 15px;
+                max-width: 200px;
+                color: #FFF;
+            }
+
+            .data {
+                color: #00000087;
+                margin-top: 10px;
+                margin-bottom: 25px;
+                font-size: 20px;
+            }
+
+            .form-ponto {
+                max-width: 370px;
+                min-width: 280px;
+                text-align: left;
+            }
+
+            .form-control-user {
+                font-size: 14px;
+                padding: 20px 15px;
+            }
+
+            .buttons {
+                max-width: 370px;
+                min-width: 250px;
+                margin-top: 20px;
+            }
+
+            .buttons .btn:not(:last-child) {
+                margin-right: 13px !important;
+            }
+
+            .btn-option {
+                justify-content: space-around;
+                height: 65px;
+                width: 80px;
+                font-size: 14px;
+                line-height: 14px;
+                background-color: #afafaf7d;
+                color: #000;
+                padding: 0;
+            }
+
+            .grid-left {
+                display: flex;
+                flex-direction: column;
+                background-color: #023E88;
+                justify-content: space-evenly; 
+                border-radius: 15px 0 0 15px;
+            }
+
+            @media (max-width: 767px){
+                .btn-option {
+                    justify-content: space-around;
+                    height: 65px;
+                    width: 65px;
+                    font-size: 10px;
+                    line-height: 14px;
+                    background-color: #afafaf7d;
+                    color: #000;
+                    padding: 0;
+                }
+
+                .grid-left {
+                    border-radius: 15px 15px 0 0;
+                }
+            }
+
+            .btn-option.active.cor {
+                background-color: #04366B;
+                color: #d0e7ff;
+            }
+
+            .btn-option > i {
+                font-size: 25px;
+            }
+
+            .btn-option:hover {
+                color: #000;
+            }
+
+            .btn-green-ponto {
+                background-color: #229E06;
+                color: #FFF;
+            }
+            
+            .btn-green-ponto:hover {
+                background-color: #1a7b04;
+                color: #FFF;
+            }
+
+        </style>
+    </head>
+    <body style="background-image: linear-gradient(#bbbbbb, #F7F7F7);">
+        <div class="container animated zoomIn">
+            <div class="row justify-content-center">
+                <div class="col-xl-10 col-lg-10 col-md-9 col-sm-12">
+                    <div class="card o-hidden border-0 shadow-lg my-5" style="border-radius: 15px;">
+                        <div class="row no-gutters" style="min-height: 700px; border-radius: 15px;">
+                            <div class="col-md-5 p-5 grid-left">
+                                <img src="{{ BASE_URL }}/assets/images/logos/brasao_light.png" class="card-img mb-3 pl-4 pr-4" alt="ACRE">
+                                <img src="{{ BASE_URL }}/assets/images/logos/seplag_light.png" class="card-img pl-4 pr-4" alt="SEPLAG"/>
+                            </div>
+                            <div class="col-md-7" style="border-radius: 20px;" onselectstart="return false">
+                                <div class="btn-area-servidor">
+                                    <a href="{{ APP_URL }}/autenticacao/login" class="btn btn-green-ponto" >
+                                        <i class="mdi mdi-account"></i> Área do Servidor
+                                    </a>
+                                </div>
+                                <div class="card-body ponto-body text-center d-flex flex-column align-items-center">
+                                    <h1 class="nome-sistemas">{{ APP_NAME }}</h1>
+                                    <div class="horario" id="horario"></div>
+                                    <div class="data" id="data"></div>
+                                    <div id="ponto-registrado"></div>
+                                    <form autocomplete="off">
+                                        <div class="form-ponto">
+                                            <div class="form-group">
+                                                <label class="ml-3" for="user" style="color: #00000087; font-size: 12px;">USUÁRIO</label>
+                                                <input class="form-control form-control-user" id="user" type="text" name="user" required/>
+                                            </div>
+                                            <div class="form-group contratos"></div>
+                                            <div class="form-group">
+                                                <label class="ml-3" for="password" style="color: #00000087; font-size: 12px;">SENHA</label>
+                                                <input class="form-control form-control-user" id="password" type="password" name="password" required/>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <div class="form-group form-buttons">
+										CONTRATOS
+                                    </div>
+                                    <div class="form-group form-buttons">
+                                        <div class="buttons">
+                                            <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                                <i class="mdi mdi-login"></i>
+                                                1ª Entrada
+                                            </button>
+                                            <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                                <i class="mdi mdi-logout"></i>
+                                                1ª Saída
+                                            </button>
+                                            <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                                <i class="mdi mdi-login"></i>
+                                                2ª Entrada
+                                            </button>
+                                            <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                                <i class="mdi mdi-logout"></i>
+                                                2ª Saída
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="avisoMobile" data-backdrop="static" data-keyboard="false" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Aviso</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Ao acessar o ponto web via Smartphone, é necessário a permitir o acesso ao GPS do seu dispositivo.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Negar</button>
+                        <button type="button" class="btn btn-success">Aceitar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- jQuery  -->
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/jquery.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/bootstrap.bundle.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/metisMenu.min.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/jquery.slimscroll.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/waves.min.js"></script>
+
+        <!-- SCRIPTS Moment -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/moment/moment.js"></script>
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/moment/moment-with-locales.js"></script>
+
+        <!-- SCRIPTS jQueryToast -->
+        <script type="text/javascript" src="{{ BASE_URL }}/plugins/jquery-toast/js/jquery.toast.js"></script>
+
+        <!-- SCRIPTS Javascript -->
+        <script type="text/javascript" src="{{ BASE_URL }}/js/scripts.js?version={{ APP_VERSION }}"></script>
+
+        <!-- App js -->
+        <script type="text/javascript" src="{{ BASE_URL }}/assets/js/app.js?version={{ APP_VERSION }}"></script>
+
+        <script type="text/javascript">
+            initialLoadDateTime();
+            var geolocalizacao
+            var ipreal
+            var locale = null
+
+            function initialLoadDateTime(){
+                moment.locale('pt');
+                const emelent_time = $('#horario');
+                const element_date = $('#data');
+
+                var _data_server = '{{ data_hora }}';
+				var difDataHora = moment().diff(moment(_data_server))
+
+                updateDateTime();
+
+                setInterval(() => {
+					updateDateTime();
+                }, 100);
+
+                function updateDateTime() {
+                    const data = moment(_data_server).format('LLLL');
+                    const time = moment(_data_server).format('HH:mm:ss');
+                    emelent_time.html(time);
+                    element_date.html(data);
+                    //_data_server = moment(_data_server).add(1, 'seconds').format('YYYY-MM-DD HH:mm:ss');
+                    _data_server = moment().subtract(difDataHora, 'ms').format('YYYY-MM-DD HH:mm:ss');
+                }
+            }
+
+            $('#user').on('change',(e)=>{
+                pontos();
+            });
+
+            $('body').on('change', '#contrato_usuario', (e)=>{
+                pontos();
+            });
+
+            function pontos(){
+                var email_usuario = $('#user').val();
+                var contrato_usuario = $('#contrato_usuario').val() ? '&contrato_usuario=' + $('#contrato_usuario').val() : '';
+                const buttons = $('.buttons');
+
+                buttons.html(`
+                    <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                        <i class="mdi mdi-login"></i>
+                        1ª Entrada
+                    </button>
+                    <button type="button" disabled="disabled" class="col-md-3 btn btn-option cor">
+                        <i class="mdi mdi-logout"></i>
+                        1ª Saída
+                    </button>
+                    <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                        <i class="mdi mdi-login"></i>
+                        2ª Entrada
+                    </button>
+                    <button type="button" disabled="disabled" class="col-md-3 btn btn-option cor">
+                        <i class="mdi mdi-logout"></i>
+                        2ª Saída
+                    </button>
+                `);
+
+                $.ajax({
+                    url: `{{ APP_URL }}/api/pontos?email_usuario=${email_usuario}${contrato_usuario}`,
+                    type: 'GET',
+                    cache: false,
+                }).then(data => {
+                    if(data.options) {
+                        buttons.html('');
+                        data.options.map(function (option, key) {
+                            let disabled = option.disabled ? 'disabled="disabled"' : '';
+							//waves-effect waves-light //classe removida para evitar erros
+                            buttons.append(`
+                                <button type="button" ${disabled} data-option="${option.option}" title="${option.title}" class="col-md-3 btn btn-option ${option.class}  registrar-ponto">
+                                    <i class="mdi mdi-${option.icon}"></i>
+                                    ${option.label}
+                                </button>
+                            `);
+                        });
+                    }else if (data.contratos && data.contratos.length > 1) {
+                        $('.contratos').empty().append(`
+                            <label class="ml-3" for="contrato_usuario" style="color: #00000087; font-size: 12px;">CONTRATO</label>
+                            <select id="contrato_usuario" name="contrato_usuario" class="form-control form-control-user" required="required" style="padding: 0px 1.0rem; font-size: 14px;">
+                                <option>Selecione um contrato...</option>
+                            </select>`);
+                        data.contratos.map(function (option, key) {
+                            $('#contrato_usuario').append(new Option(`${option.contrato_usuario} - ${option.lotacao.descricao_lotacao}`, option.contrato_usuario));
+                        });
+                    }
+                }).catch(data => {
+                    var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.';
+                    $.toast({
+                        heading: 'Erro',
+                        text: error,
+                        position: 'bottom-center',
+                        showHideTransition: 'slide',
+                        icon: 'error',
+                        <!-- hideAfter: 8000, -->
+                    });
+                });
+            }
+            
+            $(document).on('click', '.registrar-ponto', (e)=>{
+				/*REMOVE O BOTÃO PARA NÃO HAVER RISCO DE REGISTRAR MAIS DE UMA VEZ*/
+				let cardOld = $('.buttons').html()
+				$('.buttons').html('<div class="text-center"><img src="{{ BASE_URL }}/img/loading.gif" style="width: 100%;"></div>')
+			
+                const button = $(e.currentTarget);
+                var email_usuario = $('#user').val();
+                var password = $('#password').val();
+                var contrato_usuario = $('#contrato_usuario').val() ? $('#contrato_usuario').val() : false;
+                let tipo_ponto = button.attr('data-option');
+                let geo = geolocalizacao ?  JSON.stringify(geolocalizacao) : locale;
+                let ipreal = window.ipreal ?? null;
+
+                var btn = $(this).find('input[type="submit"], button[type="submit"], button[type="button"]');
+
+                btn.attr('disabled', 'true');
+
+                $.ajax({
+                    url: `{{ APP_URL }}/pontos`,
+                    type: 'POST',
+                    cache: false,
+                    data: {
+                        email_usuario,
+                        password,
+                        contrato_usuario,
+                        tipo_ponto,
+                        geo,
+                        ipreal
+                    }
+                }).then(data => {
+                    $('#ponto-registrado').html(`
+                        <div class="alert alert-primary text-body text-center">
+                            <h6>${data.message}</h6>
+                        </div>
+                    `);
+                    $('.form-ponto').remove();
+                    $('.form-buttons').remove();
+                    $('.ponto-body').append(`
+                        <div class="form-group">
+                            <div class="buttons">
+                                <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                    1ª Entrada
+                                    <strong>${data.entrada_1_ponto}</strong>
+                                </button>
+                                <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                    1ª Saída
+                                    <strong>${data.saida_1_ponto}</strong>
+                                </button>
+                                <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                    2ª Entrada
+                                    <strong>${data.entrada_2_ponto}</strong>
+                                </button>
+                                <button type="button" disabled="disabled" class="col-md-3 btn btn-option">
+                                    2ª Saída
+                                    <strong>${data.saida_2_ponto}</strong>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                }).catch(data => {
+					$('.buttons').html(cardOld)
+                    var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.';
+                    $.toast({
+                        heading: 'Erro',
+                        text: error,
+                        position: 'bottom-center',
+                        showHideTransition: 'slide',
+                        icon: 'error',
+                        hideAfter: 8000,
+                    });
+                    btn.removeAttr('disabled');
+                });
+                    
+            })
+
+            $('body').on('click', '#avisoMobile .btn.btn-success', function(){
+                getLocation()
+                verificarPermissaoRecurssiva()
+            })
+
+            $('body').on('click', '#avisoMobile .btn.btn-danger', function(){
+                $('#avisoMobile').modal('hide');
+                $('.ponto-body').remove()
+            })
+
+            function getLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(showPosition, verificarPermissaoRecurssiva);
+                } else { 
+                    {# x.innerHTML = "A geolocalização não é suportada por este navegador."; #}
+                    console.log("A geolocalização não é suportada por este navegador.")
+                }
+            }
+
+            function showPosition(position) {
+                console.log(position)
+                window.geolocalizacao = {
+                    accuracy: position.coords.accuracy,
+                    altitude: position.coords.altitude,
+                    altitudeAccuracy: position.coords.altitudeAccuracy,
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    speed: position.coords.speed
+                }
+            }
+
+            function verificarPermissaoRecurssiva(first) {
+                
+                try {
+                    navigator.permissions.query({name:'geolocation'}).then(function(result) {
+                        
+                        if (result.state == 'denied') {
+                            
+                            if(!window.primeiraVerificacao) {
+                                $('#avisoMobile .modal-body .alert').remove()
+
+                                $('#avisoMobile .modal-body').prepend(`
+                                <div class="alert alert-danger" role="alert">
+                                    Você não permitiu acesso ao dispositivo!
+                                </div>
+                                `)
+
+                                $('#avisoMobile .modal-body').append(`
+                                <div class="alert alert-primary">
+                                    Se você negou acesso ao dispositivo será necessário redefinir as permissões. Siga os passos para redifinir as permissões em cada navegando clicando nos links abaixo.<br/>
+                                    <a href="https://support.google.com/chrome/answer/114662?hl=pt-PT&ref_topic=7439724" target="_new">Google Chrome</a><br/>
+                                    <a href="https://support.mozilla.org/pt-BR/kb/painel-de-permissoes-do-site" target="_new">Mozila FireFox</a><br/>
+                                    <a href="https://support.apple.com/pt-br/guide/safari/ibrwe2159f50/mac" target="_new">Safari</a>
+                                </div>
+                                `)
+                            }
+
+                            $('#avisoMobile').modal('show');
+                            
+                        } else if (result.state == 'granted') {
+                            getLocation()
+                        } else {
+                            if(first){
+                                $('#avisoMobile').modal('show');
+                            } else {
+                                getLocation()
+                            }
+                        }
+
+                        window.primeiraVerificacao = false
+                        
+                    });
+                } catch(e) {
+                    if(first){
+                        $('#avisoMobile .modal-body .alert').remove()
+
+                        $('#avisoMobile .modal-body').prepend(`
+                        <div class="alert alert-danger" role="alert">
+                            Você não permitiu acesso ao dispositivo!
+                        </div>
+                        `)
+
+                        $('#avisoMobile .modal-body').append(`
+                        <div class="alert alert-primary">
+                            Se você negou acesso ao dispositivo será necessário redefinir as permissões. Siga os passos para redifinir as permissões em cada navegando clicando nos links abaixo.<br/>
+                            <a href="https://support.google.com/chrome/answer/114662?hl=pt-PT&ref_topic=7439724" target="_new">Google Chrome</a><br/>
+                            <a href="https://support.mozilla.org/pt-BR/kb/painel-de-permissoes-do-site" target="_new">Mozila FireFox</a><br/>
+                            <a href="https://support.apple.com/pt-br/guide/safari/ibrwe2159f50/mac" target="_new">Safari</a>
+                        </div>
+                        `)
+
+
+                        $('#avisoMobile').modal('show');
+                    } else {
+                        getLocation()
+                    }
+                }
+            }
+
+            
+			//PEGAR O IP REAL
+			{# $.get('https://api.ipify.org/?format=json', function(data){ #}
+			{# $.get('https://ipinfo.io/json', function(data){ #}
+			$.get('https://servicos.seplag.ac.gov.br/ip.php', function(data){
+				window.ipreal = data.ip
+                // if(data.loc){
+                //    window.locale = JSON.stringify({
+                //        accuracy:300,
+                //        altitude: null,
+                //        altitudeAccuracy:null,
+                //        latitude: (data.loc).split(',')[0],
+                //        longitude: (data.loc).split(',')[1],
+                //        speed:null
+                //    })
+                // }
+			},'json')
+
+            var primeiraVerificacao = true
+            if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                setTimeout(function(){
+                    verificarPermissaoRecurssiva()
+                },150)
+            }
+
+
+            
+			
+        </script>
+    </body>
+</html>

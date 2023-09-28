@@ -1,0 +1,141 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <form class="form-ajax" data-redirect="{{ APP_URL }}/servidores/visualizar/{{ usuario.id_usuario }}" autocomplete="off">
+        <div class="container-fluid p-0">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">
+                            <a href="{{ APP_URL }}/servidores">Lista de Servidores </a><i class="fa fa-chevron-right font-12"></i> 
+                            <a href="{{ APP_URL }}/servidores/visualizar/{{ usuario.id_usuario }}">Informações do Usuário </a><i class="fa fa-chevron-right font-12"></i> 
+                            Editar Servidor
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p class="msg"></p>
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Dados Pessoais</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane p-3 active" id="home" role="tabpanel">
+                                <div class="form-group">
+                                    <label>Matrícula</label>
+                                    <div>{{ usuario.matricula_usuario }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Contrato</label>
+                                    <div>{{ usuario.contrato_usuario }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nome</label>
+                                    <div>{{ usuario.nome_usuario }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <div>{{ usuario.email_usuario }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cargo</label>
+                                    <div>{{ usuario.cargo_comissao_usuario ? usuario.cargo_comissao_usuario : usuario.cargo_usuario }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Data da Admissão</label>
+                                    <div>{{ usuario.data_admissao_usuario|date('d/m/Y') }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo do Contrato</label>
+                                    <div>{{ usuario.tipo_contrato_usuario|upper }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Situação Funcional</label>
+                                    <div>{{ usuario.situacao_funcional_usuario|upper }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Órgão</label>
+                                    <div>{{ usuario.orgao.descricao_orgao }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Lotação Exercício</label>
+                                    <div>{{ usuario.lotacao.descricao_lotacao }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Horários {{ OBRIGATORIO }}</label>
+                                    <div class="form-inline">
+                                        <div id="campo_horario"class="col-md-4 pl-0"></div>
+                                        <div class="form-group form-check">
+                                            <input type="checkbox" class="form-check-input" id="id_horario_padrao" {{ not usuario.id_horario ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="id_horario_padrao">Horário Padrão</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group pt-2 mb-0">
+                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                        <i class="fa fa-save"></i>
+                                        Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $('#campo_horario').html(
+            {% if usuario.id_horario %}
+                `
+                    <select name="id_horario" class="form-control" required="required" style="width: inherit !important;">
+                        <option value="">Selecione um horário...</option>
+                        {% for horario in horarios %}
+                            <option value="{{ horario.id_horario }}" {{ horario.id_horario == usuario.id_horario ? 'selected' : '' }}>
+                                {{ str.mask(horario.entrada_1_horario, '#####') }} - 
+                                {{ str.mask(horario.saida_1_horario, '#####') }} - 
+                                {{ str.mask(horario.entrada_2_horario, '#####') }} - 
+                                {{ str.mask(horario.saida_2_horario, '#####') }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                `
+            {% else %}
+                `
+                    <input type="text" name="id_horario" class="d-none" value="null" />
+                    <div class="form-control" style="width: inherit !important;"></div>
+                `
+            {% endif %}
+        );
+        $('#id_horario_padrao').on('change',function(e) {
+            if(e.target.checked){
+                $('#campo_horario').html(`
+                    <input type="text" name="id_horario" class="d-none" value="null" />
+                    <div class="form-control" style="width: inherit !important;"></div>
+                `);
+            }else{
+                $('#campo_horario').html(`
+                    <select name="id_horario" class="form-control" required="required" style="width: inherit !important;">
+                        <option value="">Selecione um horário...</option>
+                        {% for horario in horarios %}
+                            <option value="{{ horario.id_horario }}" {{ horario.id_horario == usuario.id_horario ? 'selected' : '' }}>
+                                {{ str.mask(horario.entrada_1_horario, '#####') }} - 
+                                {{ str.mask(horario.saida_1_horario, '#####') }} - 
+                                {{ str.mask(horario.entrada_2_horario, '#####') }} - 
+                                {{ str.mask(horario.saida_2_horario, '#####') }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                `);
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,143 @@
+#chart-container {
+    padding: 0px;
+    margin: 0px;
+    text-align: center;
+}
+
+.orgchart { 
+	background: #fff; height: 100%;	
+	transition:all 0.3s ease;
+	/*transform: matrix(0.76, 0, 0, 0.76, -245, -1268);*/
+	padding: 300px;
+}
+.orgchart td.left, .orgchart td.right, .orgchart td.top { border-color: #aaa; }
+.orgchart td>.down { background-color: #aaa; }
+.orgchart .middle-level .title { background-color: #006699; }
+.orgchart .middle-level .content { border-color: #006699; }
+.orgchart .product-dept .title { background-color: #009933; }
+.orgchart .product-dept .content { border-color: #009933; }
+.orgchart .rd-dept .title { background-color: #993366; }
+.orgchart .rd-dept .content { border-color: #993366; }
+.orgchart .pipeline1 .title { background-color: #996633; }
+.orgchart .pipeline1 .content { border-color: #996633; }
+.orgchart .frontend1 .title { background-color: #cc0066; }
+.orgchart .frontend1 .content { border-color: #cc0066; }
+
+.orgchart .node .title {
+	font-weight: 900;
+    text-shadow: 1px 1px 3px #000;
+}
+
+.orgchart .node .barGov {
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to left, #fdcb0f, #fdcb0f, #008F4C, #fdcb0f, #fdcb0f);
+}
+.orgchart .node .content {
+    overflow: hidden;
+	margin-top: initial;
+    margin-bottom: initial;
+}
+	
+.orgchart .node .content .foto {
+	width: 50px;
+    height: 50px;
+    float: left;
+    border-radius: 50px;
+    overflow: hidden;
+	border: 3px solid #ccc;
+}
+
+.orgchart .node .content .foto img {
+	width: 100%;
+}
+
+.orgchart .node .content .dados{
+    float: left;
+    /*width: calc(100% - 76px);*/
+    padding: 10px;
+    text-align: left;
+}
+
+.orgchart .node.focused, .orgchart .node:hover {
+	border-radius: 8px 8px 0px 0px;
+	-webkit-transform: scale(1.3);
+	-ms-transform: scale(1.3);
+	transform: scale(1.5);
+	z-index: 99;
+}
+
+.orgchart .node:hover {
+	z-index: 100;
+}
+
+.orgchart .node .content .dados strong{
+    color: #023E88;
+}
+
+.orgchart .node .nivel-1 .title 	{ background-color: #008F4C;  }
+.orgchart .node .nivel-1 .content 	{ border-color: #008F4C; }
+
+.orgchart .node .nivel-2 .title 	{ background-color: #FAB434;  }
+.orgchart .node .nivel-2 .content 	{ border-color: #FAB434; }
+
+.orgchart .node .nivel-3 .title 	{ background-color: #4D9BFA;  }
+.orgchart .node .nivel-3 .content 	{ border-color: #4D9BFA; }
+
+.orgchart .node .nivel-4 .title 	{ background-color: #9eadbf;  }
+.orgchart .node .nivel-4 .content 	{ border-color: #9eadbf; }
+
+.orgchart .node .nivel-5 .title 	{ background-color: #9eadbf;  }
+.orgchart .node .nivel-5 .content 	{ border-color: #9eadbf; }
+
+
+.ferramentas {
+    position: fixed;
+    right: 5px;
+    bottom: 20px;
+    color: #000;
+	z-index: 99;
+	width: 40px;
+}
+
+.legenda {
+    position: fixed;
+    right: 5px;
+    z-index: 999;
+    top: calc(50% - 65px);
+}
+
+.legenda .itens {
+    padding: 5px;
+}
+
+.legenda .cor {
+    height: 25px;
+    width: 25px;
+    padding: 3px 8px;
+    color: #fff;
+    border-radius: 50px;
+    float: right;
+    margin: 3px;
+    transition: all 0.3s ease;
+}
+
+.legenda .cor.active {
+	width: 40px;
+	padding: 3px 15px;
+}
+
+.legenda .cor.orgao { background: #023e88;}
+.legenda .cor.sec-adjunta {background: #008F4C;}
+.legenda .cor.diretoria {background: #FAB434;}
+.legenda .cor.departamento {background: #4D9BFA;}
+.legenda .cor.divisao {background: #9eadbf;}
+
+
+select.organograma {
+    float: right;
+    width: 150px;
+    border: 1px solid #cccccc7d;
+    background: initial;
+    border-radius: 4px;
+}

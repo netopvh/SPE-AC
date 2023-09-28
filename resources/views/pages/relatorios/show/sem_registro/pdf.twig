@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>{{ APP_NAME }}</title>
+
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="{{ APP_URL }}/assets/images/favicon.png">
+
+
+        <link rel="stylesheet" type="text/css" href="{{ APP_URL }}/assets/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ APP_URL }}/assets/css/documents.css?version={{ APP_VERSION }}"/>
+
+        <style>
+            body, section, .row{
+                padding: 0px !important;
+                margin: 0px !important;
+            }
+            .fl, .fr {
+                width: 48%;
+                float: left;
+                overflow: hidden;
+            }
+            .f-line {
+                float: left;
+            }
+            .padding-0mm {
+                padding: 0mm !important;
+            }
+            .table-bordered td,
+            .table-bordered th {
+                border: 1px solid #343a40 !important;
+            }
+        </style>
+    </head>
+    <body class="A4" id="paginaImpressao">
+        <section class="sheet padding-0mm pt-10" >
+            <div class="row padding-0mm">
+                <div class="col-sm-6 fl text-left">
+                    <table>
+                        <tr>
+                            <td><img class="brasao" src="{{ APP_URL }}/assets/images/logos/brasao.png"></td>
+                            <td class="p-10">
+                                <p class="texto-cabecalho" style="font-size: 18px;">GOVERNO DO ESTADO DO ACRE</p>
+                                <p class="texto-cabecalho" style="font-size: 16px;">www.ac.gov.br</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-sm-4 fr text-right" style="padding-top: 25px;">
+                    <p class="texto-cabecalho" style="font-size: 18px;">SECRETARIA DE ESTADO DE</p>
+                    <p class="texto-cabecalho" style="font-size: 18px;">PLANEJAMENTO E GESTÃO</p>
+                </div>
+                <div class="col-sm-12 f-line text-center">
+                    <div class="line"></div>
+                </div>
+            </div>
+        
+            <div class="row" >
+                <div class="col-sm-12 padding-0mm" id="tabelas">
+                    {% for orgao in orgaos %}
+                        <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th class="text-center" colspan="5">SERVIDORES {{ situacao_funcional_usuario|upper }} SEM REGISTRO DE PONTO EM {{ mes }}/{{ ano }}</th>
+                            </tr>
+                            <tr>
+                                <th class="text-left" colspan="4">{{ orgao.sigla_orgao }} - {{ orgao.descricao_orgao }}</th>
+                                <th class="text-right" colspan="1">Total: {{orgao.usuarios|length}}</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center" style="width: 40px;">#</th>
+                                <th class="text-center" style="width: 115px;">MATRÍCULA</th>
+                                <th class="text-center" style="width: 115px;">CONTRATO</th>
+                                <th>NOME</th>
+                                <th>LOTAÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 13px;">
+                            {% for i, usuario in orgao.usuarios %}
+                            <tr>
+                                <td class="text-center">
+                                    <b>{{ i + 1 }}</b>
+                                </td>
+                                <td class="text-center">{{ usuario.matricula_usuario }}</td>
+                                <td class="text-center">{{ usuario.contrato_usuario }}</td>
+                                <td>{{ usuario.nome_usuario }}</td>
+                                <td>{{ usuario.descricao_lotacao }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

@@ -1,0 +1,403 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Lista de Dispensas</h4>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+            
+                {% if AUTH.perfil_usuario['id_tipo_perfil'] != 4 %}
+                <div class="col-lg-12 mb-4">
+                    <form class="form-ajax" action="{{ APP_URL }}/dispensas/cadastrar" data-redirect="{{ APP_URL }}/dispensas" autocomplete="off">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Atribuir Dispensa</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane p-3 active" id="home" role="tabpanel">
+                                <div class="form-group">
+                                    <label>Servidor {{ OBRIGATORIO }}</label>
+                                    <select id="id_usuario" name="id_usuario" class="form-control searchable" required="required">
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-md-4">
+                                        <label for="data_inicio_dispensa">Data Início {{ OBRIGATORIO }}</label>
+                                        <input name="data_inicio_dispensa" id="data_inicio_dispensa" type="date" class="form-control" onkeydown="return false" required="required"/>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label for="data_fim_dispensa">Data Fim</label>
+                                        <input name="data_fim_dispensa" id="data_fim_dispensa" type="date" class="form-control" onkeydown="return false"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="amparo_legal_dispensa" class="col-form-label">Amparo Legal {{ OBRIGATORIO }}</label>
+                                    <textarea id="amparo_legal_dispensa" name="amparo_legal_dispensa" rows="3" class="form-control" required="required" maxlength="500"></textarea>
+                                </div>
+                                <div class="form-group pt-2 mb-0">
+                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                        <i class="fa fa-save"></i>
+                                        Cadastrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Matrícula, contrato, nome e amparo legal"/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control">
+							<option value="A" selected>Todos</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-dispensas" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">Matrícula</th>
+                                <th class="text-uppercase">Contrato</th>
+                                <th class="text-uppercase">Nome</th>
+                                <th class="text-uppercase">Cargo</th>
+                                <th class="text-uppercase">Data Inicio/Fim</th>
+                                <th class="text-uppercase">Amparo Legal</th>
+                                <th class="text-uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editarDispensa" tabindex="-1" aria-labelledby="editarDispensaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarDispensaLabel">Editar Dispensa</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-ajax" id="form-editarDispensaLabel" data-confirmation="Editar Dispensa" data-reload="true">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="form-group col-md-4">
+                                <label for="editar_data_inicio_dispensa">Data Início {{ OBRIGATORIO }}</label>
+                                <input name="data_inicio_dispensa" id="editar_data_inicio_dispensa" type="date" class="form-control" onkeydown="return false" required="required"/>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="editar_data_fim_dispensa">Data Fim</label>
+                                <input name="data_fim_dispensa" id="editar_data_fim_dispensa" type="date" class="form-control" onkeydown="return false"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editar_amparo_legal_dispensa" class="col-form-label">Amparo Legal {{ OBRIGATORIO }}</label>
+                            <textarea name="amparo_legal_dispensa" id="editar_amparo_legal_dispensa" rows="3" class="form-control" required="required" maxlength="500"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-4 mt-0 mb-0">
+                                <label>Usuário Criação</label>
+                                <span id="usuario_criacao" class="form-control-plaintext pt-0" style="margin-top: -10px;"></span>
+                            </div>
+                            <div class="form-group col-md-4 mt-0 mb-0">
+                                <label>Data Criação</label>
+                                <span id="data_criacao" class="form-control-plaintext pt-0" style="margin-top: -10px;"></span>
+                            </div>
+                        </div>
+                        <div class="row" id="campo_atualizacao">
+                            <div class="form-group col-md-4 mt-0 mb-0">
+                                <label>Usuário Atualização</label>
+                                <span id="usuario_atualizacao" class="form-control-plaintext pt-0" style="margin-top: -10px;"></span>
+                            </div>
+                            <div class="form-group col-md-4 mt-0 mb-0">
+                                <label>Data Atualização</label>
+                                <span id="data_atualizacao" class="form-control-plaintext pt-0" style="margin-top: -10px;"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary waves-effect waves-light"><i class="fa fa-save"></i> Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+            
+            const meusOrgaos = JSON.parse('{{ AUTH.visualizar_orgaos|json_encode() }}');
+            const minhasLotacoes = JSON.parse('{{ LOTACOES.lotacoesArray|json_encode() }}');
+
+			$('#id_orgao').select2({
+				placeholder: 'Digite nome ou sigla (exibindo até 10 registros)',
+				theme: 'bootstrap',
+				language: 'pt-BR',
+				ajax: {
+					url: `{{ APP_URL }}/api/orgaos`,
+					dataType: 'json',
+					data: function(params) {
+						var query = {
+							search: params.term ? params.term : '',
+							length: 100,
+							start: 0,
+							draw: 1,
+                            order: [{
+                                column: 2,
+                                dir: 'asc'
+                            }]
+						}
+
+						return query;
+					},
+					processResults: function(data) {
+						var itens = [];
+						itens.push({ id: 'A', text: `Todas os Órgão` })
+						data.aaData.map(dados => {
+							itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+						});
+						return {
+							results: itens
+						};
+					}
+				}
+			});
+
+			var table = $("#table-dispensas").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/dispensas",
+					data: function(data){
+						data.search = $("#search").val();
+                        data.id_orgao = $("#id_orgao").val() != 'A' ? $("#id_orgao").val() : null;
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_comissao_usuario ? data.cargo_comissao_usuario : data.cargo_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            var data_dispensa = moment(data.data_inicio_dispensa).format('DD/MM/YYYY');
+                            if(data.data_fim_dispensa){
+                                var data_fim_dispensa = moment(data.data_fim_dispensa).format('DD/MM/YYYY');
+                                data_dispensa = `${data_dispensa} a ${data_fim_dispensa}`;
+                            }
+                            return data_dispensa;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            var amparo_legal_dispensa = data.amparo_legal_dispensa.length > 80 ? 
+                                data.amparo_legal_dispensa.substring(0, 80) + "..." : 
+                                data.amparo_legal_dispensa;
+                            return `<span data-toggle="tooltip" title="${data.amparo_legal_dispensa}">${amparo_legal_dispensa}</span>`;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        visible: {{ AUTH.perfil_usuario['id_tipo_perfil'] != 4 ? 'true' : 'false' }},
+                        render: function ( data, type, row ) {
+
+                            if({{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 2 && meusOrgaos && minhasLotacoes && meusOrgaos.includes(data.id_orgao_exercicio_usuario) && !minhasLotacoes.includes(data.id_lotacao_exercicio_usuario)){
+                                return ``;
+                            }
+
+
+                            return `
+                                <a href="javascript:void(0);" title="Remover Dispensa" class="btn btn-danger btn-sm btn-circle delete_confirmation" data-url="{{ APP_URL }}/dispensas/deletar/${data.id_dispensa}">
+                                    <i class="ti-trash"></i>
+                                </a>
+                                <a 
+                                    href="javascript:void(0);" 
+                                    class="btn btn-sm btn-default btn-circle ml-1" 
+                                    title="Editar Dispensa" 
+                                    data-toggle="modal" 
+                                    data-target="#editarDispensa" 
+                                    data-id="${data.id_dispensa}" 
+                                    data-data-inicio="${data.data_inicio_dispensa}" 
+                                    data-data-fim="${data.data_fim_dispensa}"
+                                    data-amparo-legal="${data.amparo_legal_dispensa}"
+                                    data-usuario-criacao="${data.nome_usuario_criacao}"
+                                    data-data-criacao="${data.data_criacao_dispensa}"
+                                    data-usuario-atualizacao="${data.nome_usuario_atualizacao}"
+                                    data-data-atualizacao="${data.data_atualizacao_dispensa}"
+                                >
+									<i class="ti-pencil"></i>
+								</a>
+                            `;
+                        }
+                        
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 3,6 ] 
+                    },
+                ],
+				order: [[ 2, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+            $("#id_orgao").change(function(){
+				table.draw();
+			});
+			
+		});
+
+        $('#id_usuario').select2({
+			placeholder: 'Digite nome ou matricula (exibindo até 10 registros)',
+			theme: 'bootstrap',
+			language: 'pt-BR',
+			ajax: {
+				url: `{{ APP_URL }}/api/servidores`,
+				dataType: 'json',
+				data: function(params) {
+					var query = {
+						search: params.term ? params.term : '',
+						length: 10,
+						start: 0,
+						draw: 1,
+					}
+
+					return query;
+				},
+				processResults: function(data) {
+					var usuarios = [];
+					data.aaData.map(usuario => {
+						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.contrato_usuario})` })
+					});
+					return {
+						results: usuarios
+					};
+				}
+			}
+		});
+
+        modalEditarDispensa();
+        function modalEditarDispensa(){
+            $('#editarDispensa').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var id_dispensa = button.data('id');
+                var data_inicio_dispensa = button.data('data-inicio');
+                var data_fim_dispensa = button.data('data-fim');
+                var amparo_legal_dispensa = button.data('amparo-legal');
+                var usuario_criacao = button.data('usuario-criacao');
+                var data_criacao = button.data('data-criacao');
+                var usuario_atualizacao = button.data('usuario-atualizacao');
+                var data_atualizacao = button.data('data-atualizacao');
+
+                $('#editar_data_inicio_dispensa').val(data_inicio_dispensa);
+                $('#editar_data_fim_dispensa').val(data_fim_dispensa);
+                $('#editar_amparo_legal_dispensa').val(amparo_legal_dispensa);
+                $('#editar_data_fim_dispensa').attr('min', data_inicio_dispensa);
+
+                $('#usuario_criacao').html(usuario_criacao);
+                $('#data_criacao').html(moment(data_criacao).format('DD/MM/YYYY HH:mm:ss'));
+                $('#usuario_atualizacao').html(usuario_atualizacao);
+                $('#data_atualizacao').html(moment(data_atualizacao).format('DD/MM/YYYY HH:mm:ss'));
+
+                if(data_criacao == data_atualizacao){
+                    $('#campo_atualizacao').addClass('d-none');
+                }else{
+                    $('#campo_atualizacao').removeClass('d-none');
+                }
+                
+                $('#form-editarDispensaLabel').attr('action', `{{ APP_URL }}/dispensas/editar/${id_dispensa}`)
+            });
+        }
+
+        $('#data_inicio_dispensa').on('change',function(e) {
+            if($('#data_inicio_dispensa').val() !== ''){
+                var data_inicio_dispensa = $('#data_inicio_dispensa').val();
+                $('#data_fim_dispensa').attr('min', data_inicio_dispensa);
+            }
+        });
+
+        $('#editar_data_inicio_dispensa').on('change',function(e) {
+            if($('#editar_data_inicio_dispensa').val() !== ''){
+                var data_inicio_dispensa = $('#editar_data_inicio_dispensa').val();
+                $('#editar_data_fim_dispensa').attr('min', data_inicio_dispensa);
+            }
+        });
+
+	</script>
+{%  endblock %}

@@ -1,0 +1,275 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Lista de Órgãos</h4>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Nome e sigla"/>
+					</div>
+				</div>
+                <div class="col-lg-12">
+                    <table id="table-orgaos" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">#</th>
+                                <th class="text-uppercase">Órgão</th>
+                                <th class="text-uppercase" style="width:100px;">Sigla</th>
+                                {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+                                    <th class="text-uppercase" style="width:95px;">Responsáveis</th>
+                                {% endif %}
+                                <th class="text-uppercase" style="width:100px;">Ações</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- configurações -->
+    <div class="modal fade" id="configs" role="dialog" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content form-ajax" action="{{ APP_URL }}/orgaos/update" data-redirect="{{ APP_URL }}/orgaos">
+                <div class="modal-header">
+                    <h5 class="modal-title mt-0">Configurações</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="id_orgao" name="id_orgao" value=""/>
+                    <input type="hidden" id="id_horario_padrao_inicial" name="id_horario_padrao_inicial" value=""/>
+                    <div class="form-row align-items-center">
+                        <div class="col-12">
+                            <label class="">Dispositivos Mobile <i class="fa fa-info-circle ml-1" data-toggle="tooltip" data-placement="top" title="Permitir que os servidores utilizem dispositivos móveis para bater o ponto"></i></label>
+                            <select class="custom-select mr-sm-2" id="mobile" name="mobile">
+                                <option value="A">Sim</option>
+                                <option value="I">Não</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <label class="">Horario Padrão <i class="fa fa-info-circle ml-1" data-toggle="tooltip" data-placement="top" title="Selecione o horário padrão do órgão"></i></label>
+                            <select class="custom-select mr-sm-2" id="id_horario_padrao" name="id_horario_padrao">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+
+            const meusOrgaos = JSON.parse('{{ AUTH.visualizar_orgaos|json_encode() }}');
+            const minhasLotacoes = JSON.parse('{{ LOTACOES.lotacoesArray|json_encode() }}');
+
+			var table = $("#table-orgaos").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/orgaos",
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.id_orgao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.descricao_orgao;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.sigla_orgao;
+                        }                       
+                    },
+                    {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+                        {
+                            data: null,
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return `
+                                    <a href="{{ APP_URL }}/orgaos/${data.id_orgao}/responsaveis" class="btn btn-sm btn-success btn-circle" title="Editar Responsáveis pelo Órgão">
+                                        <i class="mdi mdi-account-check"></i>
+                                    </a>
+                                `;
+                            }
+                            
+                        },
+                    {% endif %}
+					{
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            let acao = '';
+
+                            if(({{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 2 && meusOrgaos && !meusOrgaos.includes(parseInt(data.id_orgao))) || {{ AUTH.perfil_usuario['id_tipo_perfil'] }} == 1){
+                                acao = `
+                                <a href="javascript:void(0)" data-id="${data.id_orgao}" data-mobile="${data.mobile}" class="btn btn-sm btn-default btn-circle configuracoes" title="Configurações do Órgão">
+                                    <i class="fa fa-cog"></i>
+                                </a>`;
+                            }
+
+
+                            return `
+                                <a href="{{ APP_URL }}/orgaos/visualizar/${data.id_orgao}" class="btn btn-sm btn-default btn-circle">
+                                    <i class="mdi mdi-eye"></i>
+                                </a>
+                                <a href="{{ APP_URL }}/lotacoes?id_orgao=${data.id_orgao}" class="btn btn-sm btn-default btn-circle" title="Listar Lotações">
+                                    <i class="mdi mdi-sort-variant"></i>
+                                </a>
+                                ${acao}
+                            `;
+                        }                       
+                    },
+                ],
+                columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 
+                            3,
+                            {% if AUTH.perfil_usuario and AUTH.perfil_usuario ['id_tipo_perfil'] == 1 %}
+                                4 
+                            {% endif %}
+                        ] 
+                    },
+                ],
+				order: [[ 0, 'asc' ]],
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+            $('body').on('click', '.configuracoes', function() {
+                let id_orgao = $(this).data('id');
+                let mobile = $(this).data('mobile');
+                
+                buscarHorarios(id_orgao);
+
+                $('#configs').modal('show');
+
+                $('[name=mobile]').val(mobile)
+                $('[name=id_orgao]').val(id_orgao)
+
+            })
+
+
+            function buscarHorarios(id_orgao){
+
+                $.post("{{ APP_URL }}/api/horarios", {id_orgao: id_orgao, length: 1000, start: 0, draw: 1, order: [{column: 0, dir: 'asc'}]}, function(data) {
+                    let id_horario_padrao
+                    for(let dados of data.aaData){
+                        
+                        if(dados.padrao_horario == 'S') {
+                           id_horario_padrao = dados.id_horario
+                        }
+
+                        $('[name=id_horario_padrao]').append(`<option value="${dados.id_horario}">
+                            ${dados.entrada_1_horario ? dados.entrada_1_horario.substr(0,5) : ''}
+                            ${dados.entrada_1_horario && dados.saida_1_horario ? ' às ' : ''}
+                            ${dados.saida_1_horario ? dados.saida_1_horario.substr(0,5) : ''}
+                            ${dados.entrada_1_horario && dados.saida_1_horario && dados.entrada_2_horario && dados.saida_2_horario ? ' - ' : ''}
+                            ${dados.entrada_2_horario ? dados.entrada_2_horario.substr(0,5) : ''}
+                            ${dados.entrada_2_horario && dados.saida_2_horario ? ' às ' : ''}
+                            ${dados.saida_2_horario ? dados.saida_2_horario.substr(0,5) : ''}
+                        </option>`)
+                    }
+
+                    if(id_horario_padrao){
+                        $('[name=id_horario_padrao_inicial]').val(id_horario_padrao)
+                        $('[name=id_horario_padrao]').val(id_horario_padrao)
+                    }
+                    
+                }, 'json')
+
+
+                {# $('#id_horario_padrao').select2({
+                    dropdownParent: $('.configuracoes'),
+                    placeholder: 'Selecione o horario padrão',
+                    theme: 'bootstrap',
+                    language: 'pt-BR',
+                    ajax: {
+                        url: "{{ APP_URL }}/api/horarios",
+                        dataType: 'json',
+                        data: function(params) {
+                            var query = {
+                                search: params.term ? params.term : '',
+                                length: 1000,
+                                start: 0,
+                                draw: 1,
+                                order: [{
+                                    column: 0,
+                                    dir: 'asc'
+                                }]
+                            }
+
+                            return query;
+                        },
+                        processResults: function(data) {
+                            var itens = [];
+                            
+                            data.aaData.map(dados => {
+                                itens.push({ id: dados.id_horario, text: `${dados.entrada_1_horario.substr(0,5)} ${dados.entrada_1_horario.substr && dados.entrada_2_horario.substr ? ' às ' : ''} ${dados.entrada_2_horario.substr(0,5)}  ${dados.entrada_1_horario && dados.entrada_3_horario ? ' - ' : ''} ${dados.entrada_3_horario.substr(0,5)} ${dados.entrada_3_horario.substr && dados.entrada_4_horario.substr ? ' às ' : ''} ${dados.entrada_4_horario.substr(0,5)}` })
+                            });
+                            return {
+                                results: itens
+                            };
+                        }
+                    }
+                }); #}
+            }
+
+		});
+	</script>
+{%  endblock %}

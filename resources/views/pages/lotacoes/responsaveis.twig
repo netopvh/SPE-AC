@@ -1,0 +1,467 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <form class="form-ajax" data-redirect="{{ APP_URL }}/lotacoes/{{ lotacao.id_lotacao }}/responsaveis" autocomplete="off">
+        <div class="container-fluid p-0">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">
+                            <a href="{{ APP_URL }}/orgaos">Lista de Órgãos </a><i class="fa fa-chevron-right font-12"></i> 
+                            <a href="{{ APP_URL }}/lotacoes?id_orgao={{ lotacao.id_orgao }}">Lista de Lotações </a><i class="fa fa-chevron-right font-12"></i> 
+                            Responsáveis pelo {{ lotacao.descricao_lotacao }}
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <div class="row">
+                    <div class="col-lg-12 mb-4">
+                        <p class="msg"></p>
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#home" role="tab" aria-selected="true">Atribuir Acesso</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#historico" role="tab" aria-selected="true">Histórico de Chefia</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane p-3 active" id="home" role="tabpanel">
+                                <div class="form-group">
+                                    <label>Servidores / Colaboradores {{ OBRIGATORIO }}</label>
+                                    <select id="id_usuario" name="id_usuario" class="form-control searchable" required="required">
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                                <div class="form-group pt-2 mb-0">
+                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                        <i class="fa fa-save"></i>
+                                        Cadastrar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tab-pane p-3" id="historico" role="tabpanel">
+                                <table class="table table-sm table-hover w-100" id="tableHistorico">
+                                    <thead>
+                                        <tr class="text-center">
+                                            <th class="text-left">Nome</th>
+                                            <th class="text-center">Período</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="search">Buscar</label>
+                            <input type="text" id="search" class="form-control" autocomplete="off" placeholder="Matrícula, contrato, nome, cargo e tipo"/>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <table id="table-responsaveis" class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase">Matrícula</th>
+                                    <th class="text-uppercase">Contrato</th>
+                                    <th class="text-uppercase">Nome</th>
+                                    <th class="text-uppercase">Cargo</th>
+                                    <th class="text-uppercase">E-mail</th>
+                                    <th class="text-uppercase">Remover</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+	
+	
+	
+	<!-- Modal -->
+	<div class="modal fade" id="modalAfastamentos" tabindex="-1" aria-labelledby="modalAfastamentosLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="modalAfastamentosLabel">Afastamento Temporário</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					
+					<div class="container-fluid">
+						<form class="row addTemporario" autocomplete="off">
+							<input type="hidden" name="id_lotacao" value="{{ lotacao.id_lotacao }}" />
+							<input type="hidden" name="id_usuario" value="" />
+							
+							<div class="col-xl-6 col-lg-6 col-md-12">
+								<div class="form-group">
+									<label for="data_inicial">Data Inicial</label>
+									<input type="date" class="form-control" id="data_inicial" name="data_inicial">
+								</div>
+							</div>
+							<div class="col-xl-6 col-lg-6 col-md-12">
+								<div class="form-group">
+									<label for="data_final">Data Final</label>
+									<input type="date" class="form-control" id="data_final" name="data_final">
+								</div>
+							</div>
+							<div class="col-xl-12 col-lg-12 col-md-12">
+								<div class="form-group">
+									<label for="id_substituto">Substituto</label>
+                                    <select id="id_substituto" name="id_substituto" class="form-control searchable" required="required">
+                                        <option value=""></option>
+                                    </select>
+								</div>
+							</div>
+							<div class="col-xl-12 col-lg-12 col-md-12">
+								<div class="form-group text-center">
+									<button type="submit" class="btn btn-success"><i class="fa fa-save"></i> ADICIONAR</button>
+								</div>
+							</div>
+						</form>
+						<hr/>
+						<div class="row">
+							<div class="col-12">
+								<h5>Afastamentos Agendados</h5>
+								<div class="list-group"></div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+    
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+
+		$('#id_usuario').select2({
+			placeholder: 'Digite nome ou matricula (exibindo até 10 registros)',
+			theme: 'bootstrap',
+            language: 'pt-BR',
+			ajax: {
+				url: `{{ APP_URL }}/api/perfis_usuario?id_tipo_perfil=3`,
+				dataType: 'json',
+				data: function(params) {
+					var query = {
+						search: params.term ? params.term : '',
+						length: 10,
+						start: 0,
+						draw: 1,
+					}
+
+					return query;
+				},
+				processResults: function(data) {
+					var usuarios = [];
+					data.aaData.map(usuario => {
+						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.contrato_usuario})` })
+					});
+					return {
+						results: usuarios
+					};
+				}
+			}
+		});
+
+		$('#id_substituto').select2({
+			dropdownParent: $('#modalAfastamentos'),
+			placeholder: 'Digite nome ou matricula (exibindo até 10 registros)',
+			theme: 'bootstrap',
+            language: 'pt-BR',
+			ajax: {
+				url: `{{ APP_URL }}/api/perfis_usuario?id_tipo_perfil=3`,
+				dataType: 'json',
+				data: function(params) {
+					var query = {
+						search: params.term ? params.term : '',
+						length: 10,
+						start: 0,
+						draw: 1,
+					}
+
+					return query;
+				},
+				processResults: function(data) {
+					var usuarios = [];
+					data.aaData.map(usuario => {
+						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.contrato_usuario})` })
+					});
+					return {
+						results: usuarios
+					};
+				}
+			}
+		});
+        
+		$('.addTemporario').submit(function (e) {
+			e.preventDefault();
+			let form = $(this);
+			let btn = $(this).find('input[type="submit"], button[type="submit"]');
+			
+			btn.attr('disabled', true)
+			
+			let id = $('.addTemporario [name="id_usuario"]').val()
+			
+			$.post('{{ APP_URL }}/api/lotacoes_responsaveis/afastamento-temporario/'+id, form.serialize(), function(data){
+				btn.attr('disabled', false)
+				$('#modalAfastamentos').modal('hide')
+				let message = data.message ? data.message : 'Adicionado com sucesso.'
+				$.toast({
+					heading: 'Success',
+					text: message,
+					position: 'top-right',
+					showHideTransition: 'slide',
+					icon: 'success'
+				});
+			}, 'json')
+			.fail(function(data) {
+				console.log(btn)
+				btn.attr('disabled', false)
+				let message = data.responseJSON.message ? data.responseJSON.message : 'Ocorreu um erro inesperado.'
+				$.toast({
+					heading: 'Success',
+					text: message,
+					position: 'top-right',
+					showHideTransition: 'slide',
+					icon: 'error'
+				});
+			}, 'json')
+		})
+		
+		$('body').on('click', '.removerTemporario', function(data){
+			let cod = $(this).data('cod')
+			let id = $(this).data('id')
+			swal({
+				title: 'Deletar',
+				text: 'Tem certeza que deseja fazer isso?',
+				icon: 'warning',
+				dangerMode: true,
+				closeOnClickOutside: false,
+				buttons: {
+					cancel: {
+						text: 'Cancelar',
+						value: null,
+						visible: true,
+						closeModal: true,
+					},
+					confirm: {
+						text: 'Ok',
+						value: true,
+						visible: true,
+						closeModal: false
+					}
+				},
+			}).then(function (result) {
+				if (result) {
+					$.ajax({
+						url: '{{ APP_URL }}/api/lotacoes_responsaveis/afastamento-temporario/'+cod,
+						type: 'PUT',
+						success: function(data) {
+							swal.close()
+							$('#modalAfastamentos').modal('hide')
+							let message = data.message ? data.message : 'Removido com sucesso.'
+							$.toast({
+								heading: 'Success',
+								text: message,
+								position: 'top-right',
+								showHideTransition: 'slide',
+								icon: 'success'
+							});
+						}
+					});
+					
+				}else{
+					btn.removeAttr('disabled');
+				}
+			});
+			
+		})
+		
+		$('body').on('click', '.temporarios', function(data){
+			$('form.addTemporario')[0].reset()
+			$('#id_substituto').trigger('change')
+			let id = $(this).data('id')
+			$.get('{{ APP_URL }}/api/lotacoes_responsaveis/afastamento-temporario/'+id, {lotacao: '{{ lotacao.id_lotacao }}'}, function(data){				
+				$('#modalAfastamentos .modal-body form').attr('data-redirect', '{{ APP_URL }}/api/lotacoes_responsaveis/afastamento-temporario/'+id)
+				$('#modalAfastamentos .modal-body [name="id_usuario"]').val(id)
+				
+				$('#modalAfastamentos .modal-body .list-group').html('')
+				if( data.dados.length > 0){
+					for(let i in data.dados){
+						$('#modalAfastamentos .modal-body .list-group').append(`
+						<div class="list-group-item list-group-item-action">
+							<div class="d-flex w-100 justify-content-between">
+								<h6 class="mb-1"><b>Substituto:</b> ${data.dados[i]['substituto']['nome_usuario']}</h6>
+								<small><a href="#!" class="text-danger removerTemporario" data-id="${data.dados[i]['id_usuario']}" data-cod="${data.dados[i]['id_afastamento_temporario']}">Remover</a></small>
+							</div>
+							<p class="mb-1"><b>Periodo:</b> ${moment(data.dados[i]['data_inicial']).format("DD/MM/YYYY")} À ${moment(data.dados[i]['data_final']).format("DD/MM/YYYY")}</p>
+						</div>
+						`)
+					}
+				} else {
+					$('#modalAfastamentos .modal-body .list-group').html('<br/><br/><br/><br/><h6 class="text-center"><i>Nenhum afastamento temporario agendado</i></h6><br/><br/><br/><br/>')
+				}
+				
+				$('#modalAfastamentos').modal('show')
+				
+			},'json')
+		})
+		
+		$(function(){
+			var table = $("#table-responsaveis").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/lotacoes_responsaveis?id_lotacao={{ lotacao.id_lotacao }}",
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                     {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.cargo_comissao_usuario ? data.cargo_comissao_usuario : data.cargo_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.email_usuario;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							if( data.substituto ){
+								return `<a title="Responsável Substituto" class="btn btn-outline-secondary btn-sm text-secondary">
+											<i class="mdi mdi-block"></i> SUBSTITUTO
+										</a>`
+							} else {
+                            return `
+                                <a href="javascript:void(0);" title="Substituto Temporário" class="btn btn-outline btn-info temporarios" data-id="${data.id_usuario}" >
+                                    <i class="mdi mdi-calendar-clock"></i>
+                                </a>
+                                <a href="javascript:void(0);" title="Remover Servidor" class="btn btn-outline btn-danger delete_confirmation" data-url="{{ APP_URL }}/lotacoes/{{ lotacao.id_lotacao }}/responsaveis/deletar/${data.id_lotacao_responsavel}">
+                                    <i class="ti-trash"></i>
+                                </a>
+                            `;
+							}
+                        }                       
+                    },
+                ],
+				ordering:  false,
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+
+
+
+            
+			var historico = $("#tableHistorico").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/lotacoes_responsaveis/historico?id_lotacao={{ lotacao.id_lotacao }}",
+					data: function(data){
+						data.search = $("#search").val();
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: 'text-left',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+					{
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+							return `${moment(data.data_criacao_lotacao_responsavel).format("DD/MM/YYYY")} à ${moment(data.data_atualizacao_lotacao_responsavel).format("DD/MM/YYYY")}`;
+                        }                       
+                    },
+                ],
+				ordering:  false,
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+		});
+	</script>
+{% endblock %}

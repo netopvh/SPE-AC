@@ -1,0 +1,101 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	<div class="container-fluid p-0">		
+		<div class="wrapper-page" style="max-width: 640px; margin-top: 150px;">
+			<div class="card overflow-hidden account-card mx-3">
+				<div class="p-4 pb-1 text-white text-center position-relative">
+					<h4 class="font-800" style="color:#2a3142">Validação da Folha de Ponto</h4>
+					<span class="text-black">Verifique a autenticidade da folha de ponto</span>
+				</div>
+				<div class="account-card-content pt-1">
+					<form id="veficar-token" autocomplete="off">
+						<label class="small mb-1" for="token">Código de Autenticidade</label>
+						<div class="input-group">
+							<input type="text" name="token" id="token" class="form-control" value="" required="">
+
+							<div class="input-group-append">
+								<button typer="submit" class="btn btn-success">Validar</button>
+							</div>
+						</div>
+						{# <div class="form-group">
+							<label class="small mb-1" for="token">Token</label>
+							<input type="text" class="form-control" id="token" name="token" placeholder="Informe o token" required="required">
+						</div>
+						<div class="form-group row m-t-20">
+							<div class="col-sm-6 text-left">
+							</div>
+							<div class="col-sm-6 text-right">
+								<button class="btn btn-success w-md waves-effect waves-light" type="submit">
+									Verificar</button>
+							</div>
+						</div> #}
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+		
+{% block scripts %}
+	<script>
+
+		$('#veficar-token').submit(function(e) {
+
+			//prevent submission default action
+			e.preventDefault();
+
+			// //bind elements
+			let form = $(this);
+			var btn = $(this).find('input[type="submit"], button[type="submit"]');
+
+			btn.attr('disabled', 'true');
+
+			//send data
+			$.ajax({
+				cache: false,
+				url: form.attr('action'),
+				type: 'POST',
+				dataType: 'json',
+				data: form.serialize(),
+				success: function (data) {
+					var div = document.createElement('div');
+					div.style.display = 'flex';
+					div.style.flexDirection = 'column';
+					div.style.alignItems = 'start';
+					div.innerHTML = `
+						<span>Servidor: <strong>${ data.nome_usuario }</strong></span>
+						<span>Matrícula: <strong>${ data.matricula_usuario }</strong> &nbsp;&nbsp;&nbsp;&nbsp; Contrato: <strong>${ data.contrato_usuario }</strong></span>
+						<span>Mês/Ano: <strong>${ data.mes_folha + '/' + data.ano_folha }</strong></span>
+						<br/>
+						<div style="display: flex; align-self: center;">
+							<a class="btn btn-primary" href="{{ APP_URL }}/folhas_ponto/visualizar?id_usuario=${data.id_usuario}&ano=${data.ano_folha}&mes=${data.mes_folha}&id_lotacao=${data.id_lotacao}&validacao=true">
+								<i class="mdi mdi-eye"></i> Visualizar Folha
+							</a>
+						</div>
+					`;
+
+					swal({
+						html:true,
+						title: 'Validação da Folha de Ponto',
+						text: 'Código de autenticidade válido!',
+						icon: 'success',
+						closeOnClickOutside: false,
+						content: div,
+					});	
+					btn.removeAttr('disabled');				
+				},
+				error: function (data) {
+					swal({
+						title: 'Validação da Folha de Ponto',
+						text: 'Código de autenticidade inválido!',
+						icon: 'error',
+						dangerMode: true,
+						closeOnClickOutside: false,	
+					});
+					btn.removeAttr('disabled');
+				},
+			});
+		});
+	</script>
+{%  endblock %}

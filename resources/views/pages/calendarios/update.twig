@@ -1,0 +1,59 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <form class="form-ajax" data-redirect="{{ APP_URL }}/calendarios" autocomplete="off">
+        <div class="container-fluid p-0">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">
+                            <a href="{{ APP_URL }}/calendarios?ano={{ NOW.format('Y') }}&mes={{ NOW.format('m') }}">Lista de Feriados e Pontos Facultativos </a><i class="fa fa-chevron-right font-12"></i> 
+                            Editar Feriado ou Ponto Facultativo</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p class="msg"></p>
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#tab1" role="tab" aria-selected="true">Dados Pessoais</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane p-3 active" id="home" role="tabpanel">
+                                <div class="form-group">
+                                    <label>Data {{ OBRIGATORIO }}</label>
+                                    <input name="data_calendario" type="date" class="form-control col-md-3" onkeydown="return false" required="required" value="{{ calendario.data_calendario }}" maxlength="50">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo {{ OBRIGATORIO }}</label>
+                                    <select name="tipo_calendario" class="form-control col-md-3" required="required">
+                                        <option {{ calendario.tipo_calendario == 'F' ? 'selected' : '' }} value="F">FERIADO</option>
+                                        <option {{ calendario.tipo_calendario == 'P' ? 'selected' : '' }} value="P">PONTO FACULTATIVO</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Descrição {{ OBRIGATORIO }}</label>
+                                    <input name="descricao_calendario" type="text" class="form-control" required="required" value="{{ calendario.descricao_calendario }}" maxlength="100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Amparo Legal {{ OBRIGATORIO }}</label>
+                                    <textarea name="amparo_calendario" rows="3" class="form-control" required="required" maxlength="100">{{ calendario.amparo_calendario }}</textarea>
+                                </div>
+                                <div class="form-group pt-2 mb-0">
+                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                        <i class="fa fa-save"></i>
+                                        Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}

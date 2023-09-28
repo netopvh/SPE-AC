@@ -1,0 +1,104 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-6">
+                    <h4 class="page-title">{{ orgao.descricao_orgao }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="card card-bordered">
+                        <h5 class="card-header font-17 mt-0">Dados do Órgão</h5>
+                        <div class="card-body">
+                            <dl>
+                                <dt>Nome</dt>
+                                <dd>{{ orgao.descricao_orgao }}</dd>
+
+                                <dt>Sigla</dt>
+                                <dd>{{ orgao.sigla_orgao }}</dd>
+
+                                <dt>Gestor do Orgão</dt>
+                                <dd>
+                                    {% for responsavel in orgao.orgao_responsavel %}
+                                        {{ responsavel.usuario.nome_usuario }}<br/>
+                                    {% endfor %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card card-bordered">
+                        <h5 class="card-header font-17 mt-0">Estatísticas de Servidores</h5>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl>
+                                        <h4 class="font-16">Tipos de Contrato</h4 class="font-16">
+                                        <dt>Efetivos</dt>
+                                        <dd>{{ efetivo }}</dd>
+
+                                        <dt>Comissão</dt>
+                                        <dd>{{ comissao }}</dd>
+
+                                        <dt>Efetivo / Comissão</dt>
+                                        <dd>{{ efetivo_comissao }}</dd>
+
+                                        <dt>Temporário</dt>
+                                        <dd>{{ temporario }}</dd>
+
+                                        <dt>Contrato CLT</dt>
+                                        <dd>{{ contrato_clt }}</dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <dl>
+                                        <h4 class="font-16">Situação</h4 class="font-16">
+                                        <dt>Em Exercício</dt>
+                                        <dd>{{ em_exercicio }}</dd>
+
+                                        <dt>Cedido</dt>
+                                        <dd>{{ cedido }}</dd>
+
+                                        <dt>Afastado/Licenciado</dt>
+                                        <dd>{{ afastado_licenciado }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer col-md-12 text-center">
+                            <h5 class="font-17">Total de Servidores: {{ servidores }} </h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card card-bordered">
+                        <h5 class="card-header font-17 mt-0">Estatísticas de Colaboradores</h5>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <dl>
+                                        <h4 class="font-16">Terceirizados</h4 class="font-16">
+                                        <dd>{{ terceirizados }}</dd>
+
+                                        <h4 class="font-16">Estagiários</h4 class="font-16">
+                                        <dd>{{ estagiarios }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer col-md-12 text-center">
+                            <h5 class="font-17">Total de Colaboradores: {{ terceirizados + estagiarios }} </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

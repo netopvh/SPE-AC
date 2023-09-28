@@ -1,0 +1,559 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+	<style>
+        .table > tbody > tr > td,
+        .table > tfoot > tr > td,
+        .table > thead > tr > td {
+            padding: 4px 1px !important;
+        }
+    </style>
+	<div class="container-fluid p-0">
+		<div class="page-title-box">
+			<div class="row align-items-center">
+				<div class="col-sm-6">
+					<h4 class="page-title">
+						<a href="{{ APP_URL }}/folhas_ponto?ano={{ ano }}&mes={{ mes }}">Relatórios </a><i class="fa fa-chevron-right font-12"></i> 
+						Relatório de Ponto <i class="fa fa-chevron-right font-12"></i> 
+						{{ usuario.nome_usuario ~ ' (' ~ usuario.matricula_usuario ~ '-' ~ usuario.contrato_usuario ~ ')' }}
+					</h4>
+				</div>
+				<div class="col-md-6">
+					<div class="float-right d-none d-md-block">
+						<button data-url="{{ APP_URL }}/folhas_ponto/imprimir?id_usuario={{ usuario.id_usuario }}&ano={{ ano }}&mes={{ mes }}{{ id_lotacao ? '&id_lotacao=' ~ id_lotacao ~ '&validacao=true' : '' }}" id="imprimir" class="btn btn-primary waves-effect waves-light">
+							<i class="fa fa-print"></i>
+							Imprimir</button>
+					</div>
+				</div>
+				<h6 class="ml-3">Ano de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="year" class="form-control" required="required">
+							{% for year in years %}
+								<option {{ year == ano ? 'selected' : '' }} value="{{ year }}">{{ year }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<h6 class="ml-3">Mês de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="month" class="form-control" required="required">
+							{% for month in 1..12 %}
+								<option {{ month == mes ? 'selected' : '' }} value="{{ month }}">{{ DATE.monthName(month) }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				{% if AUTH.perfil_usuario and AUTH.perfil_usuario['id_tipo_perfil'] != 0 %}
+					{% if lotacoes|length > 1 %}
+						<h6 class="ml-3">Lotação</h6>
+						<div class="col-sm-3 col-xs-12 text-left mt-4">
+							<div class="form-group">
+								<select id="id_lotacao" class="form-control" required="required">
+									<option value="">Selecione uma lotação...</option>
+									{% for lotacao in lotacoes %}
+										<option value="{{ lotacao.id_lotacao }}" {{ id_lotacao == lotacao.id_lotacao ? 'selected' : '' }} >{{ lotacao.descricao_lotacao }}</option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+					{% endif %}
+				{% endif %}
+			</div>
+		</div>
+		<div class="page-content">
+			<div class="row">
+				<div class="col-lg-12">
+                    <div class="card card-bordered">
+                        <h4 class="card-header font-16 mt-0">Dados do Servidor</h4>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-9 row">
+                                    <dl class="col-md-2 mb-0">
+                                        <dt>Matrícula</dt>
+                                        <dd>
+                                            {{ usuario.matricula_usuario ? usuario.matricula_usuario : '-- --' }}
+                                        </dd>
+                                    </dl>
+                                    <dl class="col-md-2 mb-0">
+                                        <dt>Contrato</dt>
+                                        <dd>
+                                            {{ usuario.contrato_usuario ? usuario.contrato_usuario : '-- --' }}
+                                        </dd>
+                                    </dl>
+                                    <dl class="col-md-8 mb-0">
+                                        <dt>Nome</dt>
+                                        <dd>{{ usuario.nome_usuario }}</dd>
+                                    </dl>
+                                    <dl class="col-md-6 mb-0">
+                                        <dt>Órgão</dt>
+                                        <dd>
+                                            {{ usuario.orgao.sigla_orgao ? usuario.orgao.sigla_orgao : '' }}
+                                            {{ (usuario.orgao.descricao_orgao and usuario.orgao.descricao_orgao) ? ' - ' : '' }}
+                                            {{ usuario.orgao.descricao_orgao ? usuario.orgao.descricao_orgao : '' }}
+                                        </dd>
+                                    </dl>
+                                    <dl class="col-md-6 mb-0">
+                                        <dt>Lotação</dt>
+                                        <dd>
+                                            {{ usuario.lotacao.descricao_lotacao|upper }}
+                                        </dd>
+                                    </dl>
+                                    <dl class="col-md-4 mb-0">
+                                        <dt>Cargo</dt>
+                                        <dd>{{ usuario.cargo_comissao_usuario ? usuario.cargo_comissao_usuario : usuario.cargo_usuario }}</dd>
+                                    </dl>
+                                    <dl class="col-md-4 mb-0">
+                                        <dt>Vínculo</dt>
+                                        <dd>
+                                            {{ usuario.tipo_usuario.descricao_tipo_usuario|upper }}
+                                        </dd>
+                                    </dl>
+                                    <dl class="col-md-4">
+                                        <dt>Horário</dt>
+                                        {% for i, horario in horarios %}
+                                        <dd>
+                                            {{ horario.entrada_1_horario|date("H:i") }}
+                                            às
+                                            {{ horario.saida_1_horario|date("H:i") }}
+
+                                            {% if horario.entrada_2_horario != '00:00' and  horario.entrada_2_horario   %}
+                                                /
+                                                {{ horario.entrada_2_horario|date("H:i") }}
+                                                às
+                                                {{ horario.saida_2_horario|date("H:i") }}
+                                            {% endif %}
+                                        </dd>
+                                        {% endfor %}
+                                    </dl>
+                                </div>
+
+                                <div class="col-3 row">
+                                    <dl class="col-md-12 text-center">
+                                        {% if usuario.id_usuario != AUTH.id_usuario %}
+                                            {% if AUTH.perfil_usuario and AUTH.perfil_usuario['id_tipo_perfil'] != 4 %}
+                                                {% 
+													if AUTH.perfil_usuario['id_tipo_perfil'] != 3 and AUTH.perfil_usuario['id_tipo_perfil'] != 2 %}										
+                                                    {% if assinado == 'N' and autorizadoAssinar == true %}
+                                                        <dt></dt>
+                                                        <dd>
+                                                            <button type="button" data-toggle="modal" data-target="#assinarFolha" class="btn btn-success waves-effect waves-light">
+                                                                <i class="fa fa-user-edit"></i>
+                                                                Assinar Folha
+                                                            </button>
+                                                        </dd>
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if 
+                                                        ( ano == NOW.format('Y') and mes == NOW.format('m') - 1 and NOW.format('d') >= 1 and NOW.format('d') <= ENV.get('dia_fechamento_folha') ) or
+                                                        ( NOW.format('m') == 1 and ano == NOW.format('Y') - 1 and mes == 12 and NOW.format('d') >= 1 and NOW.format('d') <= ENV.get('dia_fechamento_folha') )
+                                                    %}
+                                                        {% if (assinado == 'N') %}
+                                                            <dt></dt>
+                                                            <dd>
+                                                                <button type="button" data-toggle="modal" data-target="#assinarFolha" class="btn btn-success waves-effect waves-light">
+                                                                    <i class="fa fa-user-edit"></i>
+                                                                    Assinar Folha
+                                                                </button>
+                                                            </dd>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endif %}
+                                        
+                                        {% if usuario.id_usuario == AUTH.id_usuario %}
+                                            {% if assinado == 'N' and minhaAssinaturaStatus != 'S' %}
+                                                <dt></dt>
+                                                <dd>
+                                                    <button type="button" id="assinarMinhaFolha" class="btn btn-success waves-effect waves-light">
+                                                        <i class="fa fa-user-edit"></i>
+                                                        Assinar Minha Folha
+                                                    </button>
+                                                </dd>
+                                            {% endif %}
+                                        {% endif %}
+
+                                        {% if folha %}
+                                            <dt>Status da folha</dt>
+                                            <dd>
+                                                {% if parcial == 'S' %}
+                                                <span class="badge badge-info" style="font-size: 14px;">Assinada Parcialmente</span>
+                                                {% else %}
+                                                <span class="badge badge-success" style="font-size: 14px;">Assinada</span>
+                                                {% endif %}
+                                            </dd>
+                                        {% elseif 
+                                            not ( 
+                                                ( ano == NOW.format('Y') and mes == NOW.format('m') - 1 and NOW.format('d') >= 1 and NOW.format('d') <= ENV.get('dia_fechamento_folha') ) or
+                                                ( NOW.format('m') == 1 and ano == NOW.format('Y') - 1 and mes == 12 and NOW.format('d') >= 1 and NOW.format('d') <= ENV.get('dia_fechamento_folha') )
+                                            )
+                                        %}
+                                            {% if AUTH.perfil_usuario and AUTH.perfil_usuario['id_tipo_perfil'] == 3 or AUTH.perfil_usuario['id_tipo_perfil'] == 4 %}
+                                                {% if 
+                                                    ( ano == NOW.format('Y') and mes <= NOW.format('m') - 2 or NOW.format('d') > ENV.get('dia_fechamento_folha') or ano < NOW.format('Y') and mes >= NOW.format('m') ) 
+                                                %}
+                                                    <dt>Status da folha</dt>
+                                                    <dd>
+                                                        <span class="badge badge-warning" style="font-size: 14px;">Pendente</span>
+                                                    </dd>
+                                                {% else %}
+                                                    <dt>Status da folha</dt>
+                                                    <dd>
+                                                        <span class="badge badge-secondary" style="font-size: 14px;">Aguardando fechamento</span>
+                                                    </dd>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+				<div class="col-lg-12">
+					<table class="table">
+						<thead>
+							<tr>
+								<th class="text-center">Dia</th>
+								<th class="text-center">Primeira Entrada</th>
+								<th class="text-center">Primeira Saída</th>
+								<th class="text-center">Segunda Entrada</th>
+								<th class="text-center">Segunda Saída</th>
+								<th class="text-center">Período do Abono</th>
+                                {% if AUTH.perfil_usuario['id_tipo_perfil'] == 1 %}
+								<th class="text-center">Horas Trabalhada</th>
+                                {% endif %}
+							</tr>
+						</thead>
+						<tbody>
+                            {% set totalHoras = 0 %}
+							{% for index, ponto in pontos %}
+								<tr>
+									<td class="text-center" style="width: 50px !important;">{{ index }}</td>
+									{% if ponto.ferias|length > 0 %}
+										<td class="text-center" style="width: 200px !important;">Férias
+										<td class="text-center" style="width: 200px !important;">Férias
+										<td class="text-center" style="width: 200px !important;">Férias
+										<td class="text-center" style="width: 200px !important;">Férias
+										<td class="text-center"></td>
+									{% elseif ponto.afastamentos|length > 0 %}
+										<td class="text-center" style="width: 200px !important;">Afastado / Licenciado
+										<td class="text-center" style="width: 200px !important;">Afastado / Licenciado
+										<td class="text-center" style="width: 200px !important;">Afastado / Licenciado
+										<td class="text-center" style="width: 200px !important;">Afastado / Licenciado
+										<td class="text-center"></td>
+									{% elseif ponto.abonos|length > 0 and ponto.abonos[1] and ponto.abonos[2] and ponto.abonos[3] and ponto.abonos[4] %}
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[1] == '00:00' ? '-' : ponto.abonos[1] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[2] == '00:00' ? '-' : ponto.abonos[2] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[3] == '00:00' ? '-' : ponto.abonos[3] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[4] == '00:00' ? '-' : ponto.abonos[4] }}</strong>
+										<td class="text-center">INTEGRAL</td>
+									{% elseif ponto.abonos|length > 0 and ponto.abonos[1] and ponto.abonos[2] %}
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[1] == '00:00' ? '-' : ponto.abonos[1] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[2] == '00:00' ? '-' : ponto.abonos[2] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[3] == '00:00' ? '-' : ponto.pontos[3] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[4] == '00:00' ? '-' : ponto.pontos[4] }}</strong>
+										<td class="text-center">
+											{% if ponto.solicitacoes_abono %}
+													<a href="{{ APP_URL }}/abonos/visualizar/{{ ponto.solicitacoes_abono.id_abono }}" class="btn btn-primary btn-sm">
+														Pendência de abono
+													</a>
+											{% else %}
+												MATUTINO
+												{% if ponto.abono_indeferido %}
+													/ VESPERTINO <span class="text-danger"><strong>(Indeferido)</strong></span>
+												{% endif %}
+											{% endif %}
+										</td>
+									{% elseif ponto.abonos|length > 0 and ponto.abonos[3] and ponto.abonos[4] %}
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[1] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[2] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[3] == '00:00' ? '-' : ponto.abonos[3] }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.abonos[4] == '00:00' ? '-' : ponto.abonos[4] }}</strong>
+										<td class="text-center">
+											{% if ponto.solicitacoes_abono %}
+													<a href="{{ APP_URL }}/abonos/visualizar/{{ ponto.solicitacoes_abono.id_abono }}" class="btn btn-primary btn-sm">
+														Pendência de abono
+													</a>
+											{% else %}
+												{% if ponto.abono_indeferido %}
+													MATUTINO <span class="text-danger"><strong>(Indeferido)</strong></span> / 
+												{% endif %}
+												VESPERTINO
+											{% endif %}
+										</td>
+									{% elseif ponto.pontos %}
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[1] | raw }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[2] | raw }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[3] | raw }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[4] | raw }}</strong>
+										<td class="text-center">
+											{% if ponto.solicitacoes_abono %}
+												<a href="{{ APP_URL }}/abonos/visualizar/{{ ponto.solicitacoes_abono.id_abono }}" class="btn btn-primary btn-sm">
+													Pendência de abono
+												</a>
+											{% elseif ponto.abono_indeferido and ponto.abono_indeferido.periodo_abono == 'V' %}
+                                                VESPERTINO <span class="text-danger"><strong>(Indeferido)</strong></span>
+											{% elseif ponto.abono_indeferido and ponto.abono_indeferido.periodo_abono == 'M' %}
+                                                MATUTINO <span class="text-danger"><strong>(Indeferido)</strong></span>
+											{% elseif ponto.abono_indeferido and ponto.abono_indeferido.periodo_abono == 'I' %}
+												INTEGRAL <span class="text-danger"><strong>(Indeferido)</strong></span>
+											{% endif %}
+										</td>
+									{% elseif ponto.fim_de_semana %}
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.dia_nome|upper }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.dia_nome|upper }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.dia_nome|upper }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.dia_nome|upper }}</strong>
+										<td class="text-center" style="width: 200px !important;"></td>
+									{% elseif ponto.datas|length > 0 and ponto.datas[0].tipo_calendario == 'F' %}
+										<td class="text-center" colspan="4"><div style="background-color: #FF4F4F; color: #FFF;" title="{{ ponto.datas[0].descricao_calendario }}">FERIADO</div>
+										<td class="col-options-xs text-center"></td>
+									{% elseif ponto.datas|length > 0 and ponto.datas[0].tipo_calendario == 'P' %}
+										<td class="text-center" colspan="4"><div style="background-color: #2F2FFF; color: #FFF;" title="{{ ponto.datas[0].descricao_calendario }}">PONTO FACULTATIVO</div>
+										<td class="text-center"></td>
+									{% elseif ponto.dispensas|length > 0 %}
+										<td class="text-center" colspan="4" style="background-color: #b3b3b3; color: #FFF;">DISPENSA</td>
+										<td class="text-center"></td>
+									{% elseif ponto.escalas|length > 0 %}
+										<td class="text-center" colspan="4" style="background-color: #dca500; color: #FFF;">ESCALA</td>
+										<td class="text-center"></td>
+									{% else %}
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[1] | raw }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[2] | raw }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[3] | raw }}</strong>
+										<td class="text-center" style="width: 200px !important;"><strong>{{ ponto.pontos[4] | raw }}</strong>
+										<td class="text-center">
+											{% if ponto.solicitacoes_abono %}
+												<a href="{{ APP_URL }}/abonos/visualizar/{{ ponto.solicitacoes_abono.id_abono }}" class="btn btn-primary btn-sm">
+													Pendência de abono
+												</a>
+											{% elseif ponto.abono_indeferido and ponto.abono_indeferido.periodo_abono == 'V' %}
+                                                VESPERTINO <span class="text-danger"><strong>(Indeferido)</strong></span>
+											{% elseif ponto.abono_indeferido and ponto.abono_indeferido.periodo_abono == 'M' %}
+                                                MATUTINO <span class="text-danger"><strong>(Indeferido)</strong></span>
+											{% elseif ponto.abono_indeferido and ponto.abono_indeferido.periodo_abono == 'I' %}
+												INTEGRAL <span class="text-danger"><strong>(Indeferido)</strong></span>
+											{% endif %}
+										</td>
+									{% endif %} 
+                                    
+                                    {% if AUTH.perfil_usuario['id_tipo_perfil'] == 1 %}
+									<td class="text-center" style="width: 50px !important;">{{ (ponto.horas_trabalhadas.minutos > 0) ? ponto.horas_trabalhadas.formatada : '-' }}</td>  
+                                    {% set totalHoras = totalHoras + ponto.horas_trabalhadas.minutos %}
+									{% endif %} 
+								</tr>
+							{% endfor %}
+
+
+                            {% if AUTH.perfil_usuario['id_tipo_perfil'] == 1 %}
+                            <tr>
+                                <td class="text-right text-danger" colspan="6"><b>TOTAL DE HORAS</b></td>
+                                <td class="text-center text-danger" colspan="6"><b>{{ (totalHoras / 60) |number_format(0) }}h e {{ totalHoras % 60 }}min</b></td>
+                            </tr>
+                            {% endif %} 
+
+						</tbody>
+					</table>
+				</div>
+
+                {% if minhaAssinatura %}
+                <div class="col-lg-12 mb-1">
+                    <div class="row no-gutters">
+                        <div style="display: flex; align-items: center; width: 135px;">
+                            <img src="{{ APP_URL }}/assets/images/assinatura_digital.png" class="card-img" alt="Assinatura Digital" />
+                        </div>
+                        <div style="width: calc(100% - 135px);">
+                            <div class="card-body">
+                                <p class="card-text">
+                                    Documento assinado eletronicamente por <strong>{{ minhaAssinatura.nome_usuario_responsavel|trim }}</strong>, 
+                                    {{ minhaAssinatura.cargo_comissao_usuario_responsavel ? minhaAssinatura.cargo_comissao_usuario_responsavel|trim : minhaAssinatura.cargo_usuario_responsavel|trim }}, 
+                                    lotado no(a) {{ minhaAssinatura.descricao_lotacao_usuario_responsavel|trim }}, 
+                                    em <strong>{{ minhaAssinatura.data_criacao_folha|date('d/m/Y') }}</strong>, 
+                                    às <strong>{{ minhaAssinatura.data_criacao_folha|date('H:i') }}</strong>, 
+                                    conforme horário oficial do Acre.<br/>
+                                    A autenticidade desta folha de ponto pode ser conferida através do Sistema de Ponto Eletrônico, informando o código de autenticidade <strong>{{ minhaAssinatura.token_folha }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                        {# <div style="display: flex; align-items: center; width: 125px;" id="qrcode">
+                            
+                        </div> #}
+                    </div>
+                </div>
+                {% endif %}
+
+
+				{% if folha %}
+					{% for dados in folha %}
+					{% if (dados.id_lotacao == lotacao_atual.id_lotacao) or lotacao_atual is null %}
+					<div class="col-lg-12 mb-1">
+						<div class="row no-gutters">
+							<div style="display: flex; align-items: center; width: 135px;">
+								<img src="{{ APP_URL }}/assets/images/assinatura_digital.png" class="card-img" alt="Assinatura Digital" />
+							</div>
+							<div style="width: calc(100% - 135px);">
+								<div class="card-body">
+									<p class="card-text">
+										Documento assinado eletronicamente por <strong>{{ dados.nome_usuario_responsavel|trim }}</strong>, 
+										{{ dados.cargo_comissao_usuario_responsavel ? dados.cargo_comissao_usuario_responsavel|trim : dados.cargo_usuario_responsavel|trim }}, 
+										lotado no(a) {{ dados.descricao_lotacao_usuario_responsavel|trim }}, 
+										em <strong>{{ dados.data_criacao_folha|date('d/m/Y') }}</strong>, 
+										às <strong>{{ dados.data_criacao_folha|date('H:i') }}</strong>, 
+										conforme horário oficial do Acre.<br/>
+										A autenticidade desta folha de ponto pode ser conferida através do Sistema de Ponto Eletrônico, informando o código de autenticidade <strong>{{ dados.token_folha }}</strong>
+									</p>
+								</div>
+							</div>
+							{# <div style="display: flex; align-items: center; width: 125px;" id="qrcode">
+								
+							</div> #}
+						</div>
+					</div>
+					{% endif %}
+					{% endfor %}
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	{% if usuario.id_usuario != AUTH.id_usuario %}
+		<div class="modal fade" id="assinarFolha" tabindex="-1" aria-labelledby="assinarFolhaLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="assinarFolhaLabel">Assinar Folha</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<form class="form-ajax" data-reload="true">
+						<input type="hidden" name="total_assinaturas" value="{{total_assinaturas}}" />
+						<div class="modal-body">
+							<div class="row">
+								<div class="form-group col-md-6 mt-0">
+									<label>Usuário</label>
+									<span class="form-control-plaintext pt-0" style="margin-top: -10px;">{{ AUTH.nome_usuario  }}</span>
+								</div>
+								<div class="form-group col-md-6 mt-0">
+									<label>Cargo</label>
+									<span class="form-control-plaintext pt-0" style="margin-top: -10px;">{{ AUTH.cargo_comissao_usuario ? AUTH.cargo_comissao_usuario : AUTH.cargo_usuario }}</span>
+								</div>
+								<div class="form-group col-md-12 mt-0">
+									<label>Lotação</label>
+									<span class="form-control-plaintext pt-0" style="margin-top: -10px;">{{ lotacao_usuario.descricao_lotacao }}</span>
+								</div>
+							</div>
+							<div class="row">
+								<div class="form-group col-md-6 mt-0">
+									<label for="id_lotacao_servidor">Lotação do Servidor</label>
+									<select class="form-control" id="id_lotacao_servidor" name="id_lotacao_servidor">
+									{% for lotacao in lotacoes %}
+										<option value="{{ lotacao.id_lotacao }}" {{ id_lotacao == lotacao.id_lotacao ? 'selected' : '' }}>{{ lotacao.descricao_lotacao }}</option>
+									{% endfor %}
+									</select>
+								</div>
+								<div class="form-group col-md-6 mt-0">
+									<label for="password">Senha</label>
+									<input id="password" name="password" type="password" class="form-control" required="required"/>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Cancelar</button>
+							<button type="submit" class="btn btn-primary waves-effect waves-light"><i class="fa fa-user-edit"></i> Assinar</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	{% endif %}
+
+{%  endblock %}
+
+{% block scripts %}
+    <script type="text/javascript" src="{{ APP_URL }}/plugins/sweetalert2/sweetalert2@11.js"></script>
+    <script type="text/javascript">
+        $('#month').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('mes', $(this).val());
+            window.location.href = url.href;
+        });
+        $('#year').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('ano', $(this).val());
+            window.location.href = url.href;
+        });
+        $('#id_lotacao').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('id_lotacao', $(this).val());
+            window.location.href = url.href;
+        });
+		$('#imprimir').on('click',function() {
+			let html = $(this).attr('data-url');
+			if($('#id_lotacao').val() !== ''){
+				window.open(html, '_blank');
+			}else{
+				$('#id_lotacao').addClass('error');
+			}
+		});
+
+        $('body').on('click', '#assinarMinhaFolha', function() {
+            Swal.fire({
+                type: 'info',
+                title: 'Assinar',
+                text: 'Digite sua senha para assinar folha de ponto',
+                input: 'password',
+                showCancelButton: true,
+                confirmButtonText: 'Assinar',
+                cancelButtonText: 'Cancelar',
+                showLoaderOnConfirm: true,
+                confirmButtonColor: '#008F4C',
+                cancelButtonColor: '#ED1C24',
+                preConfirm: (password) => {
+                    return fetch(``, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({password})
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(response.statusText)
+                        }
+                        return response.json()
+                    })
+                    .catch(error => {
+                        if(error == 'Error: Method Not Allowed'){
+                            Swal.showValidationMessage(`Senha incorreta!`)
+                        } 
+                        else if(error == 'Error: Not Acceptable'){
+                            Swal.showValidationMessage(`Este servidor possui pendências de abono.`)
+                        }
+                        else if(error == 'TypeError: Failed to fetch'){
+                            Swal.showValidationMessage(`Esta folha já foi assinada!`)
+                        } else {
+                            Swal.showValidationMessage(`Request failed: ${error}`)
+                        }
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Assinada!',
+                        text: 'Folha assinada com sucesso!',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        didClose: () => {
+                            location.reload();
+                        }
+                    })
+                }
+            })
+        })
+    </script>
+{%  endblock %}

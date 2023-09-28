@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>{{ APP_NAME }}</title>
+
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="{{ APP_URL }}/assets/images/favicon.png">
+
+        <link rel="stylesheet" type="text/css" href="{{ APP_URL }}/assets/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ APP_URL }}/assets/css/documents.css?version={{ APP_VERSION }}"/>
+
+        <style>
+            .table-bordered td,
+            .table-bordered th {
+                border: 1px solid #343a40 !important;
+            }
+        </style>
+    </head>
+    <body class="A4">
+        <section class="sheet padding-10mm pt-10">
+            <div class="row">
+                <div class="col-sm-6 text-left">
+                    <table>
+                        <tr>
+                            <td><img class="brasao" src="{{ APP_URL }}/assets/images/logos/brasao.png"></td>
+                            <td class="p-10">
+                                <p class="texto-cabecalho" style="font-size: 20px;">GOVERNO DO ESTADO DO ACRE</p>
+                                <p class="texto-cabecalho" style="font-size: 20px;">www.ac.gov.br</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-sm-6 text-right" style="padding-top: 20px;">
+                    <p class="texto-cabecalho" style="font-size: 20px;">SECRETARIA DE ESTADO DE</p>
+                    <p class="texto-cabecalho" style="font-size: 20px;">PLANEJAMENTO E GESTÃO</p>
+                </div>
+                <div class="col-sm-12 text-center">
+                    <div class="line"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12" id="tabelas">
+                </div>
+            </div>
+        </section>
+    </body>
+
+    <!-- jQuery  -->
+    <script type="text/javascript" src="{{ APP_URL }}/assets/js/jquery.min.js"></script>
+
+    <script>
+        window.onload = function () {
+            window.print();
+        }
+
+        var groupBy = function(xs, key) {
+            return xs.reduce(function(rv, x) {
+                (rv[x[key]] = rv[x[key]] || []).push(x);
+                return rv;
+            }, {});
+        };
+
+        var orgaos = Object.values(groupBy({{ usuarios|json_encode|raw }},'id_orgao'));
+
+        orgaos.map(orgao => {
+            var html = `
+                
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th class="text-center" colspan="6">BATIDAS DE PONTO POR IP EM {{ mes }}/{{ ano }}</th>
+                            </tr>
+                            <tr>
+                                <th class="text-left" colspan="5"></th>
+                                <th class="text-right" colspan="1">Total: ${orgao.length}</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center" style="width: 5%;">#</th>
+                                <th class="text-center" style="width: 5%;">DIA</th>
+                                <th class="text-center" style="width: 10%;">IP</th>
+                                <th class="text-center" style="width: 40%;">SERVIDORES</th>
+                                <th class="text-center" style="width: 15%;">LOTAÇÕES</th>
+                                <th class="text-center" style="width: 15%;">ÓRGÃOS</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 13px;">`;
+            
+            orgao.map((usuario, index) => {
+                html += `
+                    <tr>
+                        <td class="text-center">
+                            <b>${ index + 1 }</b>
+                        </td>
+                        <td class="text-center">${ usuario.dia }</td>
+                        <td class="text-center">${ usuario.ip }</td>
+                        <td>${ usuario.servidores }</td>
+                        <td>${ usuario.lotacoes }</td>
+                        <td>${ usuario.orgao }</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody>
+                </table>`;
+        
+
+            $('#tabelas').append(html);
+        });
+    </script>
+</html>

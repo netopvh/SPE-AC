@@ -1,0 +1,264 @@
+{% extends 'layouts/painel/index.twig' %}
+{% block content %}
+
+    <div class="container-fluid p-0">
+        <div class="page-title-box">
+            <div class="row align-items-center">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Lista de Solicitações de Abono</h4>
+                </div>
+                <h6 class="ml-3">Ano de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="year" class="form-control" required="required">
+							{% for year in years %}
+								<option {{ year == ano ? 'selected' : '' }} value="{{ year }}">{{ year }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<h6 class="ml-3">Mês de Referência</h6>
+				<div class="col-sm-2 col-xs-12 text-left mt-4">
+					<div class="form-group">
+						<select id="month" class="form-control" required="required">
+							{% for month in 1..12 %}
+								<option {{ month == mes ? 'selected' : '' }} value="{{ month }}">{{ DATE.monthName(month) }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+            </div>
+        </div> 
+        {# Mostrar abonos deferidos/indeferidos #}
+        <div class="page-content">
+            <div class="row">
+                <div class="col-md-6">
+					<div class="form-group">
+						<label for="search">Buscar</label>
+						<input type="text" id="search" class="form-control" autocomplete="off" placeholder=""/>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id_orgao">Órgão</label>
+						<select id="id_orgao" class="form-control">
+							<option value="A" selected>Todos</option>
+						</select>
+					</div>
+				</div>
+                <div class="col-md-3 mb-2 mt-4">
+					<div class="form-group form-check col-md-12">
+                        <input type="checkbox" class="form-check-input" id="abonos_finalizados">
+                        <label class="form-check-label" for="abonos_finalizados">Mostrar Abonos Deferidos/Indeferidos</label>
+                    </div>
+				</div>
+				<div class="col-lg-12">
+					<table id="table-abonos" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase">Matricula</th>
+                                <th class="text-uppercase">Contrato</th>
+                                <th class="text-uppercase">CPF</th>
+                                <th class="text-uppercase">Nome</th>
+                                <th class="text-uppercase">Data do Abono</th>
+                                <th class="text-uppercase">Periodo</th>
+                                <th class="text-uppercase">Situação</th>
+                                <th class="text-uppercase" class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		$(function(){
+            $('#id_orgao').select2({
+				placeholder: 'Digite nome ou sigla (exibindo até 10 registros)',
+				theme: 'bootstrap',
+				language: 'pt-BR',
+				ajax: {
+					url: `{{ APP_URL }}/api/orgaos`,
+					dataType: 'json',
+					data: function(params) {
+						var query = {
+							search: params.term ? params.term : '',
+							length: 100,
+							start: 0,
+							draw: 1,
+                            order: [{
+                                column: 2,
+                                dir: 'asc'
+                            }]
+						}
+
+						return query;
+					},
+					processResults: function(data) {
+						var itens = [];
+						itens.push({ id: 'A', text: `Todas os Órgão` })
+						data.aaData.map(dados => {
+							itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+						});
+						return {
+							results: itens
+						};
+					}
+				}
+			});
+
+
+			var table = $("#table-abonos").DataTable({
+				serverSide: true,
+				responsive: true,
+				searching: false,
+				ajax: {
+					url: "{{ APP_URL }}/api/abonos",
+					data: function(data){
+						data.search = $("#search").val();
+						data.ano = $("#year").val();
+						data.mes = $("#month").val();
+						data.id_orgao = $("#id_orgao").val() != 'A' ? $("#id_orgao").val() : null;
+						data.abonos_finalizados = $("#abonos_finalizados").is(':checked');
+					}
+				},
+				columns: [
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.matricula_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.contrato_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            return data.cpf_usuario.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            return data.nome_usuario;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: '',
+                        render: function ( data, type, row ) {
+                            var data_abono = moment(data.data_abono).format('DD/MM/YYYY');
+                            if(data.data_final_abono){
+                                var data_final_abono = moment(data.data_final_abono).format('DD/MM/YYYY');
+                                data_abono = `${data_abono} a ${data_final_abono}`;
+                            }
+                            return data_abono;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            var periodo_abono = '';
+                            if(data.periodo_abono == 'V'){
+                                periodo_abono = 'VESPERTINO';
+                            }else if(data.periodo_abono == 'M'){
+                                periodo_abono = 'MATUTINO';
+                            }else if(data.periodo_abono == 'I'){
+                                periodo_abono = 'INTEGRAL';
+                            }
+                            return periodo_abono;
+                        }                      
+                    },
+					{
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            var status = `<button class="btn btn-sm btn-${data.classe_status_abono} text-uppercase">${data.descricao_status_abono}</button>`;
+                            
+                            return status;
+                        }                       
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function ( data, type, row ) {
+                            var html = `
+                                <a href="{{ APP_URL }}/abonos/visualizar/${data.id_abono}" class="btn btn-sm btn-default btn-circle" data-toggle="tooltip" title="Visualizar">
+                                    <i class="mdi mdi-eye"></i>
+                                </a>
+                            `;
+
+                            if(data.id_status_abono == 1 || data.id_status_abono == 2){
+                                html += `
+                                <a href="{{ APP_URL }}/abonos/servidor/${data.id_usuario_criacao_abono}?ano=${$("#year").val()}&mes=${$("#month").val()}" data-toggle="tooltip" title="Abonos do Servidor" class="btn btn-sm btn-default btn-circle">
+                                    <i class="mdi mdi-calendar-remove-outline"></i>
+                                </a>
+                                `;
+                            }
+
+                            return html;
+                        }
+                        
+                    },
+                ],
+				columnDefs: [
+                    { 
+                        orderable: false, 
+                        targets: [ 6,7 ] 
+                    },
+                ],
+				order: [[ 4, 'asc' ]],                
+				language: {
+					sEmptyTable: "Nenhum registro encontrado",
+					sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+					sInfoFiltered: "",
+					{# sInfoFiltered: "(Filtrados de _MAX_ registros)", #}
+					sInfoPostFix: "",
+					sInfoThousands: ".",
+					sLengthMenu: "_MENU_ resultados por página",
+					sLoadingRecords: "Carregando...",
+					sProcessing: "Processando...",
+					sZeroRecords: "Nenhum registro encontrado",
+					sSearch: "Pesquisar",
+					oPaginate: {
+						sNext: "Próximo",
+						sPrevious: "Anterior",
+						sFirst: "Primeiro",
+						sLast: "Último"
+					}
+				}
+			});
+
+			$("#search").keyup(function(){
+				table.draw();
+			});
+			$("#year, #month, #abonos_finalizados, #id_orgao").change(function(){
+				table.draw();
+			});
+		});
+        $('#month').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('mes', $(this).val());
+            window.location.href = url.href;
+        });
+        $('#year').on('change', function () {
+			var url = new URL(window.location.href);
+			url.searchParams.set('ano', $(this).val());
+            window.location.href = url.href;
+        });
+	</script>
+{%  endblock %}
