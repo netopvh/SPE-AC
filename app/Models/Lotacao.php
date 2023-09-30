@@ -20,6 +20,7 @@ class Lotacao extends Model
     const UPDATED_AT = 'data_atualizacao_lotacao';
 
     protected $fillable = [
+        'id_lotacao',
         'id_orgao',
         'descricao_lotacao',
         'sigla_lotacao',

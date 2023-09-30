@@ -1,5 +1,7 @@
 <?php
+
 use App\Middlewares\RedirectMainRoute;
+use Sabberworm\CSS\Property\Import;
 
 ob_start();
 session_start();
@@ -20,6 +22,7 @@ use App\Middlewares\SessionValidationMiddleware;
 use App\Classes\ErrorRenderer;
 
 use App\Models\Configuracao;
+use App\Services\ImportacaoService;
 
 // Create Container using PHP-DI
 $container_temp = new Container();
@@ -42,22 +45,5 @@ foreach ($configuracoes as $configuracao) {
     define(strtoupper($configuracao['chave_configuracao']), $configuracao['valor_configuracao']);
 }
 
-// BaseUrl Location
-$app->setBasePath('/spe_novo');
-
-// Add error middleware
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorHandler = $errorMiddleware->getDefaultErrorHandler();
-$errorHandler->registerErrorRenderer('text/html', ErrorRenderer::class);
-
-
-$app->add(new SessionValidationMiddleware());
-
-// Add routes
-require_once '../routes/router.php';
-// foreach (Routing::autoload() as $file) {
-//     require_once $file;
-// }
-
-$app->run();
-ob_end_flush();
+$service = new ImportacaoService();
+$service->setDsn('folha')->importar();

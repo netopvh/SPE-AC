@@ -5,11 +5,11 @@ define('ambiente', 'develop'); // local, develop, homologation, production
 define('APP_DATABASE', [
 
     'driver' => 'mysql',
-    'host' => 'mysql',
+    'host' => 'localhost',
     'port' => '3306',
     'database' => 'dados',
-    'username' => 'default',
-    'password' => 'secret',
+    'username' => 'root',
+    'password' => '',
     'charset' => 'utf8',
     'collation' => 'utf8_unicode_ci',
     'prefix' => ''
@@ -17,10 +17,10 @@ define('APP_DATABASE', [
 
 
 define('DATABASE_MONGO', [
-    'host' => 'mongo',
+    'host' => 'localhost',
     'port' => '27017',
     'database' => 'dados',
-    'username' => 'root',
+    'username' => 'admin',
     'password' => 'example',
 ]);
 

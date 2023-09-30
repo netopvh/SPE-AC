@@ -11,11 +11,7 @@
                     <div class="float-right d-none d-md-block">
                         <button type="submit" class="btn btn-primary waves-effect waves-light importacao">
                             <i class="mdi mdi-backup-restore"></i>
-                            Importação Externa
-                        </button>
-                        <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#fileModal">
-                            <i class="mdi mdi-backup-restore"></i>
-                            Importar Arquivo
+                            Importação Dados
                         </button>
                     </div>
                 </div>
@@ -125,7 +121,7 @@
                         className: 'text-center',
                         render: function ( data, type, row ) {
                             return `
-                                <a href="javascript:void(0);" class="btn btn-outline btn-primary importacao" data-id-orgao="${data.COD_ORGAO}">
+                                <a href="javascript:void(0);" class="btn btn-outline btn-primary importacao" data-id-orgao="${data.id_orgao}">
                                     <i class="mdi mdi-backup-restore"></i>
                                     Importar
                                 </a>
@@ -194,10 +190,28 @@
                         type: 'POST',
                         data: { id_orgao },
                         success: function (data) {
-                            document.location.reload(true);
+                            swal({
+                                title: 'Sucesso',
+                                text: 'Importação realizada com sucesso!',
+                                icon: 'success',
+                                closeOnClickOutside: false,
+                                buttons: {
+                                    confirm: {
+                                        text: 'Ok',
+                                        value: true,
+                                        visible: true,
+                                        closeModal: true
+                                    }
+                                },
+                            }).then(function (result) {
+                                if (result) {
+                                    document.location.reload(true);
+                                }
+                            });
                         },
                         error: function (data) {
                             var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.';
+                            console.log(data);
                             $.toast({
                                 heading: 'Error',
                                 text: error,
@@ -245,6 +259,7 @@
                         $('.alerta-importacao').empty();
                     },
                     error: function (data) {
+                        console.log(data);
                         var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.';
                         $('.alerta-importacao')
                             .empty()
@@ -257,7 +272,7 @@
                 });
             }
             getData();
-            setInterval(getData, 2000);
+            setInterval(getData, 5000);
         });
 	</script>
 {%  endblock %}

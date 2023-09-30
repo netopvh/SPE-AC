@@ -13,6 +13,7 @@ use App\Models\{
     Importacao,
 };
 use App\Classes\Turmalina;
+use App\Services\ImportacaoService;
 
 class ImportacaoController extends Controller
 {
@@ -31,9 +32,10 @@ class ImportacaoController extends Controller
                     return $response->withStatus(404)->withJson(['errorMessage' => 'Exite uma importação em andamento.']);
                 }
 
-                $query = $todos['id_orgao'] != 'all' ? "COD_ORGAO={$todos['id_orgao']}" : '';
+                $idOrgao = $todos['id_orgao'] != 'all' ? $todos['id_orgao'] : 0;
 
-                exec('php ' . APP_DIR . "public/importacao.php $query > /dev/null &");
+                $service = new ImportacaoService();
+                $service->setDsn('folha')->importar($idOrgao);
 
                 return $response->withStatus(200)->withJson([]);
             } catch (\Throwable $th) {

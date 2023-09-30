@@ -16,6 +16,7 @@ class Orgao extends Model
     const UPDATED_AT = 'data_atualizacao_orgao';
 
     protected $fillable = [
+        'id_orgao',
         'descricao_orgao',
         'sigla_orgao',
         'mobile',

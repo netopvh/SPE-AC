@@ -11,6 +11,15 @@ class FileSystem
         }
         return $path;
     }
+
+    public static function makeStorageDir($path, $make = false){
+        $path = str_replace(['~/', '\\', '/'], [STORAGE_DIR, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $path);
+        $realPath = STORAGE_DIR . $path;
+        if ($make && !file_exists($path) && !is_dir($realPath)) {
+            mkdir($realPath, 0777, true);
+        }
+        return $realPath;
+    }
     
     public static function autoload($base, &$container)
     {
