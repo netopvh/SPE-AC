@@ -35,7 +35,7 @@ class ImportacaoController extends Controller
                 $idOrgao = $todos['id_orgao'] != 'all' ? $todos['id_orgao'] : 0;
 
                 $service = new ImportacaoService();
-                $service->setDsn('folha')->importar($idOrgao);
+                $service->setDsn(ODBC_CON)->importar($idOrgao);
 
                 return $response->withStatus(200)->withJson([]);
             } catch (\Throwable $th) {
@@ -101,7 +101,5 @@ class ImportacaoController extends Controller
         } catch (\Throwable $th) {
             return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
         }
-
-
     }
 }

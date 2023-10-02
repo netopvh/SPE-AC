@@ -78,11 +78,11 @@ class ImportacaoService
 
                     $this->removeLotacoes($codLotacoes, $orgao[0]);
 
-                    $usuarios = $this->getUsuarios($orgao[0]);
+                    //$usuarios = $this->getUsuarios($orgao[0]);
 
-                    echo '<pre>';
-                    var_dump($usuarios);
-                    echo '</pre>';
+                    //echo '<pre>';
+                    //var_dump($usuarios);
+                    //echo '</pre>';
                 }
 
                 //verificarFaltas();
