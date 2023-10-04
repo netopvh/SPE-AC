@@ -18,6 +18,7 @@ use App\Middlewares\SessionValidationMiddleware;
 use App\Classes\ErrorRenderer;
 
 use App\Models\Configuracao;
+use App\Services\ImportacaoService;
 
 // Create Container using PHP-DI
 $container_temp = new Container();
@@ -39,6 +40,9 @@ $configuracoes = Configuracao::all()->toArray();
 foreach ($configuracoes as $configuracao) {
     define(strtoupper($configuracao['chave_configuracao']), $configuracao['valor_configuracao']);
 }
+
+//$service = new ImportacaoService();
+//$service->setDsn('folha')->importar();
 
 // BaseUrl Location
 $app->setBasePath('/spe_novo');

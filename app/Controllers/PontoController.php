@@ -36,16 +36,15 @@ class PontoController extends Controller
         if ($request->getMethod() == 'POST') {
             try {
 
-                $email_usuario = explode('@', ($request->getParams())['email_usuario'])[0];
-                $email_usuario = $email_usuario . '@ac.gov.br';
-                $contrato_usuario = ($request->getParams())['contrato_usuario'];
-                $tipo_ponto = ($request->getParams())['tipo_ponto'];
-                $geolocalizacao = ($request->getParams())['geo'];
-                $ipreal = (($request->getParams())['ipreal'] != "") ? ($request->getParams())['ipreal'] : null;
+                $login = ($request->getParsedBody())['email_usuario'];
+                $contrato_usuario = ($request->getParsedBody())['contrato_usuario'];
+                $tipo_ponto = ($request->getParsedBody())['tipo_ponto'];
+                $geolocalizacao = ($request->getParsedBody())['geo'];
+                $ipreal = (($request->getParsedBody())['ipreal'] != "") ? ($request->getParsedBody())['ipreal'] : null;
 
-                if (isset(($request->getParams())['tipo_ponto']) && ($request->getParams())['tipo_ponto'] != 0) {
+                if (isset(($request->getParsedBody())['tipo_ponto']) && ($request->getParsedBody())['tipo_ponto'] != 0) {
                     $usuario = Usuario::with('Orgao')->with('Lotacao')
-                        ->where('email_usuario', $email_usuario)
+                        ->where('cpf_usuario', $login)
                         ->where(function ($query) use ($contrato_usuario) {
                             if ($contrato_usuario !== 'false') {
                                 $query->where('contrato_usuario', $contrato_usuario);
@@ -59,8 +58,8 @@ class PontoController extends Controller
                         $usuario = $usuario->toArray();
 
                         $ldap = new LDAP();
-                        $ldap->setLogin(explode('@', ($request->getParams())['email_usuario'])[0]);
-                        $ldap->setPassword(($request->getParams())['password']);
+                        $ldap->setLogin(explode('@', ($request->getParsedBody())['email_usuario'])[0]);
+                        $ldap->setPassword(($request->getParsedBody())['password']);
 
                         if ($user = $ldap->verify_login()) {
 
@@ -185,7 +184,6 @@ class PontoController extends Controller
                 } else {
                     return $response->withStatus(404)->withJson(['errorMessage' => 'Ocorreu um erro durante o processo. Tente novamente.']);
                 }
-
             } catch (\Throwable $th) {
                 return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
             }
@@ -197,10 +195,6 @@ class PontoController extends Controller
         try {
 
             $email_usuario = $request->getQueryParam('email_usuario') ?? '';
-            if ($email_usuario !== '') {
-                $email_usuario = explode('@', $email_usuario);
-                $email_usuario = $email_usuario[0] . '@ac.gov.br';
-            }
 
             $contrato_usuario = $request->getQueryParam('contrato_usuario') ?? null;
             $usuario = Usuario::select([
@@ -212,7 +206,7 @@ class PontoController extends Controller
                 'cargo_comissao_usuario'
             ])
                 ->with('Lotacao.Orgao')
-                ->where('email_usuario', $email_usuario)
+                ->where('cpf_usuario', $email_usuario)
                 ->when($contrato_usuario, function ($query, $contrato_usuario) {
                     return $query->where('contrato_usuario', $contrato_usuario);
                 })
@@ -254,7 +248,6 @@ class PontoController extends Controller
                 } else if ($tipo_ultimo_registro == 2) {
                     $return['options'][0] = ['label' => '1ª Entrada', 'option' => 1, 'disabled' => true, 'title' => 'Ponto já Registrado ou Ascendido', 'class' => '', 'icon' => 'login'];
                     $return['options'][1] = ['label' => '1ª Saída', 'option' => 2, 'disabled' => true, 'title' => 'Ponto já Registrado ou Ascendido', 'class' => '', 'icon' => 'logout'];
-
                 } else if ($tipo_ultimo_registro == 3) {
                     $return['options'][0] = ['label' => '1ª Entrada', 'option' => 1, 'disabled' => true, 'title' => 'Ponto já Registrado ou Ascendido', 'class' => '', 'icon' => 'login'];
                     $return['options'][1] = ['label' => '1ª Saída', 'option' => 2, 'disabled' => true, 'title' => 'Ponto já Registrado ou Ascendido', 'class' => '', 'icon' => 'logout'];
@@ -272,6 +265,5 @@ class PontoController extends Controller
         } catch (\Throwable $th) {
             return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
         }
-
     }
 }

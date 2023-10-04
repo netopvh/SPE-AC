@@ -106,18 +106,18 @@ class ImportacaoService
                     $codAfastamentos = [];
 
 
-
                     foreach ($afastamentos as $afastamento) {
                         $codAfastamentos[] = $this->verificarAfastamentos(
                             $afastamento[0], //orgao
-                            $afastamento[1], //matricula
-                            $afastamento[2], //descricao
-                            $afastamento[3], //cod_licenca
-                            $afastamento[4], //inicio_licenca
-                            $afastamento[5], //fim_licenca
-                            $afastamento[6] //qtd_dias_licenca
+                            $afastamento[1], //matricula_afastamento
+                            $afastamento[2], //descricao_afastamento
+                            $afastamento[4], //data_inicio_afastamento
+                            $afastamento[5], //data_fim_afastamento
+                            $afastamento[6] //qtd_dias_afastamento
                         );
                     }
+
+                    $this->removeAfastamentos($codAfastamentos, $orgao[0]);
                 }
 
                 //verificarFaltas();
@@ -134,14 +134,6 @@ class ImportacaoService
             $this->iniciarErroImportacao($th->getMessage() . ' - Line: ' .  $th->getLine());
         }
     }
-
-    /**
-     * Informa o tipo de informação que será importada
-     *
-     * @param string $fileType
-     * @param txt | xml | csv
-     * @return void
-     */
     public function setFileType($fileType): self
     {
         $this->fileType = $fileType;
@@ -286,7 +278,7 @@ class ImportacaoService
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
-        $lotacao = Lotacao::query()->create([
+        $lotacao = Lotacao::create([
             'id_lotacao' => $id_lotacao,
             'id_orgao' => $id_orgao,
             'descricao_lotacao' => $this->limparAspas($descricao_lotacao),
@@ -316,15 +308,19 @@ class ImportacaoService
         return $lastId;
     }
 
-    private function removeLotacoes($codLocacoes, $id_orgao)
+    private function removeLotacoes($codLotacoes, $id_orgao)
     {
-        if ($codLocacoes) {
+        if ($codLotacoes) {
             $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
-            Lotacao::query()->whereNotIn('id_lotacao', $codLocacoes)->where('id_orgao', $id_orgao)->update([
-                'status_lotacao' => 'R',
-                'data_atualizacao_lotacao' => $data_insercao_atualizacao,
-            ]);
+            $locacao = Lotacao::query()->where('id_orgao', $id_orgao)->whereNotIn('id_lotacao', $codLotacoes)->get();
+
+            foreach ($locacao as $lotacao) {
+                $lotacao->update([
+                    'status_lotacao' => 'R',
+                    'data_atualizacao_lotacao' => $data_insercao_atualizacao,
+                ]);
+            }
         }
     }
 
@@ -379,7 +375,7 @@ class ImportacaoService
         $usuario->nome_usuario = $this->limparAspas($nome_usuario);
         $usuario->cargo_usuario = $this->limparAspas($cargo_usuario);
         $usuario->matricula_usuario = $id_usuario;
-        $usuario->data_admissao_usuario = $data_admissao_usuario;
+        $usuario->data_admissao_usuario = $this->limparAspas($data_admissao_usuario);
         $usuario->regime_usuario = $this->limparAspas($regime_usuario);
         $usuario->situacao_usuario = $this->checkSituacaoFuncional($situacao_funcional_usuario);
         $usuario->data_atualizacao_usuario = $data_insercao_atualizacao;
@@ -400,7 +396,7 @@ class ImportacaoService
             'nome_usuario' => $this->limparAspas($nome_usuario),
             'cargo_usuario' => $this->limparAspas($cargo_usuario),
             'matricula_usuario' => $id_usuario,
-            'data_admissao_usuario' => $data_admissao_usuario,
+            'data_admissao_usuario' => $this->limparAspas($data_admissao_usuario),
             'regime_usuario' => $this->limparAspas($regime_usuario),
             'situacao_usuario' => $this->checkSituacaoFuncional($situacao_funcional_usuario),
             'data_criacao_usuario' => $data_insercao_atualizacao,
@@ -408,6 +404,10 @@ class ImportacaoService
         ]);
 
         return true;
+    }
+
+    private function desativaUsuarios($idOrgao)
+    {
     }
 
     private function checkSituacaoFuncional($situacao)
@@ -427,7 +427,7 @@ class ImportacaoService
     {
         if ($this->limparAspas($tipo) === 'Efetivo Estatutário' || $this->limparAspas($tipo) === 'Celetista') {
             return 1;
-        } else if ($this->limparAspas($tipo) === 'Comissionado') {
+        } else if ($this->limparAspas($tipo) === 'Comissionado' || $this->limparAspas($tipo) === 'Agente Político') {
             return 2;
         } else if ($this->limparAspas($tipo) === 'Estagiário') {
             return 3;
@@ -517,9 +517,68 @@ class ImportacaoService
         return $this->decodeFile($fileDir);
     }
 
-    private function verificarAfastamentos($codOrgao)
+    private function verificarAfastamentos($codOrgao, $matricula, $descricao, $inicio, $fim, $qtdDias)
     {
-        $afastamentos = Afastamento::query()->where('id_orgao', $codOrgao)->get(['id_falta']);
+
+        $afastamentos = Afastamento::query()
+            ->where('id_orgao', $codOrgao)
+            ->where('matricula_afastamento', $matricula)
+            ->where('descricao_afastamento', $this->limparAspas($descricao))
+            ->where('data_inicio_afastamento', $this->limparAspas($inicio))
+            ->where('data_fim_afastamento', $this->limparAspas($fim))
+            ->where('qtd_dias_afastamento', $qtdDias)
+            ->get(['id_afastamento']);
+
+        if ($afastamentos->count()) {
+            return $this->updateAfastamentos($afastamentos->first()->id_afastamento, $codOrgao, $matricula, $descricao, $inicio, $fim, $qtdDias);
+        }
+
+        return $this->insertAfastamentos($codOrgao, $matricula, $descricao, $inicio, $fim, $qtdDias);
+    }
+
+    private function insertAfastamentos($codOrgao, $matricula, $descricao, $inicio, $fim, $qtdDias)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        $afastamento = Afastamento::query()->create([
+            'id_orgao' => $codOrgao,
+            'matricula_afastamento' => $matricula,
+            'descricao_afastamento' => $this->limparAspas($descricao),
+            'data_inicio_afastamento' => $this->limparAspas($inicio) === '' ? null : $this->limparAspas($inicio),
+            'data_fim_afastamento' => $this->limparAspas($fim) === '' ? null : $this->limparAspas($fim),
+            'qtd_dias_afastamento' => $qtdDias === '' ? null : $qtdDias,
+            'data_criacao_afastamento' => $data_insercao_atualizacao,
+            'data_atualizacao_afastamento' => $data_insercao_atualizacao,
+        ]);
+
+        return $afastamento->id_afastamento;
+    }
+
+    private function updateAfastamentos($afastamentoId, $codOrgao, $matricula, $descricao, $inicio, $fim, $qtdDias)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        $afastamento = Afastamento::query()->where('id_afastamento', $afastamentoId)->first();
+
+        $afastamento->id_orgao = $codOrgao;
+        $afastamento->matricula_afastamento = $matricula;
+        $afastamento->descricao_afastamento = $this->limparAspas($descricao);
+        $afastamento->data_inicio_afastamento = $this->limparAspas($inicio) === '' ? null : $this->limparAspas($inicio);
+        $afastamento->data_fim_afastamento = $this->limparAspas($fim) === '' ? null : $this->limparAspas($fim);
+        $afastamento->qtd_dias_afastamento = $qtdDias === '' ? null : $qtdDias;
+        $afastamento->data_atualizacao_afastamento = $data_insercao_atualizacao;
+        $afastamento->save();
+
+        return $afastamento->id_afastamento;
+    }
+
+    private function removeAfastamentos($codAfastamentos, $codOrgao)
+    {
+        if ($codAfastamentos) {
+
+            Afastamento::query()->leftJoin('usuario', 'afastamentos.matricula_afastamento', 'usuario.matricula_usuario')->whereNotIn('afastamentos.id_afastamento', $codAfastamentos)
+                ->where('usuario.id_orgao_exercicio_usuario', $codOrgao)->delete();
+        }
     }
 
     public function makeCommand(string $sqlCommand)

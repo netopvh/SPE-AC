@@ -73,13 +73,14 @@ CREATE TABLE `abono_horario` (
 
 CREATE TABLE `afastamento` (
   `id_afastamento` int(11) NOT NULL,
+  `id_orgao` int(11) NOT NULL,
   `id_licenca_turmalina` int(11) NOT NULL,
   `matricula_afastamento` int(11) NOT NULL,
   `contrato_afastamento` int(11) NOT NULL,
   `descricao_afastamento` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `data_inicio_afastamento` date NOT NULL,
-  `data_fim_afastamento` date NOT NULL,
-  `qtd_dias_afastamento` int(11) NOT NULL,
+  `data_inicio_afastamento` date NULL DEFAULT NULL,
+  `data_fim_afastamento` date NULL DEFAULT NULL,
+  `qtd_dias_afastamento` int(11) NULL DEFAULT NULL,
   `data_criacao_afastamento` datetime NOT NULL,
   `data_atualizacao_afastamento` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -620,7 +621,7 @@ CREATE TABLE `usuario` (
   `cargo_comissao_usuario` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email_usuario` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `regime_usuario` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `situacao_usuario` enum('A','D') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'A',
+  `situacao_usuario` enum('A','D', 'P', 'F') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'A',
   `data_criacao_usuario` datetime NOT NULL,
   `data_atualizacao_usuario` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -630,7 +631,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id_usuario`, `id_tipo_usuario`, `id_orgao_exercicio_usuario`, `id_lotacao_exercicio_usuario`, `id_horario`, `matricula_usuario`, `cpf_usuario`, `contrato_usuario`, `tipo_contrato_usuario`, `nome_usuario`, `situacao_funcional_usuario`, `data_admissao_usuario`, `cargo_usuario`, `cargo_comissao_usuario`, `email_usuario`, `regime_usuario`, `situacao_usuario`, `data_criacao_usuario`, `data_atualizacao_usuario`) VALUES
-(1, 1, 1, 1, 1, 1, '43536778291', 1, NULL, 'OZEIAS ROCHA', NULL, NULL, NULL, NULL, NULL, NULL, 'A', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
+(1, 1, 1, 1, 1, 1, '43536778291', 1, NULL, 'OZEIAS ROCHA', NULL, NULL, NULL, NULL, 'ozeias@ac.gov.br', NULL, 'A', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
 
 --
 -- Índices de tabelas apagadas

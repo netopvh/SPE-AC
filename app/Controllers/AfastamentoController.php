@@ -9,7 +9,7 @@ use Illuminate\Database\Capsule\Manager as DB;
 use App\Utils\Auth;
 use App\Classes\MinhasLotacoes;
 
-use App\Models\{ 
+use App\Models\{
     Usuario,
     Afastamento,
     OrgaoResponsavel,
@@ -34,11 +34,11 @@ class AfastamentoController extends Controller
 
     public function api_index(Request $request, Response $response, $args)
     {
-        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10; 
+        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
 
         $current_page = ceil((($request->getParams())['start'] + 1) / $valid_lenght);
-        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;     
-        
+        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
+
         $search = ($request->getParams())['search'] ? '%' . ($request->getParams())['search']  . '%' : false;
         $id_orgao = ($request->getParams())['id_orgao'] ?? false;
 
@@ -56,34 +56,34 @@ class AfastamentoController extends Controller
             6 => 'afastamento.data_fim_afastamento',
             7 => 'afastamento.qtd_dias_afastamento',
         ];
-		
-		if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
-			$Lotacoes = MinhasLotacoes::lotacoes();
-			$MinhasLotacoes = [];
-			
-			foreach($Lotacoes as $dados){
-				if( $dados['status_lotacao_responsavel'] == 'A' ){
-					$MinhasLotacoes[] = $dados['id_lotacao'];
-				}
-			}
-		}
-        
-        $afastamentos = Afastamento::leftJoin('usuario', function($join){
-                $join->on('usuario.matricula_usuario', 'afastamento.matricula_afastamento');
-                $join->on('usuario.contrato_usuario', 'afastamento.contrato_afastamento');
-            })
-            ->leftJoin('orgao','usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
-            ->leftJoin('lotacao','usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
-            ->where('afastamento.data_fim_afastamento', '>=', date('Y-m-d'))
+
+        if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
+            $Lotacoes = MinhasLotacoes::lotacoes();
+            $MinhasLotacoes = [];
+
+            foreach ($Lotacoes as $dados) {
+                if ($dados['status_lotacao_responsavel'] == 'A') {
+                    $MinhasLotacoes[] = $dados['id_lotacao'];
+                }
+            }
+        }
+
+        $afastamentos = Afastamento::leftJoin('usuario', function ($join) {
+            $join->on('usuario.matricula_usuario', 'afastamento.matricula_afastamento');
+            //$join->on('usuario.contrato_usuario', 'afastamento.contrato_afastamento');
+        })
+            ->leftJoin('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
+            //->leftJoin('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
+            //->where('afastamento.data_fim_afastamento', '>=', date('Y-m-d'))
             ->where(function ($query) use ($MinhasLotacoes) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
-					$query->whereIn('lotacao.id_lotacao',  $MinhasLotacoes);
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
+                    $query->whereIn('lotacao.id_lotacao',  $MinhasLotacoes);
                     /*$query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -92,12 +92,12 @@ class AfastamentoController extends Controller
                 }
             })
             ->where(function ($query) use ($descricao_afastamento) {
-                if($descricao_afastamento){
+                if ($descricao_afastamento) {
                     $query->where('afastamento.descricao_afastamento', $descricao_afastamento);
                 }
             })
             ->where(function ($query) use ($search) {
-                if($search){
+                if ($search) {
                     $query->where('usuario.matricula_usuario', 'LIKE', $search)
                         ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
                         ->orWhere('usuario.nome_usuario', 'LIKE', $search)
@@ -110,7 +110,7 @@ class AfastamentoController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
@@ -124,6 +124,6 @@ class AfastamentoController extends Controller
             'aaData' => $afastamentos['data'],
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 }

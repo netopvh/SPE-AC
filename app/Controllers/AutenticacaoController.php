@@ -22,11 +22,10 @@ class AutenticacaoController extends Controller
     public function login(Request $request, Response $response)
     {
         if ($request->getMethod() == 'POST') {
-            $login = explode('@', ($request->getParams())['login'])[0];
-            $login = $login . '@ac.gov.br';
-            $this->usuario = Usuario::with('TipoUsuario')->with('PerfilUsuario')->where('situacao_usuario', 'A')->where('email_usuario', $login)->first();
+            $login = $request->getParsedBody()['login'];
+            $this->usuario = Usuario::with('TipoUsuario')->with('PerfilUsuario')->where('situacao_usuario', 'A')->where('cpf_usuario', $login)->first();
             if ($this->usuario) {
-                $this->usuario->contratos = Usuario::with('Lotacao')->where('email_usuario', $login)->where('situacao_usuario', 'A')->get()->toArray();
+                $this->usuario->contratos = Usuario::with('Lotacao')->where('cpf_usuario', $login)->where('situacao_usuario', 'A')->get()->toArray();
                 if ($this->usuario->situacao_usuario == 'A') {
                     $ldap = new LDAP();
                     $ldap->setLogin(explode('@', ($request->getParams())['login'])[0]);
@@ -55,7 +54,6 @@ class AutenticacaoController extends Controller
             'auth',
             'login'
         );
-
     }
 
     public function alterar(Request $request, Response $response)
@@ -68,8 +66,7 @@ class AutenticacaoController extends Controller
                 if ($this->usuario->situacao_usuario == 'A') {
                     $this->usuario->contratos = Usuario::with('Lotacao')->where('email_usuario', $usuario->email_usuario)->get()->toArray();
                     session_start();
-                    unset($_SESSION[APP_SIGLA_NAME]['user']);
-                    ;
+                    unset($_SESSION[APP_SIGLA_NAME]['user']);;
                     session_write_close();
                     $this->addSession();
                 }

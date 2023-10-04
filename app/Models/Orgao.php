@@ -11,7 +11,9 @@ class Orgao extends Model
     protected $table = 'orgao';
 
     protected $primaryKey = 'id_orgao';
-    
+
+    public $incrementing = false;
+
     const CREATED_AT = 'data_criacao_orgao';
     const UPDATED_AT = 'data_atualizacao_orgao';
 
@@ -20,11 +22,12 @@ class Orgao extends Model
         'descricao_orgao',
         'sigla_orgao',
         'mobile',
-        'data_criacao_orgao', 
+        'data_criacao_orgao',
         'data_atualizacao_orgao'
     ];
 
-    public function OrgaoResponsavel() {
+    public function OrgaoResponsavel()
+    {
         return $this->hasMany(new OrgaoResponsavel, 'id_orgao', 'id_orgao')->where('funcao', 1)->with('Usuario');
     }
 }

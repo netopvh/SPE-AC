@@ -16,6 +16,8 @@ class Usuario extends Model
 
     protected $primaryKey = 'id_usuario';
 
+    public $incrementing = false;
+
     const CREATED_AT = 'data_criacao_usuario';
     const UPDATED_AT = 'data_atualizacao_usuario';
 

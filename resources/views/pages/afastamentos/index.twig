@@ -136,7 +136,7 @@
                         data: null,
                         className: '',
                         render: function ( data, type, row ) {
-                            return data.descricao_lotacao;
+                            return data.regime_usuario;
                         }                       
                     },
                     {
@@ -157,7 +157,7 @@
                         data: null,
                         className: 'text-center',
                         render: function ( data, type, row ) {
-                            return moment(data.data_fim_afastamento).format('DD/MM/YYYY');
+                            return data.data_fim_afastamento ? moment(data.data_fim_afastamento).format('DD/MM/YYYY') : '';
                         }                       
                     },
                     {
