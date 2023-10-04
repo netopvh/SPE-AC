@@ -17,13 +17,14 @@ use App\Services\ImportacaoService;
 
 class ImportacaoController extends Controller
 {
+
     public function index(Request $request, Response $response, $args)
     {
         if ($request->getMethod() == 'POST') {
             try {
 
                 $todos = [
-                    'id_orgao' => ($request->getParams())['id_orgao'],
+                    'id_orgao' => ($request->getParsedBody())['id_orgao'],
                 ];
 
                 $importacao = Importacao::where('situacao_importacao', 'S')->first();
@@ -39,7 +40,7 @@ class ImportacaoController extends Controller
 
                 return $response->withStatus(200)->withJson([]);
             } catch (\Throwable $th) {
-                return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
+                return $response->withStatus(404)->withJson(['errorMessage' => $th->getTraceAsString()]);
             }
         }
 

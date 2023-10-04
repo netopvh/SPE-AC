@@ -1,7 +1,5 @@
 <?php
 
-use App\Middlewares\RedirectMainRoute;
-
 ob_start();
 session_start();
 session_write_close();
@@ -15,12 +13,12 @@ require __DIR__ . '/../vendor/autoload.php';
 use DI\Container;
 use Slim\Factory\AppFactory;
 use App\Dependencies\BootLoader;
-use App\Extensions\Support\Routing;
 use App\Middlewares\SessionValidationMiddleware;
 
 use App\Classes\ErrorRenderer;
 
 use App\Models\Configuracao;
+use App\Services\ImportacaoService;
 
 // Create Container using PHP-DI
 $container_temp = new Container();
@@ -62,3 +60,6 @@ require_once '../routes/router.php';
 
 $app->run();
 ob_end_flush();
+
+//$service = new ImportacaoService();
+//$service->setDsn('folha')->importar();

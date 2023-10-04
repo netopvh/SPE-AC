@@ -39,13 +39,11 @@
 					<table id="table-servidores" class="table table-sm table-hover">
 						<thead>
 							<tr>
-								<th class="text-uppercase" style="width:100px;">Matrícula</th>
-								<th class="text-uppercase" style="width:100px;">Contrato</th>
+								<th class="text-uppercase" style="width:100px;">CPF</th>
 								<th class="text-uppercase">Nome</th>
 								<th class="text-uppercase">Horário</th>
 								<th class="text-uppercase">Cargo</th>
 								<th class="text-uppercase">Orgão</th>
-								<th class="text-uppercase" style="width:300px;">Lotação Exercício</th>
 								<th class="text-uppercase" style="width:65px;">Ação</th>
 							</tr>
 						</thead>
@@ -91,7 +89,7 @@
 						var itens = [];
 						itens.push({ id: 'A', text: `Todas os Órgão` })
 						data.aaData.map(dados => {
-							itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+							itens.push({ id: dados.id_orgao, text: `${dados.descricao_orgao}` })
 						});
 						return {
 							results: itens
@@ -117,14 +115,7 @@
                         data: null,
                         className: '',
                         render: function ( data, type, row ) {
-                            return data.matricula_usuario;
-                        }                       
-                    },
-                    {
-                        data: null,
-                        className: 'text-center',
-                        render: function ( data, type, row ) {
-                            return data.contrato_usuario;
+                            return data.cpf_usuario;
                         }                       
                     },
                     {
@@ -159,14 +150,7 @@
                         data: null,
                         className: '',
                         render: function ( data, type, row ) {
-                            return data.sigla_orgao;
-                        }                       
-                    },
-					{
-                        data: null,
-                        className: '',
-                        render: function ( data, type, row ) {
-                            return data.descricao_lotacao;
+                            return data.descricao_orgao;
                         }                       
                     },
                     {
@@ -197,7 +181,7 @@
 				columnDefs: [
                     { 
                         orderable: false, 
-                        targets: [ 3,4,7 ] 
+                        targets: [ 3,4,5 ] 
                     },
                 ],
 				order: [[ 2, 'asc' ]],

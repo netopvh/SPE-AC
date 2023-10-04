@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Extensions\Support\FileSystem;
+use App\Models\Afastamento;
 use App\Models\Faltas;
+use App\Models\Ferias;
 use App\Models\Importacao;
 use App\Models\Lotacao;
 use App\Models\Orgao;
+use App\Models\Usuario;
 use App\Utils\ConectionTurmalina;
 use PDO;
 use PDOException;
@@ -37,52 +40,84 @@ class Conection
 
 class ImportacaoService
 {
-    private bool $turmalina;
 
     private string $fileType;
 
     private string $dsn;
 
-    public function __construct()
-    {
-        $this->turmalina = TURMALINA;
-    }
-
     public function importar(int $codOrgao = 0)
     {
         try {
             if ($this->verificarImportacao()) {
-                //$this->iniciarImportacao();
+                $this->iniciarImportacao();
 
                 $orgaos = $this->getOrgaos($codOrgao);
 
                 foreach ($orgaos as $orgao) {
                     $this->verificarOrgao(
                         $orgao[0],
-                        str_replace("'", "", $orgao[1]),
+                        $orgao[1]
                     );
 
                     $lotacoes = $this->getLotacoes($orgao[0]);
                     $codLotacoes = [];
 
                     foreach ($lotacoes as $lotacao) {
-                        $codLotacoes[] = $lotacao[0];
-
-                        $this->verificarLotacao(
+                        $codLotacoes[] = $this->verificarLotacao(
                             $lotacao[0],
                             $lotacao[3],
-                            str_replace("'", "", $lotacao[1]),
+                            $lotacao[1],
                             $lotacao[2]
                         );
                     }
 
                     $this->removeLotacoes($codLotacoes, $orgao[0]);
 
-                    //$usuarios = $this->getUsuarios($orgao[0]);
+                    $usuarios = $this->getUsuarios($orgao[0]);
 
-                    //echo '<pre>';
-                    //var_dump($usuarios);
-                    //echo '</pre>';
+                    foreach ($usuarios as $usuario) {
+                        $this->verificaUsuario(
+                            $usuario[0], //id_orgao_exercicio_usuario
+                            $usuario[1], //id_usuario
+                            $usuario[8], //cpf_usuario
+                            $usuario[2], //nome_usuario
+                            $usuario[4], //cargo_usuario
+                            $usuario[3], //data_admissao_usuario
+                            $usuario[9], //regime_usuario
+                            $usuario[7] //situacao_funcional_usuario
+                        );
+                    }
+
+                    $feriasData = $this->getFerias($orgao[0]);
+                    $codFerias = [];
+
+                    foreach ($feriasData as $ferias) {
+                        $codFerias[] = $this->verificarFerias(
+                            $ferias[2], //matricula_ferias
+                            $ferias[3], //data_inicio_ferias
+                            $ferias[4], //data_fim_ferias
+                            $ferias[5] //qtd_dias_ferias
+                        );
+                    }
+
+                    $this->removeFerias($codFerias, $orgao[0]);
+
+                    $afastamentos = $this->getAfastamentos($orgao[0]);
+                    $codAfastamentos = [];
+
+
+
+                    foreach ($afastamentos as $afastamento) {
+                        $codAfastamentos[] = $this->verificarAfastamentos(
+                            $afastamento[0], //orgao
+                            $afastamento[1], //matricula
+                            $afastamento[2], //descricao
+                            $afastamento[3], //cod_licenca
+                            $afastamento[4], //inicio_licenca
+                            $afastamento[5], //fim_licenca
+                            $afastamento[6] //qtd_dias_licenca
+                        );
+                    }
                 }
 
                 //verificarFaltas();
@@ -97,7 +132,6 @@ class ImportacaoService
             }
         } catch (\Throwable $th) {
             $this->iniciarErroImportacao($th->getMessage() . ' - Line: ' .  $th->getLine());
-            print $th->getMessage() . ' - Line: ' .  $th->getLine();
         }
     }
 
@@ -149,7 +183,7 @@ class ImportacaoService
 
     private function iniciarErroImportacao($erro)
     {
-        $sql = "INSERT INTO erro_importacao ( descricao_erro_importacao, data_criacao_erro_importacao, data_atualizacao_erro_importacao ) VALUES ( :descricao_erro_importacao, :data_criacao_erro_importacao, :data_atualizacao_erro_importacao )";
+        $sql = "INSERT INTO erro_importacao (descricao_erro_importacao, data_criacao_erro_importacao, data_atualizacao_erro_importacao ) VALUES ( :descricao_erro_importacao, :data_criacao_erro_importacao, :data_atualizacao_erro_importacao )";
         $stm = Conection::prepare($sql);
         $stm->bindParam(':descricao_erro_importacao', $erro, PDO::PARAM_STR);
         $stm->bindParam(':data_criacao_erro_importacao', date('Y-m-d H:i:s'), PDO::PARAM_STR);
@@ -186,13 +220,25 @@ class ImportacaoService
         return $this->decodeFile($fileDir);
     }
 
+    private function verificarOrgao($id_orgao, $descricao_orgao)
+    {
+
+        $orgaos = Orgao::query()->where('id_orgao', $id_orgao)->get(['id_orgao']);
+
+        if ($orgaos->count()) {
+            return $this->updateOrgao($id_orgao, $descricao_orgao);
+        }
+
+        return $this->insertOrgao($id_orgao, $descricao_orgao);;
+    }
+
     private function insertOrgao($id_orgao, $descricao_orgao)
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
         Orgao::query()->create([
             'id_orgao' => $id_orgao,
-            'descricao_orgao' => $descricao_orgao,
+            'descricao_orgao' => $this->limparAspas($descricao_orgao),
             'data_criacao_orgao' => $data_insercao_atualizacao,
             'data_atualizacao_orgao' => $data_insercao_atualizacao,
         ]);
@@ -207,7 +253,7 @@ class ImportacaoService
         $orgao = Orgao::query()->where('id_orgao', $id_orgao)->first();
 
         $orgao->id_orgao = $id_orgao;
-        $orgao->descricao_orgao = $descricao_orgao;
+        $orgao->descricao_orgao = $this->limparAspas($descricao_orgao);
         $orgao->data_atualizacao_orgao = $data_insercao_atualizacao;
         $orgao->save();
 
@@ -228,42 +274,46 @@ class ImportacaoService
     function verificarLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao)
     {
         $lotacao = Lotacao::query()->where('id_lotacao', $id_lotacao)->get(['id_lotacao']);
-        $count = $lotacao->count();
 
-        if ($count) {
-            $this->updateLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao);
-        } else {
-            $this->insertLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao);
+        if ($lotacao->count()) {
+            return $this->updateLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao);
         }
 
-        return true;
+        return $this->insertLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao);
     }
 
-    private function insertLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao): void
+    private function insertLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao)
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
-        Lotacao::query()->create([
+        $lotacao = Lotacao::query()->create([
             'id_lotacao' => $id_lotacao,
             'id_orgao' => $id_orgao,
-            'descricao_lotacao' => $descricao_lotacao,
+            'descricao_lotacao' => $this->limparAspas($descricao_lotacao),
             'municipio_lotacao' => $municipio_lotacao,
             'data_criacao_lotacao' => $data_insercao_atualizacao,
             'data_atualizacao_lotacao' => $data_insercao_atualizacao,
         ]);
+
+        return $lotacao->id_lotacao;
     }
 
-    private function updateLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao): void
+    private function updateLotacao($id_lotacao, $id_orgao, $descricao_lotacao, $municipio_lotacao)
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
-        Lotacao::query()->where('id_lotacao', $id_lotacao)->update([
+        $lotacao = Lotacao::query()->where('id_lotacao', $id_lotacao)->first();
+        $lastId = $lotacao->id_lotacao;
+
+        $lotacao->update([
             'id_lotacao' => $id_lotacao,
             'id_orgao' => $id_orgao,
-            'descricao_lotacao' => $descricao_lotacao,
+            'descricao_lotacao' => $this->limparAspas($descricao_lotacao),
             'municipio_lotacao' => $municipio_lotacao,
             'data_atualizacao_lotacao' => $data_insercao_atualizacao,
         ]);
+
+        return $lastId;
     }
 
     private function removeLotacoes($codLocacoes, $id_orgao)
@@ -278,43 +328,208 @@ class ImportacaoService
         }
     }
 
-    private function verificarOrgao($id_orgao, $descricao_orgao)
-    {
-
-        $orgaos = Orgao::query()->where('id_orgao', $id_orgao)->get(['id_orgao']);
-        $count = $orgaos->count();
-
-        if ($count) {
-            $this->updateOrgao($id_orgao, $descricao_orgao);
-        } else {
-            $this->insertOrgao($id_orgao, $descricao_orgao);
-        }
-
-        return true;
-    }
-
     private function getUsuarios($codOrgao)
     {
         $fileDir = $this->makeFile('usuarios');
 
-        $stSql = 'SELECT i_funcionarios, cpf, nome, dt_admissao, (SELECT TOP 1 nome FROM bethadba.hist_cargos KEY JOIN bethadba.cargos WHERE hist_cargos.i_funcionarios = funcionarios.i_funcionarios AND i_tipos_cargos = 1 ORDER BY dt_alteracoes DESC) AS cargo_carreira,' .
-            '(SELECT TOP 1 nome FROM bethadba.hist_cargos KEY JOIN bethadba.cargos WHERE hist_cargos.i_funcionarios = funcionarios.i_funcionarios AND i_tipos_cargos > 1 ORDER BY dt_alteracoes DESC) AS cargo_comissao, ' .
-            'funcionarios.i_entidades AS cod_orgao_exercicio, ' .
-            '(SELECT TOP 1 i_locais_trab FROM bethadba.locais_mov WHERE locais_mov.i_entidades = funcionarios.i_entidades AND locais_mov.i_funcionarios = funcionarios.i_entidades AND dt_final is null) AS cod_lotacao_exercicio, ' .
-            '(SELECT TOP 1 email FROM bethadba.hist_pessoas_fis WHERE i_pessoas=1 ORDER BY dt_alteracoes DESC) AS email FROM bethadba.funcionarios JOIN bethadba.hist_pessoas_fis ON hist_pessoas_fis.i_pessoas = funcionarios.i_pessoas JOIN bethadba.pessoas ON pessoas.i_pessoas = hist_pessoas_fis.i_pessoas ' .
-            'WHERE funcionarios.i_entidades = ' . $codOrgao . ';' .
-            'OUTPUT TO ' . $fileDir . ';';
+        $stSql = "SELECT funcionarios.i_entidades as orgao, i_funcionarios = bethadba.funcionarios.i_funcionarios," .
+            "pessoas_nome = bethadba.pessoas.nome, funcionarios_dt_admissao = bethadba.funcionarios.dt_admissao," .
+            "cargos_nome = bethadba.cargos.nome, dt_fim_cpt = SECONDS(DAYS(CAST( today() AS datetime ),1),-1)," .
+            "situacao = isnull(bethadba.dbf_gettipoafast(1, funcionarios.i_entidades, funcionarios.i_funcionarios, bethadba.dbf_getdataafast(1, funcionarios.i_entidades, funcionarios.i_funcionarios, today(), 'S'), 'S'), 1)," .
+            "situacao_funcional = if situacao = 1 then 'Trabalhando' else if situacao between 2 and 7 or situacao between 10 and 21 then 'Afastado' else if situacao = 8 then 'Demitido' else if situacao = 9 then 'Aposentado' endif endif endif endif," .
+            //"bethadba.locais_trab.i_locais_trab," .
+            "pessoas_fisicas.cpf, tipo_cargo = (SELECT descricao from bethadba.tipos_cargos t where t.i_tipos_cargos = cargos.i_tipos_cargos) " .
+            "FROM bethadba.funcionarios, bethadba.pessoas, bethadba.pessoas_fisicas LEFT OUTER JOIN bethadba.pessoas_fis_compl ON(pessoas_fisicas.i_pessoas = pessoas_fis_compl.i_pessoas)," .
+            //"bethadba.locais_trab, bethadba.locais_mov LEFT OUTER JOIN bethadba.locais_mov ON(locais_mov.i_entidades = locais_trab.i_entidades AND locais_mov.i_locais_trab = locais_trab.i_locais_trab)," .
+            "bethadba.cargos LEFT OUTER JOIN bethadba.cargos_compl ON (cargos.i_entidades = cargos_compl.i_entidades AND cargos.i_cargos = cargos_compl.i_cargos)," .
+            "bethadba.hist_cargos, bethadba.hist_funcionarios WHERE funcionarios.i_pessoas = pessoas_fisicas.i_pessoas AND pessoas_fisicas.i_pessoas = pessoas.i_pessoas AND " .
+            "cargos.i_entidades = hist_cargos.i_entidades AND cargos.i_cargos = hist_cargos.i_cargos AND hist_cargos.i_entidades = funcionarios.i_entidades AND hist_cargos.i_funcionarios = funcionarios.i_funcionarios AND " .
+            "hist_cargos.dt_alteracoes = bethadba.dbf_getdatahiscar(funcionarios.i_entidades,funcionarios.i_funcionarios,dt_fim_cpt) AND hist_funcionarios.i_entidades = funcionarios.i_entidades AND " .
+            "hist_funcionarios.i_funcionarios = funcionarios.i_funcionarios AND hist_funcionarios.dt_alteracoes = bethadba.dbf_getdatahisfun(funcionarios.i_entidades,funcionarios.i_funcionarios,dt_fim_cpt)" .
+            "" . ($codOrgao !== 0 ? " AND funcionarios.i_entidades = $codOrgao" : "") . ";" .
+            "OUTPUT TO " . $fileDir . ";";
 
         $this->makeCommand($stSql);
 
         return $this->decodeFile($fileDir);
     }
 
+    private function verificaUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    {
+
+        $usuario = Usuario::query()->where('id_usuario', $id_usuario)->get(['id_usuario']);
+
+        if ($usuario->count()) {
+            return $this->updateUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
+        }
+
+        return $this->insertUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
+    }
+
+    private function updateUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        $usuario = Usuario::query()->where('id_usuario', $id_usuario)->first();
+
+        $usuario->id_orgao_exercicio_usuario = $id_orgao;
+        $usuario->id_usuario = $id_usuario;
+        $usuario->id_tipo_usuario = $this->checkTipoUsuario($regime_usuario);
+        $usuario->cpf_usuario = $this->limparAspas($cpf_usuario);
+        $usuario->nome_usuario = $this->limparAspas($nome_usuario);
+        $usuario->cargo_usuario = $this->limparAspas($cargo_usuario);
+        $usuario->matricula_usuario = $id_usuario;
+        $usuario->data_admissao_usuario = $data_admissao_usuario;
+        $usuario->regime_usuario = $this->limparAspas($regime_usuario);
+        $usuario->situacao_usuario = $this->checkSituacaoFuncional($situacao_funcional_usuario);
+        $usuario->data_atualizacao_usuario = $data_insercao_atualizacao;
+        $usuario->save();
+
+        return true;
+    }
+
+    private function insertUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        Usuario::query()->create([
+            'id_orgao_exercicio_usuario' => $id_orgao,
+            'id_usuario' => $id_usuario,
+            'id_tipo_usuario' => $this->checkTipoUsuario($regime_usuario),
+            'cpf_usuario' => $this->limparAspas($cpf_usuario),
+            'nome_usuario' => $this->limparAspas($nome_usuario),
+            'cargo_usuario' => $this->limparAspas($cargo_usuario),
+            'matricula_usuario' => $id_usuario,
+            'data_admissao_usuario' => $data_admissao_usuario,
+            'regime_usuario' => $this->limparAspas($regime_usuario),
+            'situacao_usuario' => $this->checkSituacaoFuncional($situacao_funcional_usuario),
+            'data_criacao_usuario' => $data_insercao_atualizacao,
+            'data_atualizacao_usuario' => $data_insercao_atualizacao,
+        ]);
+
+        return true;
+    }
+
+    private function checkSituacaoFuncional($situacao)
+    {
+        if ($this->limparAspas($situacao) === 'Trabalhando') {
+            return 'A';
+        } else if ($this->limparAspas($situacao) === 'Afastado') {
+            return 'F';
+        } else if ($this->limparAspas($situacao) === 'Demitido') {
+            return 'D';
+        } else if ($this->limparAspas($situacao) === 'Aposentado') {
+            return 'P';
+        }
+    }
+
+    private function checkTipoUsuario($tipo)
+    {
+        if ($this->limparAspas($tipo) === 'Efetivo Estatutário' || $this->limparAspas($tipo) === 'Celetista') {
+            return 1;
+        } else if ($this->limparAspas($tipo) === 'Comissionado') {
+            return 2;
+        } else if ($this->limparAspas($tipo) === 'Estagiário') {
+            return 3;
+        }
+    }
+
+    private function getFerias($codOrgao)
+    {
+        $fileDir = $this->makeFile('ferias');
+
+        $stSql = "SELECT  i_entidades as orgao, i_ferias cod_ferias, i_funcionarios matricula, dt_gozo_ini inicio_ferias, dt_gozo_fin fim_ferias, dt_gozo_fin-dt_gozo_ini qtd_dias_ferias from bethadba.ferias" .
+            "" . ($codOrgao !== 0 ? " WHERE i_entidades = $codOrgao" : "") . ";" .
+            "OUTPUT TO " . $fileDir . ";";
+
+        $this->makeCommand($stSql);
+
+        return $this->decodeFile($fileDir);
+    }
+
+    private function verificarFerias($matricula_ferias, $data_inicio_ferias, $data_fim_ferias, $qtd_dias_ferias)
+    {
+        $ferias = Ferias::query()->where('matricula_ferias', $matricula_ferias)
+            ->where('data_inicio_ferias', $this->limparAspas($data_inicio_ferias))
+            ->where('data_fim_ferias', $this->limparAspas($data_fim_ferias))
+            ->where('qtd_dias_ferias', $qtd_dias_ferias)
+            ->get(['id_ferias']);
+
+        if ($ferias->count()) {
+            return $this->updateFerias($ferias->first()->id_ferias, $matricula_ferias, $data_inicio_ferias, $data_fim_ferias, $qtd_dias_ferias);
+        }
+
+        return $this->insertFerias($matricula_ferias, $data_inicio_ferias, $data_fim_ferias, $qtd_dias_ferias);
+    }
+
+    private function insertFerias($matricula_ferias, $data_inicio_ferias, $data_fim_ferias, $qtd_dias_ferias)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        $ferias = Ferias::query()->create([
+            'matricula_ferias' => $matricula_ferias,
+            'data_inicio_ferias' => $this->limparAspas($data_inicio_ferias),
+            'data_fim_ferias' => $this->limparAspas($data_fim_ferias),
+            'qtd_dias_ferias' => $qtd_dias_ferias,
+            'data_criacao_ferias' => $data_insercao_atualizacao,
+            'data_atualizacao_ferias' => $data_insercao_atualizacao,
+        ]);
+
+        return $ferias->id_ferias;
+    }
+
+    private function updateFerias($feriasId, $matricula_ferias, $data_inicio_ferias, $data_fim_ferias, $qtd_dias_ferias)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        $ferias = Ferias::query()->where('id_ferias', $feriasId)->first();
+
+        $ferias->matricula_ferias = $matricula_ferias;
+        $ferias->data_inicio_ferias = $this->limparAspas($data_inicio_ferias);
+        $ferias->data_fim_ferias = $this->limparAspas($data_fim_ferias);
+        $ferias->qtd_dias_ferias = $qtd_dias_ferias;
+        $ferias->data_atualizacao_ferias = $data_insercao_atualizacao;
+        $ferias->save();
+
+        return $ferias->id_ferias;
+    }
+
+    private function removeFerias($codFeriasData, $codOrgao)
+    {
+        if ($codFeriasData) {
+
+            Ferias::query()->leftJoin('usuario', 'ferias.matricula_ferias', 'usuario.id_usuario')->whereNotIn('ferias.id_ferias', $codFeriasData)
+                ->where('usuario.id_orgao_exercicio_usuario', $codOrgao)->delete();
+        }
+    }
+
+    private function getAfastamentos($codOrgao)
+    {
+        $fileDir = $this->makeFile('afastamentos');
+
+        $stSql = "SELECT i_entidades AS orgao, i_funcionarios matricula, descricao descricao_licenca, (SELECT count(*) FROM bethadba.afastamentos a2 WHERE a2.i_funcionarios = a.i_funcionarios AND a2.dt_afastamento <= a.dt_afastamento) AS cod_licenca, " .
+            "dt_afastamento inicio_licenca, dt_ultimo_dia fim_licenca, IF dt_ultimo_dia IS NOT NULL THEN dt_ultimo_dia - dt_afastamento ENDIF AS qtd_dias_licenca " .
+            "FROM bethadba.afastamentos a KEY JOIN bethadba.tipos_afast WHERE a.i_entidades = " . $codOrgao . " ORDER BY 1, 3; " .
+            "OUTPUT TO " . $fileDir . ";";
+
+        $this->makeCommand($stSql);
+
+        return $this->decodeFile($fileDir);
+    }
+
+    private function verificarAfastamentos($codOrgao, $)
+    {
+        $afastamentos = Afastamento::query()->where('id_orgao', $codOrgao)->get(['id_falta']);
+    }
+
     public function makeCommand(string $sqlCommand)
     {
         $stComando = "\"%ASANY9%/win32/dbisql.exe\" -nogui -datasource " . $this->dsn . " -codepage utf8 -q \"" . $sqlCommand . "\" ";
 
+        //exec("$stComando 2>&1", $output, $return_var);
         exec($stComando);
+
+        //var_dump($output);
     }
 
     private function removeFile($filePath)
@@ -331,7 +546,7 @@ class ImportacaoService
 
         $csv = array_map('str_getcsv', $data);
 
-        //$this->removeFile($fileDir);
+        $this->removeFile($fileDir);
 
         return $csv;
     }
@@ -343,5 +558,10 @@ class ImportacaoService
         $fileDir = $path . DIRECTORY_SEPARATOR . $definedFileName;
 
         return $fileDir;
+    }
+
+    private function limparAspas($item)
+    {
+        return str_replace("'", "", $item);
     }
 }
