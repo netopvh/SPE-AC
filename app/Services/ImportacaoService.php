@@ -517,7 +517,7 @@ class ImportacaoService
         return $this->decodeFile($fileDir);
     }
 
-    private function verificarAfastamentos($codOrgao, $)
+    private function verificarAfastamentos($codOrgao)
     {
         $afastamentos = Afastamento::query()->where('id_orgao', $codOrgao)->get(['id_falta']);
     }

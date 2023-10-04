@@ -18,7 +18,6 @@ use App\Middlewares\SessionValidationMiddleware;
 use App\Classes\ErrorRenderer;
 
 use App\Models\Configuracao;
-use App\Services\ImportacaoService;
 
 // Create Container using PHP-DI
 $container_temp = new Container();
@@ -60,6 +59,3 @@ require_once '../routes/router.php';
 
 $app->run();
 ob_end_flush();
-
-//$service = new ImportacaoService();
-//$service->setDsn('folha')->importar();
