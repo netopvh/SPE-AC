@@ -631,7 +631,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id_usuario`, `id_tipo_usuario`, `id_orgao_exercicio_usuario`, `id_lotacao_exercicio_usuario`, `id_horario`, `matricula_usuario`, `cpf_usuario`, `contrato_usuario`, `tipo_contrato_usuario`, `nome_usuario`, `situacao_funcional_usuario`, `data_admissao_usuario`, `cargo_usuario`, `cargo_comissao_usuario`, `email_usuario`, `regime_usuario`, `situacao_usuario`, `data_criacao_usuario`, `data_atualizacao_usuario`) VALUES
-(1, 1, 1, 1, 1, 1, '43536778291', 1, NULL, 'OZEIAS ROCHA', NULL, NULL, NULL, NULL, 'ozeias@ac.gov.br', NULL, 'A', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
+(1000000, 1, 1, 1, 1, 1, '43536778291', 1, NULL, 'OZEIAS ROCHA', NULL, NULL, NULL, NULL, 'ozeias@ac.gov.br', NULL, 'A', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
 
 --
 -- Índices de tabelas apagadas
