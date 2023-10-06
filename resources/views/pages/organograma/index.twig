@@ -8,18 +8,21 @@
 				
 				<div class="col-lg-12">
 					<div class="card card-bordered mr-3">
-						<h4 class="card-header font-16 mt-0" style="color: #000;">
+						<h4 class="card-header d-flex justify-content-between font-16 mt-0" style="color: #000;">
+							<div>
 							Organograma
-							
-							<select name="id_lotacao" class="organograma select2">
-								{% if orgaos|length > 0 %}
-								{% for orgao in orgaos %}
-								<option value="{{ orgao.id_lotacao }}" {% if AUTH.id_orgao_exercicio_usuario == orgao.id_orgao %}selected{% endif %}>{{ orgao.sigla_orgao }}</option>
-								{% endfor %}
-								{% else %}
-									<option value="" disabled selected>NENHUM ORGANOGRAMA DISPONÍVEL</option>
-								{% endif %}
-							</select>
+							</div>
+							<div>
+								<select name="id_lotacao" class="organograma select2" style="width: 340px">
+									{% if orgaos|length > 0 %}
+									{% for orgao in orgaos %}
+									<option value="{{ orgao.id_orgao }}" {% if AUTH.id_orgao_exercicio_usuario == orgao.id_orgao %}selected{% endif %}>{{ orgao.descricao_orgao }}</option>
+									{% endfor %}
+									{% else %}
+										<option value="" disabled selected>NENHUM ORGANOGRAMA DISPONÍVEL</option>
+									{% endif %}
+								</select>
+							</div>
 						</h4>
 						<div class="card-body">
 
@@ -99,12 +102,12 @@ function exibirOrganograma(id_lotacao){
 	$.post("{{ APP_URL }}/organograma/exibir", {id_lotacao}, function(dados){
         
         if(dados.dados.length === 0){
-            console.log('entrou')
             $('#chart-container').html(`<h1><i class="fa fa-exclamation-triangle"></i></h2><h6 class="text-center">O organograma desse órgão não está disponível.</h6><p>Solicite ao Gestor de RH a inclusão do organograma<p/>`);
             return false;
         }
 
 		$('#chart-container').html('')
+		
 		let nodeTemplate = function(data) {
 			let exibirResponsaveis = '';
 			
@@ -122,7 +125,7 @@ function exibirOrganograma(id_lotacao){
 			
 			return `
 				<div class="nivel-${data.nivel_pai}">
-					<div class="title">${data.sigla_lotacao ? data.sigla_lotacao : data.descricao_lotacao}</div>
+					<div class="title">${data.nivel_pai == 0 ? data.descricao_orgao : data.descricao_lotacao}</div>
 					<div class="content">
 						${exibirResponsaveis ? exibirResponsaveis : '<div class="dados"><strong>NENHUM RESPONSÁVEL CADASTRADO</strong></div>'}
 					</div>

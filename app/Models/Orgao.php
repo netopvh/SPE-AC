@@ -26,6 +26,11 @@ class Orgao extends Model
         'data_atualizacao_orgao'
     ];
 
+    public function lotacao()
+    {
+        return $this->hasMany(Lotacao::class, 'id_orgao', 'id_orgao');
+    }
+
     public function OrgaoResponsavel()
     {
         return $this->hasMany(new OrgaoResponsavel, 'id_orgao', 'id_orgao')->where('funcao', 1)->with('Usuario');

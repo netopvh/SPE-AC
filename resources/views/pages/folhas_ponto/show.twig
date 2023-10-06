@@ -10,14 +10,14 @@
 	<div class="container-fluid p-0">
 		<div class="page-title-box">
 			<div class="row align-items-center">
-				<div class="col-sm-6">
+				<div class="col-sm-9">
 					<h4 class="page-title">
 						<a href="{{ APP_URL }}/folhas_ponto?ano={{ ano }}&mes={{ mes }}">Relatórios </a><i class="fa fa-chevron-right font-12"></i> 
 						Relatório de Ponto <i class="fa fa-chevron-right font-12"></i> 
-						{{ usuario.nome_usuario ~ ' (' ~ usuario.matricula_usuario ~ '-' ~ usuario.contrato_usuario ~ ')' }}
+						{{ usuario.nome_usuario ~ ' (' ~ usuario.matricula_usuario ~ ' - ' ~ lotacao_usuario.descricao_lotacao ~ ')' }}
 					</h4>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-3">
 					<div class="float-right d-none d-md-block">
 						<button data-url="{{ APP_URL }}/folhas_ponto/imprimir?id_usuario={{ usuario.id_usuario }}&ano={{ ano }}&mes={{ mes }}{{ id_lotacao ? '&id_lotacao=' ~ id_lotacao ~ '&validacao=true' : '' }}" id="imprimir" class="btn btn-primary waves-effect waves-light">
 							<i class="fa fa-print"></i>

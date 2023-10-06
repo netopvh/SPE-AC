@@ -73,7 +73,7 @@ class AfastamentoController extends Controller
             //$join->on('usuario.contrato_usuario', 'afastamento.contrato_afastamento');
         })
             ->leftJoin('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
-            //->leftJoin('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
+            ->leftJoin('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
             //->where('afastamento.data_fim_afastamento', '>=', date('Y-m-d'))
             ->where(function ($query) use ($MinhasLotacoes) {
                 if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2) {

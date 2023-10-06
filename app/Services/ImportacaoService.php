@@ -78,12 +78,13 @@ class ImportacaoService
                     foreach ($usuarios as $usuario) {
                         $this->verificaUsuario(
                             $usuario[0], //id_orgao_exercicio_usuario
+                            $usuario[12],  //id_lotacao_execicio_usuario
                             $usuario[1], //id_usuario
                             $usuario[8], //cpf_usuario
                             $usuario[2], //nome_usuario
                             $usuario[4], //cargo_usuario
                             $usuario[3], //data_admissao_usuario
-                            $usuario[9], //regime_usuario
+                            $usuario[11], //regime_usuario
                             $usuario[7] //situacao_funcional_usuario
                         );
                     }
@@ -328,15 +329,17 @@ class ImportacaoService
     {
         $fileDir = $this->makeFile('usuarios');
 
-        $stSql = "SELECT funcionarios.i_entidades as orgao, i_funcionarios = bethadba.funcionarios.i_funcionarios," .
+        $stSql = "SELECT distinct funcionarios.i_entidades as orgao, i_funcionarios = bethadba.funcionarios.i_funcionarios," .
             "pessoas_nome = bethadba.pessoas.nome, funcionarios_dt_admissao = bethadba.funcionarios.dt_admissao," .
             "cargos_nome = bethadba.cargos.nome, dt_fim_cpt = SECONDS(DAYS(CAST( today() AS datetime ),1),-1)," .
             "situacao = isnull(bethadba.dbf_gettipoafast(1, funcionarios.i_entidades, funcionarios.i_funcionarios, bethadba.dbf_getdataafast(1, funcionarios.i_entidades, funcionarios.i_funcionarios, today(), 'S'), 'S'), 1)," .
             "situacao_funcional = if situacao = 1 then 'Trabalhando' else if situacao between 2 and 7 or situacao between 10 and 21 then 'Afastado' else if situacao = 8 then 'Demitido' else if situacao = 9 then 'Aposentado' endif endif endif endif," .
-            //"bethadba.locais_trab.i_locais_trab," .
-            "pessoas_fisicas.cpf, tipo_cargo = (SELECT descricao from bethadba.tipos_cargos t where t.i_tipos_cargos = cargos.i_tipos_cargos) " .
+            "pessoas_fisicas.cpf, tipo_cargo = (SELECT descricao from bethadba.tipos_cargos t where t.i_tipos_cargos = cargos.i_tipos_cargos), " .
+            "hist_funcionarios.i_vinculos, desc_vinculo = (select descricao from bethadba.vinculos where vinculos.i_vinculos=hist_funcionarios.i_vinculos), " .
+            "lotacao = isnull((select top 1 i_locais_trab from bethadba.locais_mov where locais_mov.i_entidades = funcionarios.i_entidades AND locais_mov.i_funcionarios = funcionarios.i_funcionarios AND locais_mov.dt_final is null order by dt_inicial desc), " .
+            "(select top 1 i_locais_trab from bethadba.locais_mov where locais_mov.i_entidades = funcionarios.i_entidades AND locais_mov.i_funcionarios = funcionarios.i_funcionarios AND locais_mov.dt_final is not null order by dt_final desc))," .
+            "desc_lotacao=(select nome from bethadba.locais_trab where locais_trab.i_locais_trab=lotacao) " .
             "FROM bethadba.funcionarios, bethadba.pessoas, bethadba.pessoas_fisicas LEFT OUTER JOIN bethadba.pessoas_fis_compl ON(pessoas_fisicas.i_pessoas = pessoas_fis_compl.i_pessoas)," .
-            //"bethadba.locais_trab, bethadba.locais_mov LEFT OUTER JOIN bethadba.locais_mov ON(locais_mov.i_entidades = locais_trab.i_entidades AND locais_mov.i_locais_trab = locais_trab.i_locais_trab)," .
             "bethadba.cargos LEFT OUTER JOIN bethadba.cargos_compl ON (cargos.i_entidades = cargos_compl.i_entidades AND cargos.i_cargos = cargos_compl.i_cargos)," .
             "bethadba.hist_cargos, bethadba.hist_funcionarios WHERE funcionarios.i_pessoas = pessoas_fisicas.i_pessoas AND pessoas_fisicas.i_pessoas = pessoas.i_pessoas AND " .
             "cargos.i_entidades = hist_cargos.i_entidades AND cargos.i_cargos = hist_cargos.i_cargos AND hist_cargos.i_entidades = funcionarios.i_entidades AND hist_cargos.i_funcionarios = funcionarios.i_funcionarios AND " .
@@ -350,25 +353,26 @@ class ImportacaoService
         return $this->decodeFile($fileDir);
     }
 
-    private function verificaUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    private function verificaUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
     {
 
         $usuario = Usuario::query()->where('id_usuario', $id_usuario)->get(['id_usuario']);
 
         if ($usuario->count()) {
-            return $this->updateUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
+            return $this->updateUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
         }
 
-        return $this->insertUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
+        return $this->insertUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
     }
 
-    private function updateUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    private function updateUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
         $usuario = Usuario::query()->where('id_usuario', $id_usuario)->first();
 
         $usuario->id_orgao_exercicio_usuario = $id_orgao;
+        $usuario->id_lotacao_exercicio_usuario = $id_lotacao;
         $usuario->id_usuario = $id_usuario;
         $usuario->id_tipo_usuario = $this->checkTipoUsuario($regime_usuario);
         $usuario->cpf_usuario = $this->limparAspas($cpf_usuario);
@@ -384,12 +388,13 @@ class ImportacaoService
         return true;
     }
 
-    private function insertUsuario($id_orgao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    private function insertUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
         Usuario::query()->create([
             'id_orgao_exercicio_usuario' => $id_orgao,
+            'id_lotacao_exercicio_usuario' => $id_lotacao,
             'id_usuario' => $id_usuario,
             'id_tipo_usuario' => $this->checkTipoUsuario($regime_usuario),
             'cpf_usuario' => $this->limparAspas($cpf_usuario),

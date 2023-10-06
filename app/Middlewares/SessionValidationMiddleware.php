@@ -15,12 +15,19 @@ class SessionValidationMiddleware
     //rotas sem atualização de sessão
     protected $open = ['/autenticacao', '/pontos', '/api'];
 
-    public function __invoke(Request $request, RequestHandler $handler) : Response
+    public function __invoke(Request $request, RequestHandler $handler): Response
     {
         if (Routing::out($request, $this->open)) {
+
+            if ($_SERVER['REQUEST_URI'] == '/') {
+                $response = $handler->handle($request);
+                return $response->withRedirect(APP_URL . '/autenticacao/login');
+            }
+
             $response = $handler->handle($request);
             return $response;
         } else {
+
             if ($_SERVER['REQUEST_URI'] == '/spe_novo/') {
                 // if ($_SERVER['REQUEST_URI'] == '/') {
                 $response = $handler->handle($request);

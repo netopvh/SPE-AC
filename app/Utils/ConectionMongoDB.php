@@ -7,11 +7,21 @@ class ConectionMongoDB
 {
     private static $instance;
 
-    public static function getInstance() : \MongoDB\Driver\Manager
+    public static function getInstance(): \MongoDB\Driver\Manager
     {
-        if (! isset(self::$instance)) {
+        if (!isset(self::$instance)) {
             try {
-                self::$instance = new \MongoDB\Driver\Manager('mongodb://' . DATABASE_MONGO['username'] . ':' . DATABASE_MONGO['password'] . '@' . DATABASE_MONGO['host'] . ':' . DATABASE_MONGO['port'] . '');
+                if (DATABASE_MONGO['username'] !== '' && DATABASE_MONGO['password'] !== '') {
+                    $username = DATABASE_MONGO['username'];
+                    $password = DATABASE_MONGO['password'];
+                    $auth = $username . ':' . $password . '@';
+                } else {
+                    $auth = '';
+                }
+
+                $dsn = 'mongodb://' . $auth . DATABASE_MONGO['host'] . ':' . DATABASE_MONGO['port'];
+
+                self::$instance = new \MongoDB\Driver\Manager($dsn);
             } catch (\Throwable $th) {
                 echo $th->getMessage();
             }
@@ -19,7 +29,7 @@ class ConectionMongoDB
         return self::$instance;
     }
 
-    public static function connection($sql) : \MongoDB\Driver\Manager
+    public static function connection($sql): \MongoDB\Driver\Manager
     {
         return self::getInstance();
     }

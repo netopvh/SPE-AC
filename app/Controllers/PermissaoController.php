@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utils\Auth;
 
-use App\Models\{ 
+use App\Models\{
     Usuario,
     Horario,
     TipoPerfil,
@@ -30,14 +30,14 @@ class PermissaoController extends Controller
             'index'
         );
     }
-    
+
     public function store(Request $request, Response $response, $args)
     {
-        if($request->getMethod() == 'POST'){
+        if ($request->getMethod() == 'POST') {
             DB::beginTransaction();
             try {
 
-                $todos =[
+                $todos = [
                     'id_usuario' => ($request->getParams())['id_usuario'],
                     'id_tipo_perfil' => ($request->getParams())['id_tipo_perfil'],
                     'id_usuario_criacao_perfil_usuario' => Auth::id_usuario(),
@@ -46,7 +46,7 @@ class PermissaoController extends Controller
 
                 $perfil_usuario = PerfilUsuario::where('id_usuario', $todos['id_usuario'])->first();
 
-                if($perfil_usuario){
+                if ($perfil_usuario) {
                     return $response->withStatus(404)->withJson(['errorMessage' => 'Servidor já possui um perfil!']);
                 }
 
@@ -54,7 +54,6 @@ class PermissaoController extends Controller
 
                 DB::commit();
                 return $response->withStatus(200)->withJson([]);
-
             } catch (\Throwable $th) {
                 DB::rollBack();
                 return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
@@ -67,7 +66,7 @@ class PermissaoController extends Controller
             $response,
             'permissoes',
             'store',
-            [ 
+            [
                 'tipos_perfil' => $tipos_perfil,
             ]
         );
@@ -84,7 +83,6 @@ class PermissaoController extends Controller
 
             DB::commit();
             return $response->withStatus(200)->withJson([]);
-
         } catch (\Throwable $th) {
             DB::rollBack();
             return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
@@ -93,11 +91,11 @@ class PermissaoController extends Controller
 
     public function api_index(Request $request, Response $response, $args)
     {
-        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10; 
+        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
 
         $current_page = ceil((($request->getParams())['start'] + 1) / $valid_lenght);
-        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;     
-        
+        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
+
         $search = ($request->getParams())['search'] ? '%' . ($request->getParams())['search']  . '%' : false;
         $id_orgao = ($request->getParams())['id_orgao'] ?? false;
 
@@ -111,28 +109,28 @@ class PermissaoController extends Controller
             5 => 'tipo_perfil.id_tipo_perfil',
         ];
 
-        if(!$order){
-            $order['column'] = 2; 
-            $order['dir'] = 'asc'; 
+        if (!$order) {
+            $order['column'] = 2;
+            $order['dir'] = 'asc';
         }
-        
+
         $usuarios = PerfilUsuario::join('usuario', 'usuario.id_usuario', 'perfil_usuario.id_usuario')
             ->join('tipo_perfil', 'tipo_perfil.id_tipo_perfil', 'perfil_usuario.id_tipo_perfil')
             ->join('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
             ->join('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
             ->where('usuario.id_tipo_usuario', 1)
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2) {
                     $query->where('tipo_perfil.id_tipo_perfil', 3)
                         ->whereIn('orgao.id_orgao',  function ($query) {
-                        $query->select('id_orgao')
-                            ->from(with(new OrgaoResponsavel())->getTable())
-                            ->where('id_usuario', Auth::id_usuario());
-                    });
+                            $query->select('id_orgao')
+                                ->from(with(new OrgaoResponsavel())->getTable())
+                                ->where('id_usuario', Auth::id_usuario());
+                        });
                 }
             })
             ->where(function ($query) use ($search) {
-                if($search){
+                if ($search) {
                     $query->where('usuario.matricula_usuario', 'LIKE', $search)
                         ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
                         ->orWhere('usuario.nome_usuario', 'LIKE', $search)
@@ -145,7 +143,7 @@ class PermissaoController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
@@ -159,6 +157,6 @@ class PermissaoController extends Controller
             'aaData' => $usuarios['data'],
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 }

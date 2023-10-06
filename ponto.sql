@@ -450,7 +450,7 @@ CREATE TABLE `perfil_usuario` (
 --
 
 INSERT INTO `perfil_usuario` (`id_perfil_usuario`, `id_usuario`, `id_tipo_perfil`, `id_usuario_criacao_perfil_usuario`, `id_usuario_atualizacao_perfil_usuario`, `data_criacao_perfil_usuario`, `data_atualizacao_perfil_usuario`) VALUES
-(1, 1, 1, 1, 1, '0000-00-00 00:00:00', '0000-00-00 00:00:00');
+(1, 1000000, 1, 1, 1, '2023-10-20 10:16:25', '2023-10-20 10:16:25');
 
 -- --------------------------------------------------------
 

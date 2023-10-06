@@ -48,11 +48,6 @@ class FolhaPontoController extends Controller
         for ($i = 2019; $i <= date('Y'); $i++) {
             $anos[] = $i;
         }
-        /*$anos = [
-            2019,
-            2020,
-            2021,
-        ];*/
 
         return $this->view(
             $response,
@@ -60,8 +55,8 @@ class FolhaPontoController extends Controller
             'index',
             [
                 'years' => $anos,
-                'ano' => $request->getQueryParam('ano') ? $request->getQueryParam('ano') : date('Y'),
-                'mes' => $request->getQueryParam('mes') ? $request->getQueryParam('mes') : date('m'),
+                'ano' => $request->getQueryParam('ano') !== '' ? $request->getQueryParam('ano') : date('Y'),
+                'mes' => $request->getQueryParam('mes') !== '' ? $request->getQueryParam('mes') : date('m'),
             ]
         );
     }

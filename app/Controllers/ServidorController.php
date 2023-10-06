@@ -134,7 +134,7 @@ class ServidorController extends Controller
         }
 
         $usuarios = Usuario::join('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
-            //->join('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
+            ->join('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
             ->with('TipoUsuario')
             ->with('Horario')
             ->where('usuario.id_tipo_usuario', 1)

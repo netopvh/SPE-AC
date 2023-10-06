@@ -102,7 +102,7 @@
 						var itens = [];
 						itens.push({ id: 'A', text: `Todas os Órgão` })
 						data.aaData.map(dados => {
-							itens.push({ id: dados.id_orgao, text: `${dados.sigla_orgao}` })
+							itens.push({ id: dados.id_orgao, text: `${dados.descricao_orgao}` })
 						});
 						return {
 							results: itens

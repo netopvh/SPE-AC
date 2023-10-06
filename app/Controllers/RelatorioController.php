@@ -67,25 +67,25 @@ class RelatorioController extends Controller
         $id_usuario = $request->getQueryParam('id_usuario') ? $request->getQueryParam('id_usuario') : null;
         $situacao_funcional_usuario = $request->getQueryParam('situacao_funcional_usuario') ?? null;
 
-        $orgaos = Orgao::where(function ($query){
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
-                    $query->whereIn('id_orgao',  function ($query) {
-                        $query->select('id_orgao')
-                            ->from(with(new OrgaoResponsavel())->getTable())
-                            ->where('id_usuario', Auth::id_usuario());
-                    });
-                }
-            })
+        $orgaos = Orgao::where(function ($query) {
+            if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
+                $query->whereIn('id_orgao',  function ($query) {
+                    $query->select('id_orgao')
+                        ->from(with(new OrgaoResponsavel())->getTable())
+                        ->where('id_usuario', Auth::id_usuario());
+                });
+            }
+        })
             ->orderBy('sigla_orgao')
             ->get()->toArray();
 
         $lotacoes = Lotacao::where(function ($query) use ($id_orgao) {
-                if($id_orgao){
-                    $query->where('id_orgao', $id_orgao);
-                }
-            })
-            ->where(function ($query){
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+            if ($id_orgao) {
+                $query->where('id_orgao', $id_orgao);
+            }
+        })
+            ->where(function ($query) {
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
@@ -96,13 +96,13 @@ class RelatorioController extends Controller
             ->where('status_lotacao', 'A')
             ->orderBy('descricao_lotacao')
             ->get()->toArray();
-		
-		$anos = [];
-		for($i=2019;$i<=date('Y');$i++){
-			$anos[] = $i;
-		}
 
-        if($id_usuario){
+        $anos = [];
+        for ($i = 2019; $i <= date('Y'); $i++) {
+            $anos[] = $i;
+        }
+
+        if ($id_usuario) {
             $usuario = Usuario::join('orgao', 'orgao.id_orgao', 'usuario.id_orgao_exercicio_usuario')
                 ->join('lotacao', 'lotacao.id_lotacao', 'usuario.id_lotacao_exercicio_usuario')
                 ->with('TipoUsuario')
@@ -111,8 +111,8 @@ class RelatorioController extends Controller
             return $this->view(
                 $response,
                 'relatorios',
-                'show/'. $relatorio->link_relatorio .'/show',
-                [ 
+                'show/' . $relatorio->link_relatorio . '/show',
+                [
                     'relatorio' => $relatorio,
                     'years' => $anos,
                     'ano' => $request->getQueryParam('ano'),
@@ -128,17 +128,17 @@ class RelatorioController extends Controller
                 ]
             );
         }
-        
-        
+
+
         return $this->view(
             $response,
             'relatorios',
-            'show/'. $relatorio->link_relatorio .'/index',
-            [ 
+            'show/' . $relatorio->link_relatorio . '/index',
+            [
                 'relatorio' => $relatorio,
                 'years' => $anos,
-                'ano' => $request->getQueryParam('ano'),
-                'mes' => $request->getQueryParam('mes'),
+                'ano' => $request->getQueryParam('ano') ? $request->getQueryParam('ano') : date('Y'),
+                'mes' => $request->getQueryParam('mes') ? $request->getQueryParam('mes') : date('m'),
                 'qtd' => $request->getQueryParam('qtd') ?? 4,
                 'orgaos' => $orgaos,
                 'lotacoes' => $lotacoes,
@@ -152,56 +152,45 @@ class RelatorioController extends Controller
 
     public function print(Request $request, Response $response, $args)
     {
-        if($args['link_relatorio'] == 'sem_registro'){
+        if ($args['link_relatorio'] == 'sem_registro') {
             return $this->print_sem_registro($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'dispensados'){
+        } else if ($args['link_relatorio'] == 'dispensados') {
             return $this->print_dispensados($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'plataforma'){
+        } else if ($args['link_relatorio'] == 'plataforma') {
             return $this->print_plataforma($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'ip'){
+        } else if ($args['link_relatorio'] == 'ip') {
             return $this->print_ip($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'horas'){
+        } else if ($args['link_relatorio'] == 'horas') {
             return $this->print_horas($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'escalas'){
+        } else if ($args['link_relatorio'] == 'escalas') {
             return $this->print_escalas($request, $response, $args);
         }
     }
 
     public function api_relatorio(Request $request, Response $response, $args)
     {
-        if($args['link_relatorio'] == 'sem_registro'){
+        if ($args['link_relatorio'] == 'sem_registro') {
             return $this->api_sem_registro($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'dispensados'){
+        } else if ($args['link_relatorio'] == 'dispensados') {
             return $this->api_dispensados($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'plataforma'){
-            if($request->getQueryParam('id_usuario')){
+        } else if ($args['link_relatorio'] == 'plataforma') {
+            if ($request->getQueryParam('id_usuario')) {
                 return $this->api_plataforma_usuario($request, $response, $args);
             }
             return $this->api_plataforma($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'ip'){
+        } else if ($args['link_relatorio'] == 'ip') {
             return $this->api_por_ip($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'horas'){
+        } else if ($args['link_relatorio'] == 'horas') {
             return $this->api_horas($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'escalas'){
+        } else if ($args['link_relatorio'] == 'escalas') {
             return $this->api_escalas($request, $response, $args);
-        }
-        else if($args['link_relatorio'] == 'auditoria'){
+        } else if ($args['link_relatorio'] == 'auditoria') {
             return $this->api_auditoria($request, $response, $args);
         }
     }
 
     public function api_index(Request $request, Response $response, $args)
-    {        
+    {
         $relatorios = Relatorio::where('situacao_relatorio', 'S')
             ->orderBy('descricao_relatorio')
             ->paginate()->toArray();
@@ -213,7 +202,7 @@ class RelatorioController extends Controller
             'aaData' => $relatorios['data'],
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 
     // Relatório: Sem Registro 
@@ -225,7 +214,7 @@ class RelatorioController extends Controller
         $data = Date::create($request->getQueryParam('ano'), $request->getQueryParam('mes'));
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
         $situacao_funcional_usuario = $request->getQueryParam('situacao_funcional_usuario') ?? null;
         $acao = $request->getQueryParam('acao') ?? 'print';
 
@@ -234,16 +223,16 @@ class RelatorioController extends Controller
 
         $mongoDB = new MongoDB();
         $mongoDB->setFilter('$or', [['finalidade_ponto' => 'PONTO'], ['finalidade_ponto' => 'ABONO']]);
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
 
-        if($id_orgao){
+        if ($id_orgao) {
             $mongoDB->setFilter('id_orgao', intval($id_orgao));
         }
 
-        if($id_lotacao){
+        if ($id_lotacao) {
             $mongoDB->setFilter('id_lotacao', intval($id_lotacao));
         }
-		
+
         $pontos = $mongoDB->executeQuery();
 
         $ids_usuario = [];
@@ -251,21 +240,21 @@ class RelatorioController extends Controller
         foreach ($pontos as $ponto) {
             $ids_usuario[] = $ponto->id_usuario;
         }
-		
-		$ids_usuario = array_unique($ids_usuario);
+
+        $ids_usuario = array_unique($ids_usuario);
 
         $usuarios = Usuario::join('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
             ->join('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
             ->where('usuario.situacao_usuario', 'A')
             ->whereNotIn('usuario.id_usuario', $ids_usuario)
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -274,12 +263,12 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', $id_lotacao);
                 }
             })
@@ -289,48 +278,48 @@ class RelatorioController extends Controller
                         ->from(with(new Dispensa())->getTable())
                         ->where('situacao_dispensa', 'S')
 
-                        ->where(function($query) use ($data_final) {
+                        ->where(function ($query) use ($data_final) {
                             $query->whereNull('dispensa.data_fim_dispensa')
-                            ->orWhere('dispensa.data_fim_dispensa', '>', $data_final);
+                                ->orWhere('dispensa.data_fim_dispensa', '>', $data_final);
                         });
-                        
-                        // ->orWhereBetween('dispensa.data_fim_dispensa',[$data_inicial, $data_final])
-                        
+
+                    // ->orWhereBetween('dispensa.data_fim_dispensa',[$data_inicial, $data_final])
+
                 });
             })
-            ->where(function($query) use ($situacao_funcional_usuario) {
-                if($situacao_funcional_usuario){
+            ->where(function ($query) use ($situacao_funcional_usuario) {
+                if ($situacao_funcional_usuario) {
                     $query->where('situacao_funcional_usuario', $situacao_funcional_usuario);
                 }
             })
             ->select('orgao.*', 'lotacao.*', 'usuario.*');
 
-            if($acao == 'print') {
+        if ($acao == 'print') {
 
-                $usuarios = $usuarios->get()->toArray();
-                return $this->view(
-                    $response,
-                    'relatorios',
-                    'show/sem_registro/print',
-                    [
-                        'relatorio' => $relatorio,
-                        'usuarios' => $usuarios,
-                        'situacao_funcional_usuario' => $situacao_funcional_usuario,
-                        'ano' => $request->getQueryParam('ano'),
-                        'mes' => $request->getQueryParam('mes'),
-                    ]
-                );
-            }
-
-            
             $usuarios = $usuarios->get()->toArray();
+            return $this->view(
+                $response,
+                'relatorios',
+                'show/sem_registro/print',
+                [
+                    'relatorio' => $relatorio,
+                    'usuarios' => $usuarios,
+                    'situacao_funcional_usuario' => $situacao_funcional_usuario,
+                    'ano' => $request->getQueryParam('ano'),
+                    'mes' => $request->getQueryParam('mes'),
+                ]
+            );
+        }
+
+
+        $usuarios = $usuarios->get()->toArray();
 
 
         $orgaos = [];
-        
-        foreach($usuarios as $ctg => $usuario){
-            
-            if(!$orgaos[$usuario['id_orgao']]){
+
+        foreach ($usuarios as $ctg => $usuario) {
+
+            if (!$orgaos[$usuario['id_orgao']]) {
                 $orgaos[$usuario['id_orgao']] = [
                     'id_orgao' => $usuario['id_orgao'],
                     'descricao_orgao' => $usuario['descricao_orgao'],
@@ -346,31 +335,30 @@ class RelatorioController extends Controller
                 'nome_usuario' => $usuario['nome_usuario'],
                 'descricao_lotacao' => $usuario['descricao_lotacao'],
             ];
-            
         }
-        
-		// return $this->view(
-            // $response,
-            // 'relatorios',
-            // 'show/sem_registro/print',
-            // [ 
-                // 'orgaos' => $orgaos,
-                // 'relatorio' => $relatorio,
-                // 'usuarios' => $usuarios,
-                // 'situacao_funcional_usuario' => $situacao_funcional_usuario,
-                // 'ano' => $request->getQueryParam('ano'),
-                // 'mes' => $request->getQueryParam('mes'),
-            // ]
+
+        // return $this->view(
+        // $response,
+        // 'relatorios',
+        // 'show/sem_registro/print',
+        // [ 
+        // 'orgaos' => $orgaos,
+        // 'relatorio' => $relatorio,
+        // 'usuarios' => $usuarios,
+        // 'situacao_funcional_usuario' => $situacao_funcional_usuario,
+        // 'ano' => $request->getQueryParam('ano'),
+        // 'mes' => $request->getQueryParam('mes'),
+        // ]
         // );
 
         $twig = new Twig(
             Filesystem::directory('~/resources/views'),
-            [ 'cache' => false ]
+            ['cache' => false]
         );
 
         $html = $twig->fetch(
             'pages/relatorios/show/sem_registro/pdf.twig',
-            [ 
+            [
                 'APP_URL' => 'http:' . APP_URL,
                 'orgaos' => $orgaos,
                 'relatorio' => $relatorio,
@@ -389,36 +377,35 @@ class RelatorioController extends Controller
             'margin-left' => 5,
             'margin-right' => 5,
             'margin-top' => 5,
-            
+
             'footer-font-size'  => 10,
             'footer-font-name' => 'Arial',
         ]);
 
-        $snappy->setOption('footer-html', 'Relat&oacute;rio gerado em  '.date('d/m/Y').' &agrave;s '.date('H:i').'');
+        $snappy->setOption('footer-html', 'Relat&oacute;rio gerado em  ' . date('d/m/Y') . ' &agrave;s ' . date('H:i') . '');
         $snappy->setOption('footer-right', '[page] de [topage]');
-        
+
         $time = time();
-        $snappy->generateFromHtml($html, '/tmp/relatorio-'.$time.'.pdf');
-        
+        $snappy->generateFromHtml($html, '/tmp/relatorio-' . $time . '.pdf');
 
-         header('Content-Type: application/pdf');
-         echo file_get_contents('/tmp/relatorio-'.$time.'.pdf');
 
-         exit;
+        header('Content-Type: application/pdf');
+        echo file_get_contents('/tmp/relatorio-' . $time . '.pdf');
+
+        exit;
     }
 
     public function pdf_sem_registro(Request $request, Response $response, $args)
     {
-
     }
 
     public function api_sem_registro(Request $request, Response $response, $args)
     {
-        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10; 
+        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
 
         $current_page = ceil((($request->getParams())['start'] + 1) / $valid_lenght);
-        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;     
-        
+        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
+
         $search = ($request->getParams())['search'] ? '%' . ($request->getParams())['search']  . '%' : false;
 
         $order = isset(($request->getParams())['order']) ? ($request->getParams())['order'][0] : null;
@@ -431,13 +418,13 @@ class RelatorioController extends Controller
             5 => 'lotacao.descricao_lotacao',
         ];
 
-        if(!$order){
-            $order['column'] = 2; 
-            $order['dir'] = 'asc'; 
+        if (!$order) {
+            $order['column'] = 2;
+            $order['dir'] = 'asc';
         }
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
         $situacao_funcional_usuario = $request->getQueryParam('situacao_funcional_usuario') ?? null;
 
         $pontos = [];
@@ -448,16 +435,16 @@ class RelatorioController extends Controller
 
         $mongoDB = new MongoDB();
         $mongoDB->setFilter('$or', [['finalidade_ponto' => 'PONTO'], ['finalidade_ponto' => 'ABONO']]);
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
 
-        if($id_orgao){
+        if ($id_orgao) {
             $mongoDB->setFilter('id_orgao', intval($id_orgao));
         }
 
-        if($id_lotacao){
+        if ($id_lotacao) {
             $mongoDB->setFilter('id_lotacao', intval($id_lotacao));
         }
-        
+
         $pontos = $mongoDB->executeQuery();
 
         $ids_usuario = [];
@@ -467,20 +454,20 @@ class RelatorioController extends Controller
         }
 
         $ids_usuario = array_unique($ids_usuario);
-            
+
 
         $usuarios = Usuario::join('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
             ->join('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
             ->where('usuario.situacao_usuario', 'A')
             ->whereNotIn('usuario.id_usuario', $ids_usuario)
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -489,26 +476,26 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', $id_lotacao);
                 }
             })
             ->where(function ($query) use ($search) {
-                if($search){
+                if ($search) {
                     $query->where('usuario.matricula_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.nome_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.cargo_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.cargo_comissao_usuario', 'LIKE', $search)
-                    ->orWhere('orgao.descricao_orgao', 'LIKE', $search)
-                    ->orWhere('orgao.sigla_orgao', 'LIKE', $search)
-                    ->orWhere('lotacao.descricao_lotacao', 'LIKE', $search)
-                    ->orWhere('lotacao.sigla_lotacao', 'LIKE', $search);
+                        ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.nome_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.cargo_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.cargo_comissao_usuario', 'LIKE', $search)
+                        ->orWhere('orgao.descricao_orgao', 'LIKE', $search)
+                        ->orWhere('orgao.sigla_orgao', 'LIKE', $search)
+                        ->orWhere('lotacao.descricao_lotacao', 'LIKE', $search)
+                        ->orWhere('lotacao.sigla_lotacao', 'LIKE', $search);
                 }
             })
             ->where(function ($query) use ($data_inicial, $data_final) {
@@ -517,17 +504,17 @@ class RelatorioController extends Controller
                         ->from(with(new Dispensa())->getTable())
                         ->where('situacao_dispensa', 'S')
 
-                        ->where(function($query) use ($data_final) {
+                        ->where(function ($query) use ($data_final) {
                             $query->whereNull('dispensa.data_fim_dispensa')
-                            ->orWhere('dispensa.data_fim_dispensa', '>', $data_final);
+                                ->orWhere('dispensa.data_fim_dispensa', '>', $data_final);
                         });
-                        
-                        // ->orWhereBetween('dispensa.data_fim_dispensa',[$data_inicial, $data_final])
-                        
+
+                    // ->orWhereBetween('dispensa.data_fim_dispensa',[$data_inicial, $data_final])
+
                 });
             })
-            ->where(function($query) use ($situacao_funcional_usuario) {
-                if($situacao_funcional_usuario){
+            ->where(function ($query) use ($situacao_funcional_usuario) {
+                if ($situacao_funcional_usuario) {
                     $query->where('situacao_funcional_usuario', $situacao_funcional_usuario);
                 }
             })
@@ -542,7 +529,7 @@ class RelatorioController extends Controller
             'ids_usuario' => $pontos,
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 
     // Relatório: Dispensados 
@@ -552,30 +539,30 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::where('link_relatorio', $args['link_relatorio'])->first();
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
         $situacao = $request->getQueryParam('situacao') ? $request->getQueryParam('situacao') : null;
 
         $usuarios = Dispensa::select([
-                'dispensa.*',
-                'usuario.*',
-                'orgao.*',
-                'lotacao.*',
-                DB::raw("CASE WHEN ISNULL (dispensa.data_fim_dispensa) OR dispensa.data_fim_dispensa > CURRENT_DATE THEN 'ABERTA'
+            'dispensa.*',
+            'usuario.*',
+            'orgao.*',
+            'lotacao.*',
+            DB::raw("CASE WHEN ISNULL (dispensa.data_fim_dispensa) OR dispensa.data_fim_dispensa > CURRENT_DATE THEN 'ABERTA'
                 WHEN dispensa.data_fim_dispensa < CURRENT_DATE THEN 'FINALIZADA'
                 END AS situacao")
-            ])
+        ])
             ->join('usuario', 'usuario.id_usuario', 'dispensa.id_usuario')
             ->join('orgao', 'orgao.id_orgao', 'usuario.id_orgao_exercicio_usuario')
             ->join('lotacao', 'lotacao.id_lotacao', 'usuario.id_lotacao_exercicio_usuario')
-            ->where('situacao_dispensa','S')
+            ->where('situacao_dispensa', 'S')
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -584,20 +571,20 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', intval($id_orgao));
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', intval($id_lotacao));
                 }
             })
             ->where(function ($query) use ($situacao) {
-                if($situacao){
-                    if($situacao == 'finalizada'){
+                if ($situacao) {
+                    if ($situacao == 'finalizada') {
                         return $query->whereRaw('dispensa.data_fim_dispensa <= CURRENT_DATE');
-                    }else{
+                    } else {
                         return $query->whereNull('dispensa.data_fim_dispensa')->orWhereRaw('dispensa.data_fim_dispensa > CURRENT_DATE');
                     }
                 }
@@ -605,12 +592,12 @@ class RelatorioController extends Controller
             ->orderBy('orgao.sigla_orgao')
             ->orderBy('usuario.nome_usuario')
             ->get()->toArray();
-        
+
         return $this->view(
             $response,
             'relatorios',
             'show/dispensados/print',
-            [ 
+            [
                 'relatorio' => $relatorio,
                 'usuarios' => $usuarios,
                 'ano' => $request->getQueryParam('ano'),
@@ -621,11 +608,11 @@ class RelatorioController extends Controller
 
     public function api_dispensados(Request $request, Response $response, $args)
     {
-        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10; 
+        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
 
         $current_page = ceil((($request->getParams())['start'] + 1) / $valid_lenght);
-        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;     
-        
+        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
+
         $search = ($request->getParams())['search'] ? '%' . ($request->getParams())['search']  . '%' : false;
 
         $order = isset(($request->getParams())['order']) ? ($request->getParams())['order'][0] : null;
@@ -638,9 +625,9 @@ class RelatorioController extends Controller
             5 => 'lotacao.descricao_lotacao',
         ];
 
-        if(!$order){
-            $order['column'] = 2; 
-            $order['dir'] = 'asc'; 
+        if (!$order) {
+            $order['column'] = 2;
+            $order['dir'] = 'asc';
         }
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
@@ -650,26 +637,26 @@ class RelatorioController extends Controller
         $pontos = [];
 
         $usuarios = Dispensa::select([
-                'dispensa.*',
-                'usuario.*',
-                'orgao.*',
-                'lotacao.*',
-                DB::raw("CASE WHEN ISNULL (dispensa.data_fim_dispensa) OR dispensa.data_fim_dispensa > CURRENT_DATE THEN 'ABERTA'
+            'dispensa.*',
+            'usuario.*',
+            'orgao.*',
+            'lotacao.*',
+            DB::raw("CASE WHEN ISNULL (dispensa.data_fim_dispensa) OR dispensa.data_fim_dispensa > CURRENT_DATE THEN 'ABERTA'
                 WHEN dispensa.data_fim_dispensa < CURRENT_DATE THEN 'FINALIZADA'
                 END AS situacao")
-            ])
+        ])
             ->join('usuario', 'usuario.id_usuario', 'dispensa.id_usuario')
             ->join('orgao', 'orgao.id_orgao', 'usuario.id_orgao_exercicio_usuario')
             ->join('lotacao', 'lotacao.id_lotacao', 'usuario.id_lotacao_exercicio_usuario')
-            ->where('situacao_dispensa','S')
+            ->where('situacao_dispensa', 'S')
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -678,33 +665,33 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($search) {
-                if($search){
+                if ($search) {
                     $query->where('usuario.matricula_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.nome_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.cargo_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.cargo_comissao_usuario', 'LIKE', $search)
-                    ->orWhere('orgao.descricao_orgao', 'LIKE', $search)
-                    ->orWhere('orgao.sigla_orgao', 'LIKE', $search)
-                    ->orWhere('lotacao.descricao_lotacao', 'LIKE', $search)
-                    ->orWhere('lotacao.sigla_lotacao', 'LIKE', $search);
+                        ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.nome_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.cargo_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.cargo_comissao_usuario', 'LIKE', $search)
+                        ->orWhere('orgao.descricao_orgao', 'LIKE', $search)
+                        ->orWhere('orgao.sigla_orgao', 'LIKE', $search)
+                        ->orWhere('lotacao.descricao_lotacao', 'LIKE', $search)
+                        ->orWhere('lotacao.sigla_lotacao', 'LIKE', $search);
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', $id_lotacao);
                 }
             })
             ->where(function ($query) use ($situacao) {
-                if($situacao){
-                    if($situacao == 'aberta'){
+                if ($situacao) {
+                    if ($situacao == 'aberta') {
                         return $query->whereNull('dispensa.data_fim_dispensa')->orWhereRaw('dispensa.data_fim_dispensa > CURRENT_DATE');
-                    }else{
+                    } else {
                         return $query->whereRaw('dispensa.data_fim_dispensa <= CURRENT_DATE');
                     }
                 }
@@ -719,7 +706,7 @@ class RelatorioController extends Controller
             'aaData' => $usuarios['data'],
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 
     // Relatório: Plataforma
@@ -731,23 +718,23 @@ class RelatorioController extends Controller
         $data = Date::create($request->getQueryParam('ano'), $request->getQueryParam('mes'));
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
 
         $data_inicial = $data->startOfMonth()->toDateString();
         $data_final = $data->endOfMonth()->toDateString();
 
         $mongoDB = new MongoDB();
         $mongoDB->setFilter('$or', [['finalidade_ponto' => 'PONTO'], ['finalidade_ponto' => 'ABONO']]);
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('$or', [
-            ['dados_ponto' => new Regex('iPhone') ],
-            ['dados_ponto' => new Regex('iPad') ],
-            ['dados_ponto' => new Regex('Android') ],
-            ['dados_ponto' => new Regex('webOS') ],
-            ['dados_ponto' => new Regex('BlackBerry') ],
-            ['dados_ponto' => new Regex('iPod') ],
-            ['dados_ponto' => new Regex('Symbian') ],
-            ['dados_ponto' => new Regex('Windows Phone') ]
+            ['dados_ponto' => new Regex('iPhone')],
+            ['dados_ponto' => new Regex('iPad')],
+            ['dados_ponto' => new Regex('Android')],
+            ['dados_ponto' => new Regex('webOS')],
+            ['dados_ponto' => new Regex('BlackBerry')],
+            ['dados_ponto' => new Regex('iPod')],
+            ['dados_ponto' => new Regex('Symbian')],
+            ['dados_ponto' => new Regex('Windows Phone')]
         ]);
         $pontos = $mongoDB->executeQuery();
 
@@ -762,13 +749,13 @@ class RelatorioController extends Controller
             ->where('usuario.situacao_usuario', 'A')
             ->whereIn('usuario.id_usuario', $ids_usuario)
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -777,23 +764,23 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', $id_lotacao);
                 }
             })
             ->orderBy('usuario.nome_usuario')
             ->get()->toArray();
-        
+
         return $this->view(
             $response,
             'relatorios',
             'show/plataforma/print',
-            [ 
+            [
                 'relatorio' => $relatorio,
                 'usuarios' => $usuarios,
                 'ano' => $request->getQueryParam('ano'),
@@ -804,11 +791,11 @@ class RelatorioController extends Controller
 
     public function api_plataforma(Request $request, Response $response, $args)
     {
-        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10; 
+        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
 
         $current_page = ceil((($request->getParams())['start'] + 1) / $valid_lenght);
-        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;     
-        
+        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
+
         $search = ($request->getParams())['search'] ? '%' . ($request->getParams())['search']  . '%' : false;
 
         $order = isset(($request->getParams())['order']) ? ($request->getParams())['order'][0] : null;
@@ -821,13 +808,13 @@ class RelatorioController extends Controller
             5 => 'lotacao.descricao_lotacao',
         ];
 
-        if(!$order){
-            $order['column'] = 2; 
-            $order['dir'] = 'asc'; 
+        if (!$order) {
+            $order['column'] = 2;
+            $order['dir'] = 'asc';
         }
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
 
         $pontos = [];
         $data = Date::create($request->getQueryParam('ano'), $request->getQueryParam('mes'));
@@ -837,16 +824,16 @@ class RelatorioController extends Controller
 
         $mongoDB = new MongoDB();
         $mongoDB->setFilter('$or', [['finalidade_ponto' => 'PONTO'], ['finalidade_ponto' => 'ABONO']]);
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('$or', [
-            ['dados_ponto' => new Regex('iPhone') ],
-            ['dados_ponto' => new Regex('iPad') ],
-            ['dados_ponto' => new Regex('Android') ],
-            ['dados_ponto' => new Regex('webOS') ],
-            ['dados_ponto' => new Regex('BlackBerry') ],
-            ['dados_ponto' => new Regex('iPod') ],
-            ['dados_ponto' => new Regex('Symbian') ],
-            ['dados_ponto' => new Regex('Windows Phone') ]
+            ['dados_ponto' => new Regex('iPhone')],
+            ['dados_ponto' => new Regex('iPad')],
+            ['dados_ponto' => new Regex('Android')],
+            ['dados_ponto' => new Regex('webOS')],
+            ['dados_ponto' => new Regex('BlackBerry')],
+            ['dados_ponto' => new Regex('iPod')],
+            ['dados_ponto' => new Regex('Symbian')],
+            ['dados_ponto' => new Regex('Windows Phone')]
         ]);
         $pontos = $mongoDB->executeQuery();
 
@@ -861,13 +848,13 @@ class RelatorioController extends Controller
             ->where('usuario.situacao_usuario', 'A')
             ->whereIn('usuario.id_usuario', $ids_usuario)
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -876,12 +863,12 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', $id_lotacao);
                 }
             })
@@ -895,7 +882,7 @@ class RelatorioController extends Controller
             'aaData' => $usuarios['data'],
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 
     public function api_plataforma_usuario(Request $request, Response $response, $args)
@@ -911,17 +898,17 @@ class RelatorioController extends Controller
 
         $mongoDB = new MongoDB();
         $mongoDB->setFilter('$or', [['finalidade_ponto' => 'PONTO'], ['finalidade_ponto' => 'ABONO']]);
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('id_usuario', (int) $id_usuario);
         $mongoDB->setFilter('$or', [
-            ['dados_ponto' => new Regex('iPhone') ],
-            ['dados_ponto' => new Regex('iPad') ],
-            ['dados_ponto' => new Regex('Android') ],
-            ['dados_ponto' => new Regex('webOS') ],
-            ['dados_ponto' => new Regex('BlackBerry') ],
-            ['dados_ponto' => new Regex('iPod') ],
-            ['dados_ponto' => new Regex('Symbian') ],
-            ['dados_ponto' => new Regex('Windows Phone') ]
+            ['dados_ponto' => new Regex('iPhone')],
+            ['dados_ponto' => new Regex('iPad')],
+            ['dados_ponto' => new Regex('Android')],
+            ['dados_ponto' => new Regex('webOS')],
+            ['dados_ponto' => new Regex('BlackBerry')],
+            ['dados_ponto' => new Regex('iPod')],
+            ['dados_ponto' => new Regex('Symbian')],
+            ['dados_ponto' => new Regex('Windows Phone')]
         ]);
 
         $pontos = $mongoDB->executeQuery();
@@ -933,7 +920,7 @@ class RelatorioController extends Controller
             'aaData' => $pontos,
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 
     // Relatório: Por IP
@@ -946,7 +933,7 @@ class RelatorioController extends Controller
         // $qtd_aceita = $request->getParams()['qtd_aceita'] ? $request->getParams()['qtd_aceita'] : 4;
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
         $qtd_aceita = $request->getQueryParam('qtd');
 
         $pontos = [];
@@ -956,25 +943,25 @@ class RelatorioController extends Controller
         $data_final = $data->endOfMonth()->toDateString();
 
         $mongoDB = new MongoDB();
-        if((Auth::perfil_usuario())['id_tipo_perfil'] <> 1){
+        if ((Auth::perfil_usuario())['id_tipo_perfil'] <> 1) {
             $mongoDB->setFilter('id_orgao', intval(Auth::id_orgao_exercicio_usuario()));
         }
-        
 
-        if($id_orgao){
+
+        if ($id_orgao) {
             $mongoDB->setFilter('id_orgao', intval($id_orgao));
         }
 
-        if($id_lotacao){
+        if ($id_lotacao) {
             $mongoDB->setFilter('id_lotacao', intval($id_lotacao));
         }
 
         $mongoDB->setFilter('finalidade_ponto', 'PONTO');
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('$or', [
-            ['ip_ponto' => new Regex($search) ],
-            ['matricula_usuario' => new Regex($search) ],
-            ['nome_usuario' => new Regex($search) ],
+            ['ip_ponto' => new Regex($search)],
+            ['matricula_usuario' => new Regex($search)],
+            ['nome_usuario' => new Regex($search)],
         ]);
         $pontos = $mongoDB->executeQuery();
 
@@ -987,9 +974,9 @@ class RelatorioController extends Controller
             $ips_ponto[date('d', strtotime($ponto->data_ponto))][$ponto->ip_ponto]['orgaos'][] = trim($ponto->sigla_orgao);
         }
 
-        foreach($ips_ponto as $dia => $dados){
-            foreach($dados as $ip => $users) {
-                if(count($users['servidores']) > $qtd_aceita){
+        foreach ($ips_ponto as $dia => $dados) {
+            foreach ($dados as $ip => $users) {
+                if (count($users['servidores']) > $qtd_aceita) {
                     $ips_listados[] = [
                         'dia' => $dia,
                         'ip' => $ip,
@@ -1001,12 +988,12 @@ class RelatorioController extends Controller
                 }
             }
         }
-        
+
         return $this->view(
             $response,
             'relatorios',
             'show/ip/print',
-            [ 
+            [
                 'relatorio' => $relatorio,
                 'usuarios' => $ips_listados,
                 'ano' => $request->getQueryParam('ano'),
@@ -1017,14 +1004,14 @@ class RelatorioController extends Controller
     }
 
     public function api_por_ip(Request $request, Response $response, $args)
-    {  
-        
+    {
+
         $search = $request->getParams()['search'] ? $request->getParams()['search'] : false;
 
         $qtd_aceita = $request->getParams()['qtd_aceita'];
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
 
         $pontos = [];
         $data = Date::create($request->getQueryParam('ano'), $request->getQueryParam('mes'));
@@ -1033,25 +1020,25 @@ class RelatorioController extends Controller
         $data_final = $data->endOfMonth()->toDateString();
 
         $mongoDB = new MongoDB();
-        if((Auth::perfil_usuario())['id_tipo_perfil'] <> 1){
+        if ((Auth::perfil_usuario())['id_tipo_perfil'] <> 1) {
             $orgao = Orgao::find(Auth::id_orgao_exercicio_usuario());
             $mongoDB->setFilter('sigla_orgao', new Regex($orgao->sigla_orgao));
         }
 
-        if($id_orgao){
+        if ($id_orgao) {
             $mongoDB->setFilter('id_orgao', intval($id_orgao));
         }
 
-        if($id_lotacao){
+        if ($id_lotacao) {
             $mongoDB->setFilter('id_lotacao', intval($id_lotacao));
         }
 
         $mongoDB->setFilter('finalidade_ponto', 'PONTO');
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('$or', [
-            ['ip_ponto' => new Regex($search) ],
-            ['matricula_usuario' => new Regex($search) ],
-            ['nome_usuario' => new Regex($search) ],
+            ['ip_ponto' => new Regex($search)],
+            ['matricula_usuario' => new Regex($search)],
+            ['nome_usuario' => new Regex($search)],
         ]);
         $pontos = $mongoDB->executeQuery();
 
@@ -1064,9 +1051,9 @@ class RelatorioController extends Controller
             $ips_ponto[date('d', strtotime($ponto->data_ponto))][$ponto->ip_ponto]['orgaos'][] = trim($ponto->sigla_orgao);
         }
 
-        foreach($ips_ponto as $dia => $dados){
-            foreach($dados as $ip => $users) {
-                if(count($users['servidores']) > $qtd_aceita){
+        foreach ($ips_ponto as $dia => $dados) {
+            foreach ($dados as $ip => $users) {
+                if (count($users['servidores']) > $qtd_aceita) {
                     $ips_listados[] = [
                         'dia' => $dia,
                         'ip' => $ip,
@@ -1091,55 +1078,55 @@ class RelatorioController extends Controller
             'aaData' => $ips_listados,
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 
     // Horas Trabalhada api_horas
     public function print_horas(Request $request, Response $response, $args)
     {
-        $search = $request->getParams()['search'] ? $request->getParams()['search'] : false; 
+        $search = $request->getParams()['search'] ? $request->getParams()['search'] : false;
         $start = $request->getQueryParam('start') ? $request->getQueryParam('start') : 0;
         // $length = $request->getQueryParam('length') ? $request->getQueryParam('length') : 20;
         $order = isset(($request->getParams())['order']) ? ($request->getParams())['order'][0] : ['column' => 1, 'dir' => 'ASC'];
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
 
         $pontos = [];
-        $data = Date::create($request->getQueryParam('ano'), $request->getQueryParam('mes')); 
+        $data = Date::create($request->getQueryParam('ano'), $request->getQueryParam('mes'));
 
         $column_name = [
-			"matricula_usuario",
-			"nome_usuario",
-			"sigla_orgao",
-			"descricao_lotacao",
-			"total_hora",
-		];
+            "matricula_usuario",
+            "nome_usuario",
+            "sigla_orgao",
+            "descricao_lotacao",
+            "total_hora",
+        ];
 
         $data_inicial = $data->startOfMonth()->toDateString();
         $data_final = $data->endOfMonth()->toDateString();
 
         $mongoDB = new MongoDB();
-        if((Auth::perfil_usuario())['id_tipo_perfil'] <> 1){
+        if ((Auth::perfil_usuario())['id_tipo_perfil'] <> 1) {
             $mongoDB->setFilter('id_orgao', intval(Auth::id_orgao_exercicio_usuario()));
         }
-        
 
-        if($id_orgao){
+
+        if ($id_orgao) {
             $mongoDB->setFilter('id_orgao', intval($id_orgao));
         }
 
-        if($id_lotacao){
+        if ($id_lotacao) {
             $mongoDB->setFilter('id_lotacao', intval($id_lotacao));
         }
 
         // $mongoDB->setFilter('finalidade_ponto', 'PONTO');
         $mongoDB->setFilter('$or', [['finalidade_ponto' => 'PONTO'], ['finalidade_ponto' => 'ABONO']]);
         // $mongoDB->setFilter('id_usuario', 32129);
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('$or', [
-            ['matricula_usuario' => new Regex($search) ],
-            ['nome_usuario' => new Regex($search) ],
+            ['matricula_usuario' => new Regex($search)],
+            ['nome_usuario' => new Regex($search)],
         ]);
         $pontos = $mongoDB->executeQuery();
 
@@ -1148,8 +1135,8 @@ class RelatorioController extends Controller
         $dadosRetorno = [];
 
         //ORGANIZA OS HORARIOS
-        foreach($pontos as $ponto){
-            if(!$servidores[$ponto->id_usuario . '-' . $ponto->id_lotacao]){
+        foreach ($pontos as $ponto) {
+            if (!$servidores[$ponto->id_usuario . '-' . $ponto->id_lotacao]) {
                 $servidores[$ponto->id_usuario . '-' . $ponto->id_lotacao] = $ponto;
             }
 
@@ -1157,26 +1144,26 @@ class RelatorioController extends Controller
         }
 
         //CALCULA AS HORAS TRABALHADAS
-        foreach($servidores as $k => $servidor){
+        foreach ($servidores as $k => $servidor) {
             $dados = $servidor;
             $dados->total_hora = 0;
             $dias_trabalhados = 0;
 
-            foreach($pontoServidores[$k] as $kp => $ponto){
-                if($ponto[1] && $ponto[2]) {
+            foreach ($pontoServidores[$k] as $kp => $ponto) {
+                if ($ponto[1] && $ponto[2]) {
                     $e1  = new DateTime($ponto[1]);
                     $e2 = new DateTime($ponto[2]);
                     $intvl = $e1->diff($e2);
                     $dados->total_hora += ($intvl->h * 60) + $intvl->i;
                 }
-                if($ponto[3] && $ponto[4]) {
+                if ($ponto[3] && $ponto[4]) {
                     $e3  = new DateTime($ponto[3]);
                     $e4 = new DateTime($ponto[4]);
                     $intvl = $e3->diff($e4);
                     $dados->total_hora += ($intvl->h * 60) + $intvl->i;
                 }
 
-                if(($ponto[1] && $ponto[2]) || ($ponto[3] && $ponto[4])){
+                if (($ponto[1] && $ponto[2]) || ($ponto[3] && $ponto[4])) {
                     $dias_trabalhados++;
                 }
             }
@@ -1190,22 +1177,22 @@ class RelatorioController extends Controller
         foreach ($dadosRetorno as $d) {
             $new_data[] = $d[$column_name[$order['column']]];
         }
-        if ( strtoupper($order['dir']) == 'ASC') {
+        if (strtoupper($order['dir']) == 'ASC') {
             array_multisort($new_data, SORT_ASC, $dadosRetorno);
         } else {
             array_multisort($new_data,  SORT_DESC, $dadosRetorno);
         }
 
 
-        
+
         return $this->view(
             $response,
             'relatorios',
             'show/horas/print',
-            [ 
+            [
                 'usuarios' => $dadosRetorno,
-                'ano' => $request->getQueryParam('ano'),
-                'mes' => $request->getQueryParam('mes'),
+                'ano' => $request->getQueryParam('ano') != '' ? $request->getQueryParam('ano') : date('Y'),
+                'mes' => $request->getQueryParam('mes') != '' ? $request->getQueryParam('mes') : date(),
                 'qtd' => $request->getQueryParam('qtd') ?? 4,
             ]
         );
@@ -1213,47 +1200,47 @@ class RelatorioController extends Controller
 
     public function api_horas(Request $request, Response $response, $args)
     {
-        $search = $request->getParams()['search'] ? $request->getParams()['search'] : false; 
+        $search = $request->getParams()['search'] ? $request->getParams()['search'] : false;
         $start = $request->getQueryParam('start') ? $request->getQueryParam('start') : 0;
         $length = $request->getQueryParam('length') ? $request->getQueryParam('length') : 20;
         $order = isset(($request->getParams())['order']) ? ($request->getParams())['order'][0] : ['column' => 1, 'dir' => 'ASC'];
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
 
         $pontos = [];
         $data = Date::create($request->getQueryParam('ano'), $request->getQueryParam('mes'));
 
         $column_name = [
-			"matricula_usuario",
-			"nome_usuario",
-			"sigla_orgao",
-			"descricao_lotacao",
-			"total_hora",
-		];
+            "matricula_usuario",
+            "nome_usuario",
+            "sigla_orgao",
+            "descricao_lotacao",
+            "total_hora",
+        ];
 
         $data_inicial = $data->startOfMonth()->toDateString();
         $data_final = $data->endOfMonth()->toDateString();
 
         $mongoDB = new MongoDB();
-        if((Auth::perfil_usuario())['id_tipo_perfil'] <> 1){
+        if ((Auth::perfil_usuario())['id_tipo_perfil'] <> 1) {
             $mongoDB->setFilter('id_orgao', intval(Auth::id_orgao_exercicio_usuario()));
         }
-        
 
-        if($id_orgao){
+
+        if ($id_orgao) {
             $mongoDB->setFilter('id_orgao', intval($id_orgao));
         }
 
-        if($id_lotacao){
+        if ($id_lotacao) {
             $mongoDB->setFilter('id_lotacao', intval($id_lotacao));
         }
 
         $mongoDB->setFilter('$or', [['finalidade_ponto' => 'PONTO'], ['finalidade_ponto' => 'ABONO']]);
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('$or', [
-            ['matricula_usuario' => new Regex($search) ],
-            ['nome_usuario' => new Regex(strtoupper($search)) ],
+            ['matricula_usuario' => new Regex($search)],
+            ['nome_usuario' => new Regex(strtoupper($search))],
         ]);
         $pontos = $mongoDB->executeQuery();
 
@@ -1262,8 +1249,8 @@ class RelatorioController extends Controller
         $dadosRetorno = [];
 
         //ORGANIZA OS HORARIOS
-        foreach($pontos as $ponto){
-            if(!$servidores[$ponto->id_usuario . '-' . $ponto->id_lotacao]){
+        foreach ($pontos as $ponto) {
+            if (!$servidores[$ponto->id_usuario . '-' . $ponto->id_lotacao]) {
                 $servidores[$ponto->id_usuario . '-' . $ponto->id_lotacao] = $ponto;
             }
 
@@ -1271,26 +1258,26 @@ class RelatorioController extends Controller
         }
 
         //CALCULA AS HORAS TRABALHADAS
-        foreach($servidores as $k => $servidor){
+        foreach ($servidores as $k => $servidor) {
             $dados = $servidor;
             $dados->total_hora = 0;
             $dias_trabalhados = 0;
 
-            foreach($pontoServidores[$k] as $kp => $ponto){
-                if($ponto[1] && $ponto[2]) {
+            foreach ($pontoServidores[$k] as $kp => $ponto) {
+                if ($ponto[1] && $ponto[2]) {
                     $e1  = new DateTime($ponto[1]);
                     $e2 = new DateTime($ponto[2]);
                     $intvl = $e1->diff($e2);
                     $dados->total_hora += ($intvl->h * 60) + $intvl->i;
                 }
-                if($ponto[3] && $ponto[4]) {
+                if ($ponto[3] && $ponto[4]) {
                     $e3  = new DateTime($ponto[3]);
                     $e4 = new DateTime($ponto[4]);
                     $intvl = $e3->diff($e4);
                     $dados->total_hora += ($intvl->h * 60) + $intvl->i;
                 }
 
-                if(($ponto[1] && $ponto[2]) || ($ponto[3] && $ponto[4])){
+                if (($ponto[1] && $ponto[2]) || ($ponto[3] && $ponto[4])) {
                     $dias_trabalhados++;
                 }
             }
@@ -1304,7 +1291,7 @@ class RelatorioController extends Controller
         foreach ($dadosRetorno as $d) {
             $new_data[] = $d[$column_name[$order['column']]];
         }
-        if ( strtoupper($order['dir']) == 'ASC') {
+        if (strtoupper($order['dir']) == 'ASC') {
             array_multisort($new_data, SORT_ASC, $dadosRetorno);
         } else {
             array_multisort($new_data,  SORT_DESC, $dadosRetorno);
@@ -1312,17 +1299,17 @@ class RelatorioController extends Controller
 
         //CRIA A PAGINAÇÃO SE NECESSÁRIO
         $servidores = [];
-        if($length == -1){
+        if ($length == -1) {
             $servidores = $dadosRetorno;
         } else {
             $tt = 0;
-            foreach($dadosRetorno as $dados){
-                if($tt >= $start && $tt < ($start + $length)){
+            foreach ($dadosRetorno as $dados) {
+                if ($tt >= $start && $tt < ($start + $length)) {
                     $servidores[] = $dados;
                 }
                 $tt++;
             }
-        } 
+        }
 
         $resposta = [
             'draw' => (int) ($request->getParams())['draw'],
@@ -1331,9 +1318,7 @@ class RelatorioController extends Controller
             'aaData' => $servidores,
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
-
-
+        return $response->withStatus(200)->withJson($resposta);
     }
 
 
@@ -1344,7 +1329,7 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::where('link_relatorio', $args['link_relatorio'])->first();
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
-        $id_lotacao= $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
+        $id_lotacao = $request->getQueryParam('id_lotacao') ? $request->getQueryParam('id_lotacao') : null;
         $ja_finalizado = $request->getQueryParam('ja_finalizado') ? true : null;
 
         $ano = $request->getQueryParam('ano');
@@ -1356,13 +1341,13 @@ class RelatorioController extends Controller
             ->with('DataEscala')
             ->where('usuario.situacao_usuario', 'A')
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -1371,32 +1356,32 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', $id_lotacao);
                 }
             })
             ->whereIn('escala.id_escala', function ($query) use ($ano, $mes) {
                 $query->select('data_escala.id_escala')
-                        ->from(with(new DataEscala())->getTable())
-                        ->whereRaw("data_escala.id_escala = escala.id_escala")
-                        ->whereRaw("YEAR(data_escala.data_escala) = $ano")
-                        ->whereRaw("MONTH(data_escala.data_escala) = $mes")
-                        ->groupBy('data_escala.id_data_escala');
+                    ->from(with(new DataEscala())->getTable())
+                    ->whereRaw("data_escala.id_escala = escala.id_escala")
+                    ->whereRaw("YEAR(data_escala.data_escala) = $ano")
+                    ->whereRaw("MONTH(data_escala.data_escala) = $mes")
+                    ->groupBy('data_escala.id_data_escala');
             })
             ->orderBy('orgao.sigla_orgao')
             ->orderBy('usuario.nome_usuario')
             ->get()->toArray();
-        
+
         return $this->view(
             $response,
             'relatorios',
             'show/escalas/print',
-            [ 
+            [
                 'relatorio' => $relatorio,
                 'usuarios' => $usuarios,
                 'ano' => $request->getQueryParam('ano'),
@@ -1407,11 +1392,11 @@ class RelatorioController extends Controller
 
     public function api_escalas(Request $request, Response $response, $args)
     {
-        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10; 
+        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
 
         $current_page = ceil((($request->getParams())['start'] + 1) / $valid_lenght);
-        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;     
-        
+        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
+
         $search = ($request->getParams())['search'] ? '%' . ($request->getParams())['search']  . '%' : false;
 
         $order = isset(($request->getParams())['order']) ? ($request->getParams())['order'][0] : null;
@@ -1424,9 +1409,9 @@ class RelatorioController extends Controller
             5 => 'lotacao.descricao_lotacao',
         ];
 
-        if(!$order){
-            $order['column'] = 2; 
-            $order['dir'] = 'asc'; 
+        if (!$order) {
+            $order['column'] = 2;
+            $order['dir'] = 'asc';
         }
 
         $id_orgao = $request->getQueryParam('id_orgao') ? $request->getQueryParam('id_orgao') : null;
@@ -1444,13 +1429,13 @@ class RelatorioController extends Controller
             ->with('DataEscala')
             ->where('usuario.situacao_usuario', 'A')
             ->where(function ($query) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4 ){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2 || (Auth::perfil_usuario())['id_tipo_perfil'] == 4) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
                     $query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -1459,36 +1444,36 @@ class RelatorioController extends Controller
                 }
             })
             ->where(function ($query) use ($search) {
-                if($search){
+                if ($search) {
                     $query->where('escala.amparo_legal_escala', 'LIKE', $search)
-                    ->orWhere('usuario.matricula_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.nome_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.cargo_usuario', 'LIKE', $search)
-                    ->orWhere('usuario.cargo_comissao_usuario', 'LIKE', $search)
-                    ->orWhere('orgao.descricao_orgao', 'LIKE', $search)
-                    ->orWhere('orgao.sigla_orgao', 'LIKE', $search)
-                    ->orWhere('lotacao.descricao_lotacao', 'LIKE', $search)
-                    ->orWhere('lotacao.sigla_lotacao', 'LIKE', $search);
+                        ->orWhere('usuario.matricula_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.contrato_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.nome_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.cargo_usuario', 'LIKE', $search)
+                        ->orWhere('usuario.cargo_comissao_usuario', 'LIKE', $search)
+                        ->orWhere('orgao.descricao_orgao', 'LIKE', $search)
+                        ->orWhere('orgao.sigla_orgao', 'LIKE', $search)
+                        ->orWhere('lotacao.descricao_lotacao', 'LIKE', $search)
+                        ->orWhere('lotacao.sigla_lotacao', 'LIKE', $search);
                 }
             })
             ->where(function ($query) use ($id_orgao) {
-                if($id_orgao){
+                if ($id_orgao) {
                     $query->where('orgao.id_orgao', $id_orgao);
                 }
             })
             ->where(function ($query) use ($id_lotacao) {
-                if($id_lotacao){
+                if ($id_lotacao) {
                     $query->where('lotacao.id_lotacao', $id_lotacao);
                 }
             })
             ->whereIn('escala.id_escala', function ($query) use ($ano, $mes) {
                 $query->select('data_escala.id_escala')
-                        ->from(with(new DataEscala())->getTable())
-                        ->whereRaw("data_escala.id_escala = escala.id_escala")
-                        ->whereRaw("YEAR(data_escala.data_escala) = $ano")
-                        ->whereRaw("MONTH(data_escala.data_escala) = $mes")
-                        ->groupBy('data_escala.id_data_escala');
+                    ->from(with(new DataEscala())->getTable())
+                    ->whereRaw("data_escala.id_escala = escala.id_escala")
+                    ->whereRaw("YEAR(data_escala.data_escala) = $ano")
+                    ->whereRaw("MONTH(data_escala.data_escala) = $mes")
+                    ->groupBy('data_escala.id_data_escala');
             })
             ->orderBy($group_order[$order['column']], $order['dir'])
             ->paginate($length, ['*'], 'page', $current_page)->toArray();
@@ -1500,13 +1485,13 @@ class RelatorioController extends Controller
             'aaData' => $usuarios['data'],
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 
     // Auditoria
     public function api_auditoria(Request $request, Response $response, $args)
-    {  
-        
+    {
+
         $search = $request->getParams()['search'] ? $request->getParams()['search'] : false;
 
         $pontos = [];
@@ -1516,10 +1501,10 @@ class RelatorioController extends Controller
         $data_final = $data->endOfMonth()->toDateString();
 
         //VERIFICA SE O SERVIDOR ESTÁ CADASTRADO NA BASE DE DADOS
-        $servidor = Usuario::where(function($query) use ($search) {
+        $servidor = Usuario::where(function ($query) use ($search) {
             //VERIFICA SE TEM CONTRATO
-            $info = explode("-",$search);
-            if(count($info) > 1){
+            $info = explode("-", $search);
+            if (count($info) > 1) {
                 return $query->where('matricula_usuario', $info[0])->where('contrato_usuario', $info[1]);
             }
 
@@ -1531,15 +1516,15 @@ class RelatorioController extends Controller
         $mongoDB = new MongoDB();
 
         $mongoDB->setFilter('finalidade_ponto', 'PONTO');
-        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial.' 00:00:00', '$lte' => $data_final.' 23:59:59' ]);
+        $mongoDB->setFilter('data_ponto', ['$gte' => $data_inicial . ' 00:00:00', '$lte' => $data_final . ' 23:59:59']);
         $mongoDB->setFilter('id_usuario', $servidor->id_usuario);
         $mongoDB->setOptions('sort', ['tipo_ponto' => -1]);
         $pontos = $mongoDB->executeQuery();
 
         $registros = [];
 
-        foreach($pontos as $ponto){
-            if($registros[date('j', strtotime($ponto->data_ponto))][$ponto->tipo_ponto]){
+        foreach ($pontos as $ponto) {
+            if ($registros[date('j', strtotime($ponto->data_ponto))][$ponto->tipo_ponto]) {
                 $registros[date('j', strtotime($ponto->data_ponto))][$ponto->tipo_ponto] = [];
             }
 
@@ -1547,17 +1532,15 @@ class RelatorioController extends Controller
             $mongoDB->setFilter('finalidade_ponto', 'PONTO');
             $mongoDB->setFilter('tipo_ponto', $ponto->tipo_ponto);
             $mongoDB->setFilter('ip_ponto', $ponto->ip_ponto);
-            $mongoDB->setFilter('data_ponto', ['$gte' => date('Y-m-d', strtotime($ponto->data_ponto)) . ' 00:00:00', '$lte' => date('Y-m-d', strtotime($ponto->data_ponto)) .' 23:59:59' ]);
+            $mongoDB->setFilter('data_ponto', ['$gte' => date('Y-m-d', strtotime($ponto->data_ponto)) . ' 00:00:00', '$lte' => date('Y-m-d', strtotime($ponto->data_ponto)) . ' 23:59:59']);
             $mongoDB->setOptions('sort', ['tipo_ponto' => -1]);
             $batidas = $mongoDB->executeQuery();
 
-            foreach($batidas as $b){
-                if(!in_array($b->ip_ponto, ['10.1.9.102'])){
+            foreach ($batidas as $b) {
+                if (!in_array($b->ip_ponto, ['10.1.9.102'])) {
                     $registros[date('j', strtotime($ponto->data_ponto))][$ponto->tipo_ponto][] = $b;
                 }
-                
             }
-
         }
 
         $resposta = [
@@ -1568,7 +1551,6 @@ class RelatorioController extends Controller
             'id_usuario' => $servidor->id_usuario,
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
-   
 }

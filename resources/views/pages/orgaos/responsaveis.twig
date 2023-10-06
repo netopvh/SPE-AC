@@ -104,7 +104,7 @@
 				processResults: function(data) {
 					var usuarios = [];
 					data.aaData.map(usuario => {
-						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.contrato_usuario})` })
+						usuarios.push({ id: usuario.id_usuario, text: `${usuario.nome_usuario} (${usuario.matricula_usuario} - ${usuario.descricao_lotacao})` })
 					});
 					return {
 						results: usuarios

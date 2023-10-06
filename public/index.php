@@ -1,5 +1,6 @@
 <?php
 
+
 ob_start();
 session_start();
 session_write_close();
@@ -16,7 +17,7 @@ use App\Dependencies\BootLoader;
 use App\Middlewares\SessionValidationMiddleware;
 
 use App\Classes\ErrorRenderer;
-
+use App\Middlewares\RedirectMainRoute;
 use App\Models\Configuracao;
 use App\Services\ImportacaoService;
 
@@ -49,8 +50,8 @@ $app->setBasePath('/spe_novo');
 
 // Add error middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorHandler = $errorMiddleware->getDefaultErrorHandler();
-$errorHandler->registerErrorRenderer('text/html', ErrorRenderer::class);
+//$errorHandler = $errorMiddleware->getDefaultErrorHandler();
+//$errorHandler->registerErrorRenderer('text/html', ErrorRenderer::class);
 
 
 $app->add(new SessionValidationMiddleware());
