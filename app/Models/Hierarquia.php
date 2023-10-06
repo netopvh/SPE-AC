@@ -13,10 +13,13 @@ class Hierarquia extends Model
 
     protected $primaryKey = 'id_hierarquia';
 
+    public $incrementing = false;
+
     const CREATED_AT = NULL;
     const UPDATED_AT = NULL;
 
     protected $fillable = [
+        'id_hierarquia',
         'id_lotacao',
         'nivel_pai',
         'id_lotacao_subordinada'

@@ -6,6 +6,7 @@ use App\Extensions\Support\FileSystem;
 use App\Models\Afastamento;
 use App\Models\Faltas;
 use App\Models\Ferias;
+use App\Models\Hierarquia;
 use App\Models\Importacao;
 use App\Models\Lotacao;
 use App\Models\Orgao;
@@ -84,7 +85,7 @@ class ImportacaoService
                             $usuario[2], //nome_usuario
                             $usuario[4], //cargo_usuario
                             $usuario[3], //data_admissao_usuario
-                            $usuario[11], //regime_usuario
+                            $usuario[9], //regime_usuario
                             $usuario[7] //situacao_funcional_usuario
                         );
                     }
@@ -123,7 +124,7 @@ class ImportacaoService
 
                 //verificarFaltas();
 
-                //verificarHierarquia();
+                $this->getOrganograma();
 
                 //verificarAfastamentoTemporarios();
 
@@ -133,6 +134,7 @@ class ImportacaoService
             }
         } catch (\Throwable $th) {
             $this->iniciarErroImportacao($th->getMessage() . ' - Line: ' .  $th->getLine());
+            echo $th->getMessage();
         }
     }
     public function setFileType($fileType): self
@@ -581,9 +583,76 @@ class ImportacaoService
     {
         if ($codAfastamentos) {
 
-            Afastamento::query()->leftJoin('usuario', 'afastamentos.matricula_afastamento', 'usuario.matricula_usuario')->whereNotIn('afastamentos.id_afastamento', $codAfastamentos)
-                ->where('usuario.id_orgao_exercicio_usuario', $codOrgao)->delete();
+            Afastamento::query()->leftJoin('usuario', 'afastamento.matricula_afastamento', 'usuario.matricula_usuario')
+                ->whereNotIn('afastamento.id_afastamento', $codAfastamentos)
+                ->where('usuario.id_orgao_exercicio_usuario', $codOrgao)
+                ->delete();
         }
+    }
+
+    private function getOrganograma()
+    {
+        $fileDir = $this->makeFile('organograma');
+
+        $stSql = "SELECT i_organogramas, nivel, descricao, sigla FROM bethadba.organogramas; " .
+            "OUTPUT TO " . $fileDir . ";";
+
+        $this->makeCommand($stSql);
+
+        $data = $this->decodeFile($fileDir);
+
+        $this->verificaOrganograma($data);
+    }
+
+    private function verificaOrganograma($hierarquias)
+    {
+        foreach ($hierarquias as $hierarquia) {
+
+            $hierarquiaData = Hierarquia::query()
+                ->where('id_hierarquia', $this->limparAspas($hierarquia[0]))
+                ->get(['id_hierarquia']);
+
+            $lotacao = Lotacao::query()
+                ->where('descricao_lotacao', $this->limparAspas($hierarquia[2]))
+                ->get(['id_lotacao'])
+                ->first();
+
+            if ($lotacao) {
+
+                if ($hierarquiaData->count()) {
+                    $this->updateOrganograma($hierarquia[0], $hierarquia[1], $lotacao->id_lotacao);
+                } else {
+                    $this->insertOrganograma($hierarquia[0], $hierarquia[1], $lotacao->id_lotacao);
+                }
+            }
+        }
+    }
+
+    private function insertOrganograma($hierarquiaId, $nivel, $idLotacao)
+    {
+        Hierarquia::query()->create([
+            'id_hierarquia' => $this->limparAspas($hierarquiaId),
+            'nivel_pai' => $nivel,
+            'id_lotacao' => $idLotacao,
+            'id_lotacao_subordinada' => 0
+        ]);
+
+        return true;
+    }
+
+    private function updateOrganograma($hierarquiaId, $nivel, $idLotacao)
+    {
+
+        $hierarquia = Hierarquia::query()
+            ->where('id_hierarquia', $this->limparAspas($hierarquiaId))
+            ->get()
+            ->first();
+
+        $hierarquia->nivel_pai = $nivel;
+        $hierarquia->id_lotacao = $idLotacao;
+        $hierarquia->save();
+
+        return true;
     }
 
     public function makeCommand(string $sqlCommand)

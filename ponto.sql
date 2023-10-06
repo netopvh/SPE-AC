@@ -278,7 +278,7 @@ INSERT INTO `folha` (`id_folha`, `id_usuario`, `id_lotacao`, `nome_usuario_respo
 --
 
 CREATE TABLE `hierarquia` (
-  `id_hierarquia` int(11) NOT NULL,
+  `id_hierarquia` varchar(20) NOT NULL,
   `nivel_pai` int(11) NOT NULL,
   `id_lotacao` bigint(20) NOT NULL,
   `id_lotacao_subordinada` bigint(20) NOT NULL
@@ -738,8 +738,8 @@ ALTER TABLE `folha`
 --
 -- Índices de tabela `hierarquia`
 --
-ALTER TABLE `hierarquia`
-  ADD PRIMARY KEY (`id_hierarquia`);
+-- ALTER TABLE `hierarquia`
+--  ADD PRIMARY KEY (`id_hierarquia`);
 
 --
 -- Índices de tabela `horario`
@@ -937,8 +937,8 @@ ALTER TABLE `folha`
 --
 -- AUTO_INCREMENT de tabela `hierarquia`
 --
-ALTER TABLE `hierarquia`
-  MODIFY `id_hierarquia` int(11) NOT NULL AUTO_INCREMENT;
+-- ALTER TABLE `hierarquia`
+--   MODIFY `id_hierarquia` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `horario`
