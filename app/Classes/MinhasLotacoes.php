@@ -12,7 +12,7 @@ use App\Models\{
 class MinhasLotacoes
 {
 
-	public function lotacoes()
+	public static function lotacoes()
 	{
 		$MinhasLotacoes = [];
 		$Lotacoes = LotacaoResponsavel::where('id_usuario', Auth::id_usuario())
@@ -31,7 +31,7 @@ class MinhasLotacoes
 		return $MinhasLotacoes;
 	}
 
-	public function subordinadas($id_lotacao = NULL, $status_lotacao_responsavel = 'A', $data_criacao_lotacao_responsavel = NULL, $data_atualizacao_lotacao_responsavel = NULL)
+	public static function subordinadas($id_lotacao = NULL, $status_lotacao_responsavel = 'A', $data_criacao_lotacao_responsavel = NULL, $data_atualizacao_lotacao_responsavel = NULL)
 	{
 		$Itens = [];
 

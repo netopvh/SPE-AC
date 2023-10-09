@@ -2,12 +2,12 @@
 
 define('ambiente', 'develop'); // local, develop, homologation, production
 
+//AMBIENTE NETO
 define('APP_DATABASE', [
-
     'driver' => 'mysql',
     'host' => 'localhost',
     'port' => '3306',
-    'database' => 'ponto',
+    'database' => 'dados',
     'username' => 'root',
     'password' => '',
     'charset' => 'utf8',
@@ -15,14 +15,34 @@ define('APP_DATABASE', [
     'prefix' => ''
 ]);
 
+//AMBIENTE SERVIDOR
+//define('APP_DATABASE', [
+//    'driver' => 'mysql',
+//    'host' => 'localhost',
+//    'port' => '3306',
+//    'database' => 'ponto',
+//    'username' => 'root',
+//    'password' => '',
+//    'charset' => 'utf8',
+//    'collation' => 'utf8_unicode_ci',
+//    'prefix' => ''
+//]);
 
 define('DATABASE_MONGO', [
     'host' => 'localhost',
     'port' => '27017',
-    'database' => 'ponto',
-    'username' => '',
-    'password' => '',
+    'database' => 'dados',
+    'username' => 'admin',
+    'password' => 'example',
 ]);
+
+//define('DATABASE_MONGO', [
+//    'host' => 'localhost',
+//    'port' => '27017',
+//    'database' => 'ponto',
+//    'username' => '',
+//    'password' => '',
+//]);
 
 
 define('DATABASE_SEICT', [

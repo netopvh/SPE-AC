@@ -23,4 +23,5 @@ define('APP_VERSION', '0001');
 
 define('DATA_INSERCAO_ATUALIZACAO', Date('Y-m-d H:i:s'));
 
-define('ODBC_CON', 'ponto_spe');
+//define('ODBC_CON', 'ponto_spe');
+define('ODBC_CON', 'folha');

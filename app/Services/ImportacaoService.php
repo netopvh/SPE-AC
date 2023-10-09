@@ -4,12 +4,12 @@ namespace App\Services;
 
 use App\Extensions\Support\FileSystem;
 use App\Models\Afastamento;
-use App\Models\Faltas;
 use App\Models\Ferias;
 use App\Models\Hierarquia;
 use App\Models\Importacao;
 use App\Models\Lotacao;
 use App\Models\Orgao;
+use App\Models\TipoUsuario;
 use App\Models\Usuario;
 use App\Utils\ConectionTurmalina;
 use PDO;
@@ -53,7 +53,7 @@ class ImportacaoService
                 $this->iniciarImportacao();
 
                 $orgaos = $this->getOrgaos($codOrgao);
-				
+
                 foreach ($orgaos as $orgao) {
                     $this->verificarOrgao(
                         $orgao[0],
@@ -74,10 +74,9 @@ class ImportacaoService
 
                     $this->removeLotacoes($codLotacoes, $orgao[0]);
 
+                    $this->getVinculos();
+
                     $usuarios = $this->getUsuarios($orgao[0]);
-					echo "<pre>";
-				print_r($usuarios);
-				echo "</pre>";
 
                     foreach ($usuarios as $usuario) {
                         $this->verificaUsuario(
@@ -88,7 +87,7 @@ class ImportacaoService
                             $usuario[2], //nome_usuario
                             $usuario[4], //cargo_usuario
                             $usuario[3], //data_admissao_usuario
-                            $usuario[9], //regime_usuario
+                            $usuario[10], //regime_usuario
                             $usuario[7] //situacao_funcional_usuario
                         );
                     }
@@ -330,6 +329,62 @@ class ImportacaoService
         }
     }
 
+    private function getVinculos()
+    {
+        $fileDir = $this->makeFile('vinculos');
+
+        $stSql = "SELECT i_vinculos, descricao, vinculo_temp FROM bethadba.vinculos; OUTPUT TO " . $fileDir . ";";
+
+        $this->makeCommand($stSql);
+
+        $vinculos = $this->decodeFile($fileDir);
+
+        foreach ($vinculos as $vinculo) {
+            $this->verificarVinculo($vinculo[0], $vinculo[1], $vinculo[2]);
+        }
+    }
+
+    private function verificarVinculo($id_vinculo, $descricao_vinculo, $temp)
+    {
+        $vinculo = TipoUsuario::query()->where('id_tipo_usuario', $id_vinculo)->get(['id_tipo_usuario']);
+
+        if ($vinculo->count()) {
+            return $this->updateVinculo($id_vinculo, $descricao_vinculo, $temp);
+        }
+
+        return $this->insertVinculo($id_vinculo, $descricao_vinculo, $temp);
+    }
+
+    private function insertVinculo($idVinculo, $descricaoVinculo, $temp)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        TipoUsuario::query()->create([
+            'id_tipo_usuario' => $idVinculo,
+            'descricao_tipo_usuario' => $this->limparAspas($descricaoVinculo),
+            'temporario' => $this->limparAspas($temp),
+            'data_criacao_tipo_usuario' => $data_insercao_atualizacao,
+            'data_atualizacao_tipo_usuario' => $data_insercao_atualizacao,
+        ]);
+
+        return true;
+    }
+
+    private function updateVinculo($idVinculo, $descricaoVinculo, $temp)
+    {
+        $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
+
+        $vinculo = TipoUsuario::query()->where('id_tipo_usuario', $idVinculo)->first();
+
+        $vinculo->id_tipo_usuario = $idVinculo;
+        $vinculo->descricao_tipo_usuario = $this->limparAspas($descricaoVinculo);
+        $vinculo->temporario = $this->limparAspas($temp);
+        $vinculo->data_atualizacao_tipo_usuario = $data_insercao_atualizacao;
+        $vinculo->save();
+
+        return true;
+    }
+
     private function getUsuarios($codOrgao)
     {
         $fileDir = $this->makeFile('usuarios');
@@ -379,13 +434,12 @@ class ImportacaoService
         $usuario->id_orgao_exercicio_usuario = $id_orgao;
         $usuario->id_lotacao_exercicio_usuario = $id_lotacao;
         $usuario->id_usuario = $id_usuario;
-        //$usuario->id_tipo_usuario = $this->checkTipoUsuario($regime_usuario);
+        $usuario->id_tipo_usuario = $regime_usuario;
         $usuario->cpf_usuario = $this->limparAspas($cpf_usuario);
         $usuario->nome_usuario = $this->limparAspas($nome_usuario);
         $usuario->cargo_usuario = $this->limparAspas($cargo_usuario);
         $usuario->matricula_usuario = $id_usuario;
         $usuario->data_admissao_usuario = $this->limparAspas($data_admissao_usuario);
-        $usuario->regime_usuario = $this->limparAspas($regime_usuario);
         $usuario->situacao_usuario = $this->checkSituacaoFuncional($situacao_funcional_usuario);
         $usuario->data_atualizacao_usuario = $data_insercao_atualizacao;
         $usuario->save();
@@ -401,13 +455,12 @@ class ImportacaoService
             'id_orgao_exercicio_usuario' => $id_orgao,
             'id_lotacao_exercicio_usuario' => $id_lotacao,
             'id_usuario' => $id_usuario,
-            //'id_tipo_usuario' => $this->checkTipoUsuario($regime_usuario),
+            'id_tipo_usuario' => $regime_usuario,
             'cpf_usuario' => $this->limparAspas($cpf_usuario),
             'nome_usuario' => $this->limparAspas($nome_usuario),
             'cargo_usuario' => $this->limparAspas($cargo_usuario),
             'matricula_usuario' => $id_usuario,
             'data_admissao_usuario' => $this->limparAspas($data_admissao_usuario),
-            'regime_usuario' => $this->limparAspas($regime_usuario),
             'situacao_usuario' => $this->checkSituacaoFuncional($situacao_funcional_usuario),
             'data_criacao_usuario' => $data_insercao_atualizacao,
             'data_atualizacao_usuario' => $data_insercao_atualizacao,

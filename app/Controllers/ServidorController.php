@@ -133,12 +133,14 @@ class ServidorController extends Controller
             $order['dir'] = 'asc';
         }
 
-        $usuarios = Usuario::join('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
+        $usuarios = Usuario::query()
+            ->join('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
             ->join('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
+            ->join('tipo_usuario', 'usuario.id_tipo_usuario', 'tipo_usuario.id_tipo_usuario')
             ->with('TipoUsuario')
             ->with('Horario')
-            ->where('usuario.id_tipo_usuario', 1)
             ->where('usuario.situacao_usuario', 'A')
+            ->where('tipo_usuario.temporario', 'N')
             ->where(function ($query) use ($MinhasLotacoes) {
                 if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {

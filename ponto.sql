@@ -585,19 +585,10 @@ INSERT INTO `tipo_ponto` (`id_tipo_ponto`, `descricao_tipo_ponto`, `data_criacao
 CREATE TABLE `tipo_usuario` (
   `id_tipo_usuario` int(11) NOT NULL,
   `descricao_tipo_usuario` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `temporario` CHAR(1) COLLATE utf8mb4_unicode_ci NOT NULL,
   `data_criacao_tipo_usuario` datetime NOT NULL,
   `data_atualizacao_tipo_usuario` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `tipo_usuario`
---
-
-INSERT INTO `tipo_usuario` (`id_tipo_usuario`, `descricao_tipo_usuario`, `data_criacao_tipo_usuario`, `data_atualizacao_tipo_usuario`) VALUES
-(1, 'Servidor', '2020-11-03 12:32:45', '2020-11-03 12:32:46'),
-(2, 'Comissionado', '2020-11-03 12:32:45', '2020-11-03 12:32:46'),
-(3, 'Terceirizado', '2020-11-03 12:32:53', '2020-11-03 12:32:54'),
-(, 'Estagiário', '2020-11-03 12:33:05', '2020-11-03 12:33:06');
 
 -- --------------------------------------------------------
 

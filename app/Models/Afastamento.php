@@ -25,4 +25,9 @@ class Afastamento extends Model
         'data_criacao_afastamento',
         'data_atualizacao_afastamento'
     ];
+
+    public function Usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'matricula_afastamento', 'matricula_usuario');
+    }
 }

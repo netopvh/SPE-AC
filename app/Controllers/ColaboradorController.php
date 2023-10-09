@@ -9,7 +9,7 @@ use Illuminate\Database\Capsule\Manager as DB;
 use App\Utils\Auth;
 use App\Classes\MinhasLotacoes;
 
-use App\Models\{ 
+use App\Models\{
     Usuario,
     TipoUsuario,
     Orgao,
@@ -37,17 +37,17 @@ class ColaboradorController extends Controller
             $response,
             'colaboradores',
             'show',
-            [ 'usuario' => $usuario ]
+            ['usuario' => $usuario]
         );
     }
 
     public function store(Request $request, Response $response, $args)
     {
-        if($request->getMethod() == 'POST'){
+        if ($request->getMethod() == 'POST') {
             DB::beginTransaction();
             try {
 
-                $todos =[
+                $todos = [
                     'id_tipo_usuario' => ($request->getParams())['id_tipo_usuario'],
                     'id_orgao_exercicio_usuario' => ($request->getParams())['id_orgao_exercicio_usuario'],
                     'id_lotacao_exercicio_usuario' => ($request->getParams())['id_lotacao_exercicio_usuario'],
@@ -60,7 +60,7 @@ class ColaboradorController extends Controller
                     'id_usuario_atualizacao_usuario' => Auth::id_usuario(),
                 ];
 
-                if($todos['id_horario'] == 'null'){
+                if ($todos['id_horario'] == 'null') {
                     $todos['id_horario'] = null;
                 }
 
@@ -68,7 +68,6 @@ class ColaboradorController extends Controller
 
                 DB::commit();
                 return $response->withStatus(200)->withJson([]);
-
             } catch (\Throwable $th) {
                 DB::rollBack();
                 return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
@@ -83,7 +82,7 @@ class ColaboradorController extends Controller
             $response,
             'colaboradores',
             'store',
-            [ 
+            [
                 'tipos_usuario' => $tipos_usuario,
                 'orgaos' => $orgaos,
                 'horarios' => $horarios
@@ -93,11 +92,11 @@ class ColaboradorController extends Controller
 
     public function update(Request $request, Response $response, $args)
     {
-        if($request->getMethod() == 'POST'){
+        if ($request->getMethod() == 'POST') {
             DB::beginTransaction();
             try {
 
-                $todos =[
+                $todos = [
                     'nome_usuario' => strtoupper(($request->getParams())['nome_usuario']),
                     'email_usuario' => strtoupper(($request->getParams())['email_usuario']),
                     'cargo_usuario' => strtoupper(($request->getParams())['cargo_usuario']),
@@ -109,7 +108,7 @@ class ColaboradorController extends Controller
                 ];
                 $usuario = Usuario::find($args['id']);
 
-                if($todos['id_horario'] == 'null'){
+                if ($todos['id_horario'] == 'null') {
                     $todos['id_horario'] = null;
                 }
 
@@ -117,7 +116,6 @@ class ColaboradorController extends Controller
 
                 DB::commit();
                 return $response->withStatus(200)->withJson([]);
-
             } catch (\Throwable $th) {
                 DB::rollBack();
                 return $response->withStatus(404)->withJson(['errorMessage' => $th->getMessage()]);
@@ -133,7 +131,7 @@ class ColaboradorController extends Controller
             $response,
             'colaboradores',
             'update',
-            [ 
+            [
                 'usuario' => $usuario,
                 'tipos_usuario' => $tipos_usuario,
                 'lotacoes' => $lotacoes,
@@ -144,11 +142,11 @@ class ColaboradorController extends Controller
 
     public function api_index(Request $request, Response $response, $args)
     {
-        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10; 
+        $valid_lenght =  ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
 
         $current_page = ceil((($request->getParams())['start'] + 1) / $valid_lenght);
-        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;     
-        
+        $length = ($request->getParams())['length'] ? ($request->getParams())['length'] : 10;
+
         $search = ($request->getParams())['search'] ? '%' . ($request->getParams())['search']  . '%' : false;
         $horario_padrao = isset(($request->getParams())['horario_padrao']) ? ($request->getParams())['horario_padrao'] : false;
 
@@ -161,36 +159,37 @@ class ColaboradorController extends Controller
             4 => 'usuario.id_tipo_usuario',
         ];
 
-        if(!$order){
-            $order['column'] = 1; 
-            $order['dir'] = 'asc'; 
+        if (!$order) {
+            $order['column'] = 1;
+            $order['dir'] = 'asc';
         }
-   
-		
-		if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
-			$Lotacoes = MinhasLotacoes::lotacoes();
-			$MinhasLotacoes = [];
-			
-			foreach($Lotacoes as $dados){
-				if( $dados['status_lotacao_responsavel'] == 'A' ){
-					$MinhasLotacoes[] = $dados['id_lotacao'];
-				}
-			}
-		}
-        
-        $usuarios = Usuario::with('TipoUsuario')
+
+
+        if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
+            $Lotacoes = MinhasLotacoes::lotacoes();
+            $MinhasLotacoes = [];
+
+            foreach ($Lotacoes as $dados) {
+                if ($dados['status_lotacao_responsavel'] == 'A') {
+                    $MinhasLotacoes[] = $dados['id_lotacao'];
+                }
+            }
+        }
+
+        $usuarios = Usuario::query()->join('tipo_usuario', 'usuario.id_tipo_usuario', 'tipo_usuario.id_tipo_usuario')
+            ->with('TipoUsuario')
             ->with('Horario')
-            ->where('usuario.id_tipo_usuario', '!=', 1)
+            ->where('tipo_usuario.temporario', 'S')
             ->where('usuario.situacao_usuario', 'A')
             ->where(function ($query) use ($MinhasLotacoes) {
-                if((Auth::perfil_usuario())['id_tipo_perfil'] == 2){
+                if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2) {
                     $query->whereIn('usuario.id_orgao_exercicio_usuario',  function ($query) {
                         $query->select('id_orgao')
                             ->from(with(new OrgaoResponsavel())->getTable())
                             ->where('id_usuario', Auth::id_usuario());
                     });
-                }else if((Auth::perfil_usuario())['id_tipo_perfil'] == 3){
-					$query->whereIn('lotacao.id_lotacao',  $MinhasLotacoes);
+                } else if ((Auth::perfil_usuario())['id_tipo_perfil'] == 3) {
+                    $query->whereIn('lotacao.id_lotacao',  $MinhasLotacoes);
                     /*$query->whereIn('lotacao.id_lotacao',  function ($query) {
                         $query->select('id_lotacao')
                             ->from(with(new LotacaoResponsavel())->getTable())
@@ -199,7 +198,7 @@ class ColaboradorController extends Controller
                 }
             })
             ->where(function ($query) use ($search) {
-                if($search){
+                if ($search) {
                     $query->where('usuario.nome_usuario', 'LIKE', $search)
                         ->orWhere('usuario.cargo_usuario', 'LIKE', $search)
                         ->orWhere('usuario.cargo_comissao_usuario', 'LIKE', $search)
@@ -208,9 +207,9 @@ class ColaboradorController extends Controller
                 }
             })
             ->where(function ($query) use ($horario_padrao) {
-                if($horario_padrao == 'true'){
+                if ($horario_padrao == 'true') {
                     $query->whereNull('usuario.id_horario');
-                }else if($horario_padrao == 'outros'){
+                } else if ($horario_padrao == 'outros') {
                     $query->whereNotNull('usuario.id_horario');
                 }
             })
@@ -224,6 +223,6 @@ class ColaboradorController extends Controller
             'aaData' => $usuarios['data'],
         ];
 
-        return $response->withStatus(200)->withJson( $resposta );
+        return $response->withStatus(200)->withJson($resposta);
     }
 }
