@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 define('APP_NAME', 'Sistema de Ponto Eletrônico');
 
@@ -23,4 +23,4 @@ define('APP_VERSION', '0001');
 
 define('DATA_INSERCAO_ATUALIZACAO', Date('Y-m-d H:i:s'));
 
-define('ODBC_CON', 'folha');
+define('ODBC_CON', 'ponto_spe');

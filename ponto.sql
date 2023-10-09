@@ -595,8 +595,9 @@ CREATE TABLE `tipo_usuario` (
 
 INSERT INTO `tipo_usuario` (`id_tipo_usuario`, `descricao_tipo_usuario`, `data_criacao_tipo_usuario`, `data_atualizacao_tipo_usuario`) VALUES
 (1, 'Servidor', '2020-11-03 12:32:45', '2020-11-03 12:32:46'),
-(2, 'Terceirizado', '2020-11-03 12:32:53', '2020-11-03 12:32:54'),
-(3, 'Estagiário', '2020-11-03 12:33:05', '2020-11-03 12:33:06');
+(2, 'Comissionado', '2020-11-03 12:32:45', '2020-11-03 12:32:46'),
+(3, 'Terceirizado', '2020-11-03 12:32:53', '2020-11-03 12:32:54'),
+(, 'Estagiário', '2020-11-03 12:33:05', '2020-11-03 12:33:06');
 
 -- --------------------------------------------------------
 
@@ -606,7 +607,7 @@ INSERT INTO `tipo_usuario` (`id_tipo_usuario`, `descricao_tipo_usuario`, `data_c
 
 CREATE TABLE `usuario` (
   `id_usuario` int(11) NOT NULL,
-  `id_tipo_usuario` int(11) NOT NULL,
+  `id_tipo_usuario` int(11) NULL DEFAULT 0,
   `id_orgao_exercicio_usuario` int(11) NOT NULL,
   `id_lotacao_exercicio_usuario` bigint(20) NOT NULL,
   `id_horario` int(11) DEFAULT NULL,
@@ -1009,8 +1010,8 @@ ALTER TABLE `tipo_ponto`
 --
 -- AUTO_INCREMENT de tabela `tipo_usuario`
 --
-ALTER TABLE `tipo_usuario`
-  MODIFY `id_tipo_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+-- ALTER TABLE `tipo_usuario`
+--  MODIFY `id_tipo_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de tabela `usuario`

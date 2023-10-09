@@ -53,7 +53,7 @@ class ImportacaoService
                 $this->iniciarImportacao();
 
                 $orgaos = $this->getOrgaos($codOrgao);
-
+				
                 foreach ($orgaos as $orgao) {
                     $this->verificarOrgao(
                         $orgao[0],
@@ -75,6 +75,9 @@ class ImportacaoService
                     $this->removeLotacoes($codLotacoes, $orgao[0]);
 
                     $usuarios = $this->getUsuarios($orgao[0]);
+					echo "<pre>";
+				print_r($usuarios);
+				echo "</pre>";
 
                     foreach ($usuarios as $usuario) {
                         $this->verificaUsuario(
@@ -376,7 +379,7 @@ class ImportacaoService
         $usuario->id_orgao_exercicio_usuario = $id_orgao;
         $usuario->id_lotacao_exercicio_usuario = $id_lotacao;
         $usuario->id_usuario = $id_usuario;
-        $usuario->id_tipo_usuario = $this->checkTipoUsuario($regime_usuario);
+        //$usuario->id_tipo_usuario = $this->checkTipoUsuario($regime_usuario);
         $usuario->cpf_usuario = $this->limparAspas($cpf_usuario);
         $usuario->nome_usuario = $this->limparAspas($nome_usuario);
         $usuario->cargo_usuario = $this->limparAspas($cargo_usuario);
@@ -398,7 +401,7 @@ class ImportacaoService
             'id_orgao_exercicio_usuario' => $id_orgao,
             'id_lotacao_exercicio_usuario' => $id_lotacao,
             'id_usuario' => $id_usuario,
-            'id_tipo_usuario' => $this->checkTipoUsuario($regime_usuario),
+            //'id_tipo_usuario' => $this->checkTipoUsuario($regime_usuario),
             'cpf_usuario' => $this->limparAspas($cpf_usuario),
             'nome_usuario' => $this->limparAspas($nome_usuario),
             'cargo_usuario' => $this->limparAspas($cargo_usuario),
@@ -432,9 +435,9 @@ class ImportacaoService
 
     private function checkTipoUsuario($tipo)
     {
-        if ($this->limparAspas($tipo) === 'Efetivo Estatutário' || $this->limparAspas($tipo) === 'Celetista') {
+        if ($this->limparAspas($tipo) === 'ESTATUTARIO') {
             return 1;
-        } else if ($this->limparAspas($tipo) === 'Comissionado' || $this->limparAspas($tipo) === 'Agente Político') {
+        } else if ($this->limparAspas($tipo) === 'CONSELHEIRO TUTELAR') {
             return 2;
         } else if ($this->limparAspas($tipo) === 'Estagiário') {
             return 3;

@@ -7,7 +7,7 @@ define('APP_DATABASE', [
     'driver' => 'mysql',
     'host' => 'localhost',
     'port' => '3306',
-    'database' => 'dados',
+    'database' => 'ponto',
     'username' => 'root',
     'password' => '',
     'charset' => 'utf8',
@@ -19,9 +19,9 @@ define('APP_DATABASE', [
 define('DATABASE_MONGO', [
     'host' => 'localhost',
     'port' => '27017',
-    'database' => 'dados',
-    'username' => 'admin',
-    'password' => 'example',
+    'database' => 'ponto',
+    'username' => '',
+    'password' => '',
 ]);
 
 
