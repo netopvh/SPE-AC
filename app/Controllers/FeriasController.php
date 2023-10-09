@@ -66,7 +66,7 @@ class FeriasController extends Controller
         })
             ->leftJoin('orgao', 'usuario.id_orgao_exercicio_usuario', 'orgao.id_orgao')
             ->leftJoin('lotacao', 'usuario.id_lotacao_exercicio_usuario', 'lotacao.id_lotacao')
-            //->where('ferias.data_fim_ferias', '>=', date('Y-m-d'))
+            ->where('ferias.data_fim_ferias', '>=', date('Y-m-d'))
             ->where(function ($query) use ($MinhasLotacoes) {
                 if ((Auth::perfil_usuario())['id_tipo_perfil'] == 2) {
                     $query->whereIn('orgao.id_orgao',  function ($query) {
