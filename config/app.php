@@ -10,7 +10,7 @@ define('TURMALINA', false); // Busca dados da Turmalina
 
 define('BASE_URL', '//' . $_SERVER['HTTP_HOST']);
 
-define('APP_URL', '//' . BASE_URL . BASE_PATH);
+define('APP_URL', BASE_URL . BASE_PATH);
 
 define('STORAGE_DIR', dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR);
 
@@ -24,4 +24,4 @@ define('APP_VERSION', '0001');
 define('DATA_INSERCAO_ATUALIZACAO', Date('Y-m-d H:i:s'));
 
 define('ODBC_CON', 'ponto_spe');
-//define('ODBC_CON', 'folha');
+// define('ODBC_CON', 'folha');

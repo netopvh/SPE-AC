@@ -41,6 +41,7 @@ use App\Utils\Auth;
 //     "cache" => 0,        
 // ]));
 
+$app->get('', [PontoController::class, 'index']);
 $app->get('/', [PontoController::class, 'index']);
 
 $app->post('/pontos', [PontoController::class, 'store']);
@@ -252,7 +253,6 @@ if (Auth::logged() and Auth::perfil_usuario()) {
                 $group->any('/editar/{id}', [CalendarioController::class, 'update']);
                 $group->delete('/deletar/{id}', [CalendarioController::class, 'destroy']);
             }
-
         })->add(new RedirectNotAuthenticated());
     }
 
@@ -273,7 +273,6 @@ if (Auth::logged() and Auth::perfil_usuario()) {
                 $group->post('/editar/{id}', [DispensaController::class, 'update']);
                 $group->delete('/deletar/{id}', [DispensaController::class, 'delete']);
             }
-
         })->add(new RedirectNotAuthenticated());
     }
 
@@ -286,7 +285,6 @@ if (Auth::logged() and Auth::perfil_usuario()) {
                 $group->any('/editar/{id}', [EscalaController::class, 'update']);
                 $group->delete('/deletar/{id}', [EscalaController::class, 'delete']);
             }
-
         })->add(new RedirectNotAuthenticated());
     }
 
@@ -304,7 +302,6 @@ if (Auth::logged() and Auth::perfil_usuario()) {
                 $group->any('/editar/{id}', [HorarioController::class, 'update']);
                 $group->delete('/deletar/{id}', [HorarioController::class, 'delete']);
             }
-
         })->add(new RedirectNotAuthenticated());
     }
 

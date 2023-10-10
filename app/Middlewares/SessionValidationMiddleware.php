@@ -21,29 +21,23 @@ class SessionValidationMiddleware
 
             if ($_SERVER['REQUEST_URI'] == '/') {
                 $response = $handler->handle($request);
-                return $response->withRedirect(APP_URL . '/autenticacao/login');
+                return $response->withRedirect(APP_URL);
             }
 
             $response = $handler->handle($request);
             return $response;
         } else {
 
-            if ($_SERVER['REQUEST_URI'] == '/spe_novo/') {
-                // if ($_SERVER['REQUEST_URI'] == '/') {
+            if ($_SERVER['REQUEST_URI'] == '/spe_novo/' || $_SERVER['REQUEST_URI'] == '/spe_novo') {
                 $response = $handler->handle($request);
                 return $response;
-            } else {
-                if (Auth::logged()) {
-                    $response = $handler->handle($request);
-                    return $response;
-                } else {
-                    $response = $handler->handle($request);
-                    return $response->withRedirect(APP_URL . '/autenticacao/login');
-                }
             }
+
+            $response = $handler->handle($request);
+            return $response;
         }
 
         $response = $handler->handle($request);
-        return $response->withRedirect(APP_URL . '/autenticacao/login');
+        return $response->withRedirect(APP_URL);
     }
 }

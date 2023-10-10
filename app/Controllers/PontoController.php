@@ -13,9 +13,7 @@ use App\Models\{
     HorarioPadrao
 };
 
-use App\Utils\Auth;
 use App\Classes\{
-    LDAP,
     MongoDB
 };
 
