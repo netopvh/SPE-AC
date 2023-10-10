@@ -31,7 +31,7 @@ class ErrorRenderer implements ErrorRendererInterface
             case 503:
                 $menssagem = 'Estamos em manutenção neste exato momento';
                 break;
-            
+
             default:
                 $menssagem = 'Erro encontrado';
                 break;
@@ -163,7 +163,7 @@ class ErrorRenderer implements ErrorRendererInterface
                 </div>
                 <h2>' . $menssagem . '</h2>
                 <p>A página que você está procurando pode ter sido removida, seu nome tenha sido alterado ou está temporariamente indisponível.</p>
-                <a href="'. APP_URL .'/dashboard">Página Inicial</a>
+                <a href="' . APP_URL . '/autenticacao/login">Página Inicial</a>
             </div>
         </div>
         <script>
