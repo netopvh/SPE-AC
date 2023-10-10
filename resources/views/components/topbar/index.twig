@@ -3,8 +3,8 @@
 	<!-- LOGO -->
 	<div class="topbar-left">
 		<a href="{{ APP_URL }}/dashboard" class="logo">
-			<span><img src="{{ BASE_URL }}/img/logo-r-a.jpg" height="70" width="auto"></span>
-			<i><img src="{{ BASE_URL }}/img/logo-r-a.jpg" height="35" width="auto"></i>
+			<span><img src="{{ BASE_URL }}/img/logo-r-a.png" height="70" width="auto"></span>
+			<i><img src="{{ BASE_URL }}/img/logo-r-a.png" height="35" width="auto"></i>
 		</a>
 	</div>
 
@@ -15,6 +15,7 @@
 					data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false"
 					style="line-height: 25px; height: 70px; padding-top: 10px; text-align: right;" >
 					<strong>{{ AUTH.nome_usuario  }}</strong><br/>
+					
 					{% for contrato in AUTH.contratos %}
 						{% if AUTH.id_usuario == contrato.id_usuario %}
 								<i class="mdi mdi-backup-restore"></i> Contrato {{ contrato.contrato_usuario }} - {{ AUTH.cargo_comissao_usuario ? AUTH.cargo_comissao_usuario : AUTH.cargo_usuario }}

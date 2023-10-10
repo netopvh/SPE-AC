@@ -81,14 +81,15 @@ class ImportacaoService
                     foreach ($usuarios as $usuario) {
                         $this->verificaUsuario(
                             $usuario[0], //id_orgao_exercicio_usuario
-                            $usuario[12],  //id_lotacao_execicio_usuario
+                            $usuario[13],  //id_lotacao_execicio_usuario
                             $usuario[1], //id_usuario
-                            $usuario[8], //cpf_usuario
+                            $usuario[9], //cpf_usuario
                             $usuario[2], //nome_usuario
-                            $usuario[4], //cargo_usuario
+                            $usuario[5], //cargo_usuario
                             $usuario[3], //data_admissao_usuario
-                            $usuario[10], //regime_usuario
-                            $usuario[7] //situacao_funcional_usuario
+                            $usuario[11], //regime_usuario
+                            $usuario[8], //situacao_funcional_usuario
+                            $usuario[4] //data_nascimento_usuario
                         );
                     }
 
@@ -391,6 +392,7 @@ class ImportacaoService
 
         $stSql = "SELECT distinct funcionarios.i_entidades as orgao, i_funcionarios = bethadba.funcionarios.i_funcionarios," .
             "pessoas_nome = bethadba.pessoas.nome, funcionarios_dt_admissao = bethadba.funcionarios.dt_admissao," .
+            "funcionarios_dt_nascimento = (select  right('00' || string(day(dt_nascimento)),2) || right('00' || string(month(dt_nascimento)),2) +string(year(dt_NASCIMENTO)) from bethadba.pessoas_fisicas pf where pf.i_pessoas = pessoas.i_pessoas)," .
             "cargos_nome = bethadba.cargos.nome, dt_fim_cpt = SECONDS(DAYS(CAST( today() AS datetime ),1),-1)," .
             "situacao = isnull(bethadba.dbf_gettipoafast(1, funcionarios.i_entidades, funcionarios.i_funcionarios, bethadba.dbf_getdataafast(1, funcionarios.i_entidades, funcionarios.i_funcionarios, today(), 'S'), 'S'), 1)," .
             "situacao_funcional = if situacao = 1 then 'Trabalhando' else if situacao between 2 and 7 or situacao between 10 and 21 then 'Afastado' else if situacao = 8 then 'Demitido' else if situacao = 9 then 'Aposentado' endif endif endif endif," .
@@ -413,19 +415,19 @@ class ImportacaoService
         return $this->decodeFile($fileDir);
     }
 
-    private function verificaUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    private function verificaUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario, $nascimento)
     {
 
         $usuario = Usuario::query()->where('id_usuario', $id_usuario)->get(['id_usuario']);
 
         if ($usuario->count()) {
-            return $this->updateUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
+            return $this->updateUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario, $nascimento);
         }
 
-        return $this->insertUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario);
+        return $this->insertUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario, $nascimento);
     }
 
-    private function updateUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    private function updateUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario, $nascimento)
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
@@ -439,6 +441,7 @@ class ImportacaoService
         $usuario->nome_usuario = $this->limparAspas($nome_usuario);
         $usuario->cargo_usuario = $this->limparAspas($cargo_usuario);
         $usuario->matricula_usuario = $id_usuario;
+        $usuario->nascimento = $this->limparAspas($nascimento);
         $usuario->data_admissao_usuario = $this->limparAspas($data_admissao_usuario);
         $usuario->situacao_usuario = $this->checkSituacaoFuncional($situacao_funcional_usuario);
         $usuario->data_atualizacao_usuario = $data_insercao_atualizacao;
@@ -447,7 +450,7 @@ class ImportacaoService
         return true;
     }
 
-    private function insertUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario)
+    private function insertUsuario($id_orgao, $id_lotacao, $id_usuario, $cpf_usuario, $nome_usuario, $cargo_usuario, $data_admissao_usuario, $regime_usuario, $situacao_funcional_usuario, $nascimento)
     {
         $data_insercao_atualizacao = DATA_INSERCAO_ATUALIZACAO;
 
@@ -460,6 +463,7 @@ class ImportacaoService
             'nome_usuario' => $this->limparAspas($nome_usuario),
             'cargo_usuario' => $this->limparAspas($cargo_usuario),
             'matricula_usuario' => $id_usuario,
+            'nascimento' => $this->limparAspas($nascimento),
             'data_admissao_usuario' => $this->limparAspas($data_admissao_usuario),
             'situacao_usuario' => $this->checkSituacaoFuncional($situacao_funcional_usuario),
             'data_criacao_usuario' => $data_insercao_atualizacao,

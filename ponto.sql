@@ -603,6 +603,7 @@ CREATE TABLE `usuario` (
   `id_lotacao_exercicio_usuario` bigint(20) NOT NULL,
   `id_horario` int(11) DEFAULT NULL,
   `matricula_usuario` int(11) DEFAULT NULL,
+  `nascimento` varchar(10) DEFAULT NULL,
   `cpf_usuario` char(11) COLLATE utf8mb4_unicode_ci NOT NULL,
   `contrato_usuario` int(11) DEFAULT NULL,
   `tipo_contrato_usuario` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -622,8 +623,8 @@ CREATE TABLE `usuario` (
 -- Despejando dados para a tabela `usuario`
 --
 
-INSERT INTO `usuario` (`id_usuario`, `id_tipo_usuario`, `id_orgao_exercicio_usuario`, `id_lotacao_exercicio_usuario`, `id_horario`, `matricula_usuario`, `cpf_usuario`, `contrato_usuario`, `tipo_contrato_usuario`, `nome_usuario`, `situacao_funcional_usuario`, `data_admissao_usuario`, `cargo_usuario`, `cargo_comissao_usuario`, `email_usuario`, `regime_usuario`, `situacao_usuario`, `data_criacao_usuario`, `data_atualizacao_usuario`) VALUES
-(1000000, 1, 1, 1, 1, 1, '43536778291', 1, NULL, 'OZEIAS ROCHA', NULL, NULL, NULL, NULL, 'ozeias@ac.gov.br', NULL, 'A', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
+INSERT INTO `usuario` (`id_usuario`, `id_tipo_usuario`, `id_orgao_exercicio_usuario`, `id_lotacao_exercicio_usuario`, `id_horario`, `matricula_usuario`, `nascimento`, `cpf_usuario`, `contrato_usuario`, `tipo_contrato_usuario`, `nome_usuario`, `situacao_funcional_usuario`, `data_admissao_usuario`, `cargo_usuario`, `cargo_comissao_usuario`, `email_usuario`, `regime_usuario`, `situacao_usuario`, `data_criacao_usuario`, `data_atualizacao_usuario`) VALUES
+(1000000, 1, 1, 1, 1, 1,'12345678', '43536778291', 1, NULL, 'OZEIAS ROCHA', NULL, NULL, NULL, NULL, 'ozeias@ac.gov.br', NULL, 'A', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
 
 --
 -- Índices de tabelas apagadas

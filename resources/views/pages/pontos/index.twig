@@ -138,8 +138,8 @@
                     <div class="card o-hidden border-0 shadow-lg my-5" style="border-radius: 15px;">
                         <div class="row no-gutters" style="min-height: 700px; border-radius: 15px;">
                             <div class="col-md-5 p-5 grid-left">
-                                <img src="{{ BASE_URL }}/assets/images/logos/brasao_light.png" class="card-img mb-3 pl-4 pr-4" alt="ACRE">
-                                <img src="{{ BASE_URL }}/assets/images/logos/seplag_light.png" class="card-img pl-4 pr-4" alt="SEPLAG"/>
+                                <img src="{{ BASE_URL }}/img/logo-r-a.png" class="card-img mb-3 pl-4 pr-4" alt="ACRE">
+                                <!--<img src="{{ BASE_URL }}/assets/images/logos/seplag_light.png" class="card-img pl-4 pr-4" alt="SEPLAG"/> -->
                             </div>
                             <div class="col-md-7" style="border-radius: 20px;" onselectstart="return false">
                                 <div class="btn-area-servidor">
@@ -263,7 +263,11 @@
                 }
             }
 
-            $('#user').on('change',(e)=>{
+            //$('#user').on('change',(e)=>{
+            //    pontos();
+            //});
+            
+            $('#password').on('change',(e)=>{
                 pontos();
             });
 
@@ -273,6 +277,7 @@
 
             function pontos(){
                 var email_usuario = $('#user').val();
+                var password = $('#password').val();
                 var contrato_usuario = $('#contrato_usuario').val() ? '&contrato_usuario=' + $('#contrato_usuario').val() : '';
                 const buttons = $('.buttons');
 
@@ -296,7 +301,7 @@
                 `);
 
                 $.ajax({
-                    url: `{{ APP_URL }}/api/pontos?email_usuario=${email_usuario}${contrato_usuario}`,
+                    url: `{{ APP_URL }}/api/pontos?email_usuario=${email_usuario}&password=${password}${contrato_usuario}`,
                     type: 'GET',
                     cache: false,
                 }).then(data => {

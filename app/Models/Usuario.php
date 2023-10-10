@@ -28,6 +28,7 @@ class Usuario extends Model
         'id_lotacao_exercicio_usuario',
         'id_horario',
         'matricula_usuario',
+        'nascimento',
         'cpf_usuario',
         'contrato_usuario',
         'tipo_contrato_usuario',

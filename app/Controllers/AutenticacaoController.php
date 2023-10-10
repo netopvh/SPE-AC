@@ -23,28 +23,34 @@ class AutenticacaoController extends Controller
     {
         if ($request->getMethod() == 'POST') {
             $login = $request->getParsedBody()['login'];
-            $this->usuario = Usuario::with('TipoUsuario')->with('PerfilUsuario')->where('situacao_usuario', 'A')->where('cpf_usuario', $login)->first();
+            $password = $request->getParsedBody()['password'];
+
+            $this->usuario = Usuario::query()
+                ->with('TipoUsuario')
+                ->with('PerfilUsuario')
+                ->where('situacao_usuario', 'A')
+                ->where('cpf_usuario', $login)
+                ->first();
+
             if ($this->usuario) {
                 $this->usuario->contratos = Usuario::with('Lotacao')->where('cpf_usuario', $login)->where('situacao_usuario', 'A')->get()->toArray();
                 if ($this->usuario->situacao_usuario == 'A') {
-                    $ldap = new LDAP();
-                    $ldap->setLogin(explode('@', ($request->getParams())['login'])[0]);
-                    $ldap->setPassword(($request->getParams())['password']);
+                    $checkUser = Usuario::query()
+                        ->where('nascimento', $password)
+                        ->get();
 
-                    if ($ldap->verify_login()) {
-                        $this->addSession();
+                    if ($checkUser->count() <= 0) {
 
-                        return $response->withStatus(200)->withJson([]);
-                    } else {
-                        return $response->withStatus(404)->withJson(['errorMessage' => 'Senha incorreta!']);
+                        return $this->respondWithError($response, ['errorMessage' => 'Login e/ou senha incorretos!']);
                     }
+                    $this->addSession();
 
-                    return $response->withStatus(200)->withJson(['message' => 'Login realizado com sucesso.']);
+                    return $this->respondWithSuccess($response, ['successMessage' => 'Login efetuado com sucesso!']);
                 } else {
-                    return $response->withStatus(404)->withJson(['errorMessage' => 'Usuário Bloqueado!']);
+                    return $this->respondWithError($response, ['errorMessage' => 'Login e/ou senha incorretos!']);
                 }
             } else {
-                return $response->withStatus(404)->withJson(['errorMessage' => 'Login e/ou senha incorretos!']);
+                return $this->respondWithError($response, ['errorMessage' => 'Login e/ou senha incorretos!']);
             }
         }
 
