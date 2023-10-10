@@ -36,6 +36,7 @@ class PontoController extends Controller
 
                 $login = ($request->getParsedBody())['email_usuario'];
                 $password = ($request->getParsedBody())['password'];
+                $contrato_usuario = ($request->getParsedBody())['contrato_usuario'];
                 $tipo_ponto = ($request->getParsedBody())['tipo_ponto'];
                 $geolocalizacao = ($request->getParsedBody())['geo'];
                 $ipreal = (($request->getParsedBody())['ipreal'] != "") ? ($request->getParsedBody())['ipreal'] : null;
@@ -46,6 +47,11 @@ class PontoController extends Controller
                         ->with('Orgao')
                         ->with('Lotacao')
                         ->where('cpf_usuario', $login)
+                        ->where(function ($query) use ($contrato_usuario) {
+                            if ($contrato_usuario !== 'false') {
+                                $query->where('contrato_usuario', $contrato_usuario);
+                            }
+                        })
                         ->where('situacao_usuario', 'A')
                         ->first();
 
@@ -109,6 +115,7 @@ class PontoController extends Controller
                                 'dados_ponto' => $_SERVER['HTTP_USER_AGENT'],
                                 'geolocalizacao' => $geolocalizacao ?? null,
                                 'matricula_usuario' => (int) $usuario['matricula_usuario'],
+                                'contrato_usuario' => (int) $usuario['contrato_usuario'],
                                 'cargo_usuario' => $usuario['cargo_usuario'],
                                 'cargo_comissao_usuario' => $usuario['cargo_comissao_usuario'],
                                 'email_usuario' => $usuario['email_usuario'],
@@ -191,6 +198,7 @@ class PontoController extends Controller
 
             $email_usuario = $request->getQueryParam('email_usuario') ?? '';
             $password = $request->getQueryParam('password') ?? '';
+            $contrato_usuario = $request->getQueryParam('contrato_usuario') ?? null;
 
             $usuario = Usuario::select([
                 'id_usuario',
@@ -202,6 +210,9 @@ class PontoController extends Controller
                 ->with('Lotacao.Orgao')
                 ->where('cpf_usuario', $email_usuario)
                 ->where('nascimento', $password)
+                ->when($contrato_usuario, function ($query, $contrato_usuario) {
+                    return $query->where('contrato_usuario', $contrato_usuario);
+                })
                 ->where('situacao_usuario', 'A')
                 ->get()
                 ->toArray();
