@@ -36,7 +36,7 @@ class PontoController extends Controller
 
                 $login = ($request->getParsedBody())['email_usuario'];
                 $password = ($request->getParsedBody())['password'];
-                $contrato_usuario = ($request->getParsedBody())['contrato_usuario'];
+                $matricula = ($request->getParsedBody())['contrato_usuario'];
                 $tipo_ponto = ($request->getParsedBody())['tipo_ponto'];
                 $geolocalizacao = ($request->getParsedBody())['geo'];
                 $ipreal = (($request->getParsedBody())['ipreal'] != "") ? ($request->getParsedBody())['ipreal'] : null;
@@ -47,9 +47,9 @@ class PontoController extends Controller
                         ->with('Orgao')
                         ->with('Lotacao')
                         ->where('cpf_usuario', $login)
-                        ->where(function ($query) use ($contrato_usuario) {
-                            if ($contrato_usuario !== 'false') {
-                                $query->where('contrato_usuario', $contrato_usuario);
+                        ->where(function ($query) use ($matricula) {
+                            if ($matricula !== 'false') {
+                                $query->where('matricula_usuario', $matricula);
                             }
                         })
                         ->where('situacao_usuario', 'A')

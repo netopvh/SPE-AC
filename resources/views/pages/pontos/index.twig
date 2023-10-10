@@ -348,7 +348,7 @@
                 const button = $(e.currentTarget);
                 var email_usuario = $('#user').val();
                 var password = $('#password').val();
-                 var contrato_usuario = $('#contrato_usuario').val() ? $('#contrato_usuario').val() : false;
+                var contrato_usuario = $('#contrato_usuario').val() ? $('#contrato_usuario').val() : false;
                 let tipo_ponto = button.attr('data-option');
                 let geo = geolocalizacao ?  JSON.stringify(geolocalizacao) : locale;
                 let ipreal = window.ipreal ?? null;
