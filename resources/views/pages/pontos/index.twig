@@ -158,11 +158,11 @@
                                                 <label class="ml-3" for="user" style="color: #00000087; font-size: 12px;">USUÁRIO</label>
                                                 <input class="form-control form-control-user" id="user" type="text" name="user" required/>
                                             </div>
-                                            <div class="form-group contratos"></div>
                                             <div class="form-group">
                                                 <label class="ml-3" for="password" style="color: #00000087; font-size: 12px;">SENHA</label>
                                                 <input class="form-control form-control-user" id="password" type="password" name="password" required/>
                                             </div>
+                                            <div class="form-group contratos"></div>
                                         </div>
                                     </form>
                                     <div class="form-group form-buttons">
@@ -319,7 +319,7 @@
                         });
                     } else if (data.contratos && data.contratos.length > 1) {
                         $('.contratos').empty().append(`
-                            <label class="ml-3" for="contrato_usuario" style="color: #00000087; font-size: 12px;">CONTRATO</label>
+                            <label class="ml-3" for="contrato_usuario" style="color: #00000087; font-size: 12px;">MATRÍCULA</label>
                             <select id="contrato_usuario" name="contrato_usuario" class="form-control form-control-user" required="required" style="padding: 0px 1.0rem; font-size: 14px;">
                                 <option>Selecione a matrícula...</option>
                             </select>`);
