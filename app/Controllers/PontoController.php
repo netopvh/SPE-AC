@@ -42,7 +42,9 @@ class PontoController extends Controller
 
                 if (isset(($request->getParsedBody())['tipo_ponto']) && ($request->getParsedBody())['tipo_ponto'] != 0) {
 
-                    $usuario = Usuario::with('Orgao')->with('Lotacao')
+                    $usuario = Usuario::query()
+                        ->with('Orgao')
+                        ->with('Lotacao')
                         ->where('cpf_usuario', $login)
                         ->where('situacao_usuario', 'A')
                         ->first();
@@ -107,7 +109,6 @@ class PontoController extends Controller
                                 'dados_ponto' => $_SERVER['HTTP_USER_AGENT'],
                                 'geolocalizacao' => $geolocalizacao ?? null,
                                 'matricula_usuario' => (int) $usuario['matricula_usuario'],
-                                'contrato_usuario' => (int) $usuario['contrato_usuario'],
                                 'cargo_usuario' => $usuario['cargo_usuario'],
                                 'cargo_comissao_usuario' => $usuario['cargo_comissao_usuario'],
                                 'email_usuario' => $usuario['email_usuario'],
@@ -201,6 +202,7 @@ class PontoController extends Controller
                 ->with('Lotacao.Orgao')
                 ->where('cpf_usuario', $email_usuario)
                 ->where('nascimento', $password)
+                ->where('situacao_usuario', 'A')
                 ->get()
                 ->toArray();
 
