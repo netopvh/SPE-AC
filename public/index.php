@@ -50,8 +50,8 @@ $app->setBasePath('/spe_novo');
 
 // Add error middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-//$errorHandler = $errorMiddleware->getDefaultErrorHandler();
-//$errorHandler->registerErrorRenderer('text/html', ErrorRenderer::class);
+$errorHandler = $errorMiddleware->getDefaultErrorHandler();
+$errorHandler->registerErrorRenderer('text/html', ErrorRenderer::class);
 
 
 $app->add(new SessionValidationMiddleware());

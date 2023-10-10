@@ -19,7 +19,7 @@ class SessionValidationMiddleware
     {
         if (Routing::out($request, $this->open)) {
 
-            if ($_SERVER['REQUEST_URI'] == '/') {
+            if ($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '/spe') {
                 $response = $handler->handle($request);
                 return $response->withRedirect(APP_URL);
             }
