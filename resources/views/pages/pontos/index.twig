@@ -399,6 +399,9 @@
                             </div>
                         </div>
                     `);
+                    setTimeout(function(){
+                        window.location.reload();
+                    }, 7000);
                 }).catch(data => {
 					$('.buttons').html(cardOld)
                     var error = data.responseJSON ? data.responseJSON.errorMessage : 'Acontenceu algum erro. Entre em contato com o administrador do sistema.';
