@@ -271,14 +271,9 @@
                 pontos();
             });
 
-            $('body').on('change', '#contrato_usuario', (e)=>{
-                pontos();
-            });
-
             function pontos(){
                 var email_usuario = $('#user').val();
                 var password = $('#password').val();
-                var contrato_usuario = $('#contrato_usuario').val() ? '&contrato_usuario=' + $('#contrato_usuario').val() : '';
                 const buttons = $('.buttons');
 
                 buttons.html(`
@@ -301,7 +296,7 @@
                 `);
 
                 $.ajax({
-                    url: `{{ APP_URL }}/api/pontos?email_usuario=${email_usuario}&password=${password}${contrato_usuario}`,
+                    url: `{{ APP_URL }}/api/pontos?email_usuario=${email_usuario}&password=${password}`,
                     type: 'GET',
                     cache: false,
                 }).then(data => {
@@ -316,15 +311,6 @@
                                     ${option.label}
                                 </button>
                             `);
-                        });
-                    }else if (data.contratos && data.contratos.length > 1) {
-                        $('.contratos').empty().append(`
-                            <label class="ml-3" for="contrato_usuario" style="color: #00000087; font-size: 12px;">CONTRATO</label>
-                            <select id="contrato_usuario" name="contrato_usuario" class="form-control form-control-user" required="required" style="padding: 0px 1.0rem; font-size: 14px;">
-                                <option>Selecione um contrato...</option>
-                            </select>`);
-                        data.contratos.map(function (option, key) {
-                            $('#contrato_usuario').append(new Option(`${option.contrato_usuario} - ${option.lotacao.descricao_lotacao}`, option.contrato_usuario));
                         });
                     }
                 }).catch(data => {
@@ -348,7 +334,6 @@
                 const button = $(e.currentTarget);
                 var email_usuario = $('#user').val();
                 var password = $('#password').val();
-                var contrato_usuario = $('#contrato_usuario').val() ? $('#contrato_usuario').val() : false;
                 let tipo_ponto = button.attr('data-option');
                 let geo = geolocalizacao ?  JSON.stringify(geolocalizacao) : locale;
                 let ipreal = window.ipreal ?? null;
@@ -364,7 +349,6 @@
                     data: {
                         email_usuario,
                         password,
-                        contrato_usuario,
                         tipo_ponto,
                         geo,
                         ipreal
