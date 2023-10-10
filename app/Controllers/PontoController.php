@@ -198,7 +198,7 @@ class PontoController extends Controller
 
             $email_usuario = $request->getQueryParam('email_usuario') ?? '';
             $password = $request->getQueryParam('password') ?? '';
-            $contrato_usuario = $request->getQueryParam('contrato_usuario') ?? null;
+            $matricula = $request->getQueryParam('contrato_usuario') ?? null;
 
             $usuario = Usuario::select([
                 'id_usuario',
@@ -210,8 +210,8 @@ class PontoController extends Controller
                 ->with('Lotacao.Orgao')
                 ->where('cpf_usuario', $email_usuario)
                 ->where('nascimento', $password)
-                ->when($contrato_usuario, function ($query, $contrato_usuario) {
-                    return $query->where('contrato_usuario', $contrato_usuario);
+                ->when($matricula, function ($query, $matricula) {
+                    return $query->where('matricula_usuario', $matricula);
                 })
                 ->where('situacao_usuario', 'A')
                 ->get()
