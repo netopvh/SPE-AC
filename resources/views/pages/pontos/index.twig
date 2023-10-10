@@ -321,10 +321,10 @@
                         $('.contratos').empty().append(`
                             <label class="ml-3" for="contrato_usuario" style="color: #00000087; font-size: 12px;">CONTRATO</label>
                             <select id="contrato_usuario" name="contrato_usuario" class="form-control form-control-user" required="required" style="padding: 0px 1.0rem; font-size: 14px;">
-                                <option>Selecione um contrato...</option>
+                                <option>Selecione a matrícula...</option>
                             </select>`);
                         data.contratos.map(function (option, key) {
-                            $('#contrato_usuario').append(new Option(`${option.contrato_usuario} - ${option.lotacao.descricao_lotacao}`, option.contrato_usuario));
+                            $('#contrato_usuario').append(new Option(`${option.matricula_usuario} - ${option.lotacao.descricao_lotacao}`, option.matricula_usuario));
                         });
                     }
                 }).catch(data => {
